@@ -1,43 +1,44 @@
 # BARtab
 A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
-  Usage: nextflow run BARtab.nf --input <input dir> 
-                                --output <output dir> 
-                                --index <path>/<prefix> 
-                                --contrasts CONTRASTS.csv 
-                                -profile local
-                                --help
+```
+    Usage: nextflow run BARtab.nf --input <input dir> 
+                                  --output <output dir> 
+                                  --index <path>/<prefix> 
+                                  --contrasts CONTRASTS.csv 
+                                  -profile local
+                                  --help
 
     Required arguments:
-      --indir                        Directory containing raw *.fastq.gz files
-      --index                        Path to the bowtie2 index for the sgRNA library. Include prefix.
+      --indir                     Directory containing raw *.fastq.gz files
+      --index                     Path to the bowtie2 index for the sgRNA library. Include prefix.
 
     Filtering arguments:
-      --minqual                      Minimum PHRED quality across read.
+      --minqual                   Minimum PHRED quality across read.
     
     Trimming arguments:
-      --error                        Proportion of mismatches allowed in constant regions.
+      --error                     Proportion of mismatches allowed in constant regions.
 
     Mapping arguments:
-      --mismatches                   Number of allowed mismatches during reference mapping.
+      --mismatches                Number of allowed mismatches during reference mapping.
 
     Optional arguments:
-      --contrasts                    CSV file detailing the comparisons to test [contrasts.csv]
-      -profile                       Configuration profile to use. Can use multiple (comma separated)
-                                            Available: local, singularity, slurm
-      --outdir                       Output directory to place output [./]
-      --threads                      Number of CPUs to use [4]
-      --help                         Print this help statement.
+      --contrasts                 CSV file detailing the comparisons to test [contrasts.csv]
+      -profile                    Configuration profile to use. Can use multiple (comma separated)
+                                         Available: local, singularity, slurm
+      --outdir                    Output directory to place output [./]
+      --threads                   Number of CPUs to use [4]
+      --help                      Print this help statement.
 
 
     Profiles:
-      local                          local execution
-      singularity                    local execution with singularity
-      slurm                          SLURM execution 
+      local                       local execution
+      singularity                 local execution with singularity
+      slurm                       SLURM execution 
 
     Author:
       Dane Vassiliadis (dane.vassiliadis@petermac.org)
-
+```
 ## Stages:
 - Check raw data quality using `fastqc`
 - [OPTIONAL] merge paired end reads using `FLASh`
