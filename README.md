@@ -1,7 +1,6 @@
 # BARtab
 A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
-'''
   Usage: nextflow run BARtab.nf --input <input dir> 
                                 --output <output dir> 
                                 --index <path>/<prefix> 
@@ -38,7 +37,6 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
     Author:
       Dane Vassiliadis (dane.vassiliadis@petermac.org)
-'''
 
 ## Stages:
 - Check raw data quality using `fastqc`
