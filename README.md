@@ -41,14 +41,14 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 ```
 ## Stages:
 - Check raw data quality using `fastqc`
-- [OPTIONAL] merge paired end reads using `FLASh`
+- [OPTIONAL] Merge paired end reads using `FLASh`
 - Quality filter reads using `fastx-toolkit`
-- filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt`
-- align to reference barcode library using `bowtie`
-- [OPTIONAL] if no reference library, derive consensus barcode repertoire using `starcode`
-- count number of reads aligning per barcode using `samtools`
-- merge counts files for multiple samples
-- report metrics for individual samples
+- Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt`
+- Align to reference barcode library using `bowtie`
+- [OPTIONAL] If no reference library, derive consensus barcode repertoire using `starcode`
+- Count number of reads aligning per barcode using `samtools`
+- Merge counts files for multiple samples
+- Report metrics for individual samples
 
 ## Dependiencies
 * [Nextflow](https://bitbucket.org/snakemake/snakemake)
@@ -63,14 +63,14 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 * [samtools](http://www.htslib.org/)
 
 ## Installing the pipeline
-1. `conda create -f environment.yaml`
-2. `conda activate BARtab`
+1. `conda env create -f environment.yaml`
+2. `conda activate BARtab_env`
 3. `nextflow run BARtab.nf --help`
 
 ## Running the pipeline
 
 1. Run the test datasets - `nextflow run BARtab.nf --indir test`
-2. Symbolic link fastq files into required directory. Or specify input and output directories.
+2. Setup directories containing input fastq files.
 3. Run the pipeline - `nextflow run BARtab.nf -i <input_dir> -o <output_dir> <other args>`
 
 

@@ -1,18 +1,18 @@
-name: BARtab-environment
+name: BARtab-env
 channels:
   - conda-forge
   - bioconda
   - r
   - defaults
 dependencies:
-  - python=3.9
+  - python=3.8
   - nextflow
   - R=4.1
   - r-tidyverse
   - fastqc
-  - cutadapt-1.18
-  - starcode=1.4
-  - flash=1.2.11
-  - fastx-toolkit=0.0.14
-  - bowtie=1.2
-  - samtools=1.9
+  - cutadapt
+  - starcode
+  - flash
+  - fastx_toolkit
+  - bowtie
+  - samtools
