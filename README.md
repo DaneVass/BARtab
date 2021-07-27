@@ -63,7 +63,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 * [samtools](http://www.htslib.org/)
 
 ## Installing the pipeline
-1. `conda create -f BARtab_environment.yaml`
+1. `conda create -f environment.yaml`
 2. `conda activate BARtab`
 3. `nextflow run BARtab.nf --help`
 
