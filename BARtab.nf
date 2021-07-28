@@ -363,7 +363,7 @@ process align_barcodes{
 // 07_get_barcode_counts
 process get_barcode_counts{
   tag "samtools idxstats on $sample_id"
-  publishDir "${params.outdir}/counts/", mode: 'symlink'
+  publishDir "${params.outdir}/counts/", mode: 'copy'
 
   input:
     tuple val(sample_id), file(reads) from mappedReadsChannel
