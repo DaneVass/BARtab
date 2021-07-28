@@ -31,8 +31,9 @@ def helpMessage() {
                             ███    ███                                       
 """
 // https://www.coolgenerator.com/ascii-text-generator Delta Corps Priest 1
-
+log.info ""
 log.info " ---------------------- Tabulate Barcode Counts in NGS ----------------------"
+log.info ""
 log.info """
 
   Usage: nextflow run BARtab.nf --input <input dir> 
