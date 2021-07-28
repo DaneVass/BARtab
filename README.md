@@ -33,7 +33,6 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
     Profiles:
       local                       local execution
-      singularity                 local execution with singularity
       slurm                       SLURM execution 
 
     Author:

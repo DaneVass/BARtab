@@ -20,10 +20,20 @@ Processes:
 def helpMessage() {
   log.info ""
   log.info """
-*************************************************
-  -- BARtab - Tabulate Barcode Counts in NGS --
-*************************************************
+▀█████████▄     ▄████████    ▄████████     ███        ▄████████ ▀█████████▄  
+  ███    ███   ███    ███   ███    ███ ▀█████████▄   ███    ███   ███    ███ 
+  ███    ███   ███    ███   ███    ███    ▀███▀▀██   ███    ███   ███    ███ 
+ ▄███▄▄▄██▀    ███    ███  ▄███▄▄▄▄██▀     ███   ▀   ███    ███  ▄███▄▄▄██▀  
+▀▀███▀▀▀██▄  ▀███████████ ▀▀███▀▀▀▀▀       ███     ▀███████████ ▀▀███▀▀▀██▄  
+  ███    ██▄   ███    ███ ▀███████████     ███       ███    ███   ███    ██▄ 
+  ███    ███   ███    ███   ███    ███     ███       ███    ███   ███    ███ 
+▄█████████▀    ███    █▀    ███    ███    ▄████▀     ███    █▀  ▄█████████▀  
+                            ███    ███                                       
+"""
+// https://www.coolgenerator.com/ascii-text-generator Delta Corps Priest 1
 
+log.info " ---------------------- Tabulate Barcode Counts in NGS ----------------------"
+log.info """
   Description: A Nextflow pipeline to tabulate synthetic barcode counts from NGS data.
 
   Usage: nextflow run BARtab.nf --input <input dir> 
