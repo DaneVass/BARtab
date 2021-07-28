@@ -74,9 +74,10 @@ def helpMessage() {
 // config file
 configfile: "envs/BARtab_config.yaml"
 
+/*
 // Set defaults
 //process 1 file unless --n used at run time, e.g. -n 32
-params.indir = "./test_SE"
+/params.indir = "./test_SE"
 params.outdir = "$PWD"
 params.index = "/Users/vassiliadisdane/Dropbox/PostDoc_PeterMac/Projects/Barcoding_project/barcode_reference_libs/mCHERRY_reference_library/bowtie/mCHERRY_barcode"
 params.ref = "/Users/vassiliadisdane/Dropbox/PostDoc_PeterMac/Projects/Barcoding_project/barcode_reference_libs/mCHERRY_reference_library/mCHERRY_barcode_reference_library.fasta"
@@ -91,6 +92,7 @@ params.pctqual = 100
 params.constants = "up"
 params.constantmismatches = 0.1
 params.email = ""
+*/
 
 // Show help message
  if (params.help) {
