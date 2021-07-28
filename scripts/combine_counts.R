@@ -1,7 +1,9 @@
 #!/Users/vassiliadisdane/anaconda3/bin/R
 
 options(warn=-1)
-suppressMessages(library("tidyverse"))
+suppressMessages(library("dplyr"))
+suppressMessages(library("magrittr"))
+suppressMessages(library("purrr"))
 
 args = commandArgs(TRUE)
 path = file.path(args[1])
