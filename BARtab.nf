@@ -92,6 +92,7 @@ params.pctqual = 100
 params.constants = "up"
 params.constantmismatches = 0.1
 params.email = ""
+
 */
 
 // Show help message
@@ -206,22 +207,6 @@ else {
 
 //readsChannel.view { "file: $it" }
 //qcChannel.view { "file: $it" }
-
-/* // Setup channel containing reference barcode library index
-Channel
-	.fromPath(params.index)
-	.ifEmpty { exit 1, "Reference barcode library index not found: ${params.index}" }
-  .set { indexChannel }
-
-//indexChannel.view { "index: $it" }
-
-// Setup channel containing reference barcode library fasta
-Channel
-	.fromPath(params.ref)
-	.ifEmpty { exit 1, "Reference barcode library fasta not found: ${params.ref}" }
-  .set { refChannel }
-
-//refChannel.view { "ref: $it" } */
 
 // 01_FastQC
 process fastqc{
@@ -367,25 +352,6 @@ process cutadapt_reads{
     """
   
 }
-
-/*
-// 03_index_reference
-Channel.fromPath('data/references/reference.fasta.gz')
-  .set { referencesChannel }
-
-process bowtie_index {
-  input:
-    file(ref) from referencesChannel
-
-  output:
-    set val("${ref}"), file("*") into indexChannel
-
-  script:
-    """
-    bowtie-build ${ref}
-    """
-}
-*/
 
 // 06_align_barcodes
 process align_barcodes{
