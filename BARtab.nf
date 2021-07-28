@@ -34,7 +34,6 @@ def helpMessage() {
 
 log.info " ---------------------- Tabulate Barcode Counts in NGS ----------------------"
 log.info """
-  Description: A Nextflow pipeline to tabulate synthetic barcode counts from NGS data.
 
   Usage: nextflow run BARtab.nf --input <input dir> 
                                 --output <output dir> 
