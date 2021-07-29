@@ -324,17 +324,17 @@ process cutadapt_reads{
 
   if(params.merge)
     """
-      cutadapt -g "${params.upconstant}...${params.downconstant}" ${reads} > ${sample_id}.trimmed.fastq
+      cutadapt -g "${params.upconstant}...${params.downconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq
     """
   
   if(params.merge && params.constants == "up")
     """
-      cutadapt -g "${params.upconstant}" ${reads} > ${sample_id}.trimmed.fastq
+      cutadapt -g "${params.upconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq
     """
   
   if(params.constants == "up")
     """
-      cutadapt -g "${params.upconstant}" ${reads} > ${sample_id}.trimmed.fastq
+      cutadapt -g "${params.upconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq
     """
   
 }
