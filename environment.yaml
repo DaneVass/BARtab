@@ -1,14 +1,16 @@
 name: BARtab-env
 channels:
-  - conda-forge
-  - bioconda
-  - r
   - defaults
+  - bioconda
+  - conda-forge
 dependencies:
-  - python=3.8
+  - python=3.9
   - nextflow
-  - R=4.1
-  - r-tidyverse
+  - r-base
+  - r-dplyr
+  - r-purrr
+  - r-ggplot2
+  - r-magrittr
   - fastqc
   - cutadapt
   - starcode
@@ -16,3 +18,4 @@ dependencies:
   - fastx_toolkit
   - bowtie
   - samtools
+  - multiqc
