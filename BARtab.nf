@@ -197,6 +197,7 @@ else {
 // 01_FastQC
 process fastqc{
   tag "FastQC on $sample_id"
+  label "process_low"
   publishDir "${params.outdir}/qc/$sample_id", mode: 'copy'
   
   input:
@@ -217,6 +218,7 @@ process fastqc{
 if(params.merge) {
     process merge_reads{
       tag "FLASh on $sample_id"
+      label "process_high"
       publishDir "${params.outdir}/merged_reads/$sample_id", mode: 'symlink'
 
       input:
@@ -241,6 +243,7 @@ if(params.merge) {
 if(params.merge) {
   process gunzip_reads_PE{
     tag "gunzip -f on $sample_id"
+    label "process_low"
   
     input:
       tuple val(sample_id), path(reads) from mergedReadsChannel
@@ -257,6 +260,7 @@ if(params.merge) {
 else {
   process gunzip_reads_SE{
     tag "gunzip -f on $sample_id"
+    label "process_low"
 
     input:
       tuple val(sample_id), path(reads) from readsChannel
@@ -275,6 +279,7 @@ else {
 if(params.merge) {
   process filter_reads_PE{
     tag "fastx-toolkit fastq_filter_quality on $sample_id"
+    label "process_medium"
     publishDir "${params.outdir}/filtered_reads/", mode: 'symlink'
 
     input:
@@ -293,6 +298,7 @@ if(params.merge) {
 else {
   process filter_reads_SE{
     tag "fastx-toolkit fastq_filter_quality on $sample_id"
+    label "process_medium"
     publishDir "${params.outdir}/filtered_reads/", mode: 'symlink'
 
     input:
@@ -312,6 +318,7 @@ else {
 // 05_cutadapt // use cutadapt to filter for length
 process cutadapt_reads{
   tag "cutadapt on $sample_id"
+  label "process_high"
   publishDir "${params.outdir}/trimmed_reads/", mode: 'symlink'
 
   input:
@@ -342,6 +349,7 @@ process cutadapt_reads{
 // 06_align_barcodes
 process align_barcodes{
   tag "bowtie on $sample_id"
+  label "process_medium"
   publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
 
   input:
@@ -363,6 +371,7 @@ process align_barcodes{
 // 07_get_barcode_counts
 process get_barcode_counts{
   tag "samtools idxstats on $sample_id"
+  label "process_low"
   publishDir "${params.outdir}/counts/", mode: 'copy'
 
   input:
@@ -379,6 +388,7 @@ process get_barcode_counts{
 
 // 08_combine_barcode_counts
 process combine_barcode_counts{
+  label "process_low"
   publishDir "${params.outdir}/counts/", mode: 'copy'
 
   input:
