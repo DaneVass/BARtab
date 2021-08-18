@@ -357,14 +357,12 @@ process align_barcodes{
 
   output:
     set val(sample_id), "${sample_id}.mapped.bam" into mappedReadsChannel
-    file "${sample_id}.unmapped.bam"
     file "${sample_id}.mapped.bam.bai"
 
   script:
   """
-  bowtie -v ${params.alnmismatches} --norc -t -p ${params.threads} --sam --un ${sample_id}.unmapped.bam ${params.index} ${reads} | samtools view -Sb - | samtools sort - > ${sample_id}.mapped.bam
+  bowtie -v ${params.alnmismatches} --norc -t -p ${params.threads} --sam ${params.index} ${reads} | samtools view -Sb - | samtools sort - > ${sample_id}.mapped.bam
   samtools index ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
-  
   """
 }
 
