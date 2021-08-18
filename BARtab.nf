@@ -119,6 +119,7 @@ log.info " alignment mismatches     : ${params.alnmismatches}"
 log.info " CPU threads              : ${params.threads}"
 log.info " Minimum PHRED quality    : ${params.minqual}"
 log.info " Quality percentage       : ${params.pctqual}"
+log.info " Email                    : ${params.email}"
 log.info " ======================"
 log.info ""
 
@@ -230,6 +231,7 @@ if(params.merge) {
         file "${sample_id}.notCombined_2.fastq.gz"
         file "${sample_id}.hist"
         file "${sample_id}.histogram"
+        //file ".command.log" into mergedLogChannel
 
       script: 
       """
@@ -287,7 +289,8 @@ if(params.merge) {
 
     output:
       set val(sample_id), file("${sample_id}.filtered.fastq.gz") into filteredReadsChannel
-  
+      //file ".command.log" into filteredLogChannel
+
     script:
     """
     fastq_quality_filter -z -v -p ${params.pctqual} -q ${params.minqual} -i ${reads} -o "${sample_id}.filtered.fastq.gz"
@@ -306,6 +309,7 @@ else {
 
     output:
       set val(sample_id), file("${sample_id}.filtered.fastq.gz") into filteredReadsChannel
+      //file ".command.log" into filteredLogChannel
   
     script:
     """
@@ -326,6 +330,9 @@ process cutadapt_reads{
 
   output:
     set val(sample_id), file("${sample_id}.trimmed.fastq") into trimmedReadsChannel
+    //file ".command.log" into trimmedLogChannel
+
+
   
   script:
 
@@ -358,7 +365,8 @@ process align_barcodes{
   output:
     set val(sample_id), "${sample_id}.mapped.bam" into mappedReadsChannel
     file "${sample_id}.mapped.bam.bai"
-
+    file ".command.log" into mappedLogChannel
+    
   script:
   """
   bowtie -v ${params.alnmismatches} --norc -t -p ${params.threads} --sam ${params.index} ${reads} | samtools view -Sb - | samtools sort - > ${sample_id}.mapped.bam
@@ -384,6 +392,7 @@ process get_barcode_counts{
   """
 }
 
+/*
 // 08_combine_barcode_counts
 process combine_barcode_counts{
   label "process_low"
@@ -400,28 +409,27 @@ process combine_barcode_counts{
   Rscript $PWD/scripts/combine_counts.R $PWD all_counts_combined.txt
   """
 }
+*/
 
-/*
-// 09_multiqc
+// 09_multiqc_report
 process multiqc {
+  label "process_low"
 
-  tag { 'all' }
-
-  publishDir "${params.outdir}/counts/", mode: 'copy', overwrite: 'true'
+  publishDir "${params.outdir}/qc", mode: 'copy', overwrite: 'true'
 
   input:
-  file (fastqc: 'fastqc/*') from ch_out_fastqc.collect()
-  //file (align: 'align/*') from alignResults.collect()
-  //file (featurecounts: 'featureCounts/*') from featureCountsResults.collect()
+    file (fastqc: 'qc/*') from ch_out_fastqc.collect().ifEmpty([])
+    file (bowtie: "${params.outdir}/mapped_reads/mappedLogChannel*") from mappedLogChannel.collect().ifEmpty([])
 
   output:
-  file "*multiqc_report.html" into multiqc_report
+    file "multiqc_report.html" into multiqc_report
+    file "multiqc_data"
 
   script:
   """
   export LC_ALL=C.UTF-8
   export LANG=C.UTF-8
-  multiqc -f -x *.run .
+  multiqc -v -f .
   """
 }
 
@@ -448,12 +456,13 @@ else {
         """
         .stripIndent()
 
-        sendMail(to: params.email, subject: "BARtab execution", body: msg,  attach: "${outputMultiQC}/multiqc_report.html")
+        sendMail(to: params.email, subject: "BARtab execution", body: msg)
+        //,  attach: "${outputMultiQC}/multiqc_report.html"
     }
 }
 
 workflow.onComplete {
-    println "Pipeline BIOCORE@CRG vectorQC completed at: $workflow.complete"
+    println "BARtab pipeline completed at: $workflow.complete"
     println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
 }
 */
