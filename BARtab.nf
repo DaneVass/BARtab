@@ -231,11 +231,11 @@ if(params.merge) {
         file "${sample_id}.notCombined_2.fastq.gz"
         file "${sample_id}.hist"
         file "${sample_id}.histogram"
-        //file ".command.log" into mergedLogChannel
+        file "${sample_id}.flash.log" into mergedLogChannel
 
       script: 
       """
-      flash -z --min-overlap=10 -t ${params.threads} --output-prefix=${sample_id} ${reads}
+      flash -z --min-overlap=10 -t ${params.threads} --output-prefix=${sample_id} ${reads} 2> "${sample_id}.flash.log"
       """
     }
 //mergedReadsChannel.view { "file: $it" }
@@ -289,11 +289,11 @@ if(params.merge) {
 
     output:
       set val(sample_id), file("${sample_id}.filtered.fastq.gz") into filteredReadsChannel
-      //file ".command.log" into filteredLogChannel
+      file("${sample_id}.filter.log") into filteredLogChannel
 
     script:
     """
-    fastq_quality_filter -z -v -p ${params.pctqual} -q ${params.minqual} -i ${reads} -o "${sample_id}.filtered.fastq.gz"
+    fastq_quality_filter -z -v -p ${params.pctqual} -q ${params.minqual} -i ${reads} > ${sample_id}.filtered.fastq.gz 2> ${sample_id}.filter.log
     """
   }
   //filteredReadsChannel.view { "file: $it" }
@@ -309,11 +309,11 @@ else {
 
     output:
       set val(sample_id), file("${sample_id}.filtered.fastq.gz") into filteredReadsChannel
-      //file ".command.log" into filteredLogChannel
+      file("${sample_id}.filter.log") into filteredLogChannel
   
     script:
     """
-    fastq_quality_filter -z -v -p ${params.pctqual} -q ${params.minqual} -i ${reads} -o "${sample_id}.filtered.fastq.gz"
+    fastq_quality_filter -z -v -p ${params.pctqual} -q ${params.minqual} -i ${reads} > ${sample_id}.filtered.fastq.gz 2> ${sample_id}.filter.log
     """ 
   }
   //filteredReadsChannel.view { "file: $it" }
@@ -330,25 +330,23 @@ process cutadapt_reads{
 
   output:
     set val(sample_id), file("${sample_id}.trimmed.fastq") into trimmedReadsChannel
-    //file ".command.log" into trimmedLogChannel
-
-
+    file("${sample_id}.cutadapt.log") into trimmedLogChannel
   
   script:
 
   if(params.merge)
     """
-      cutadapt -g "${params.upconstant}...${params.downconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq
+      cutadapt -g "${params.upconstant}...${params.downconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
   
   if(params.merge && params.constants == "up")
     """
-      cutadapt -g "${params.upconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq
+      cutadapt -g "${params.upconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
   
   if(params.constants == "up")
     """
-      cutadapt -g "${params.upconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq
+      cutadapt -g "${params.upconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
   
 }
@@ -357,7 +355,7 @@ process cutadapt_reads{
 process align_barcodes{
   tag "bowtie on $sample_id"
   label "process_medium"
-  publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
+  publishDir "${params.outdir}/mapped_reads/", mode: 'copy', overwrite: 'true'
 
   input:
     tuple val(sample_id), file(reads) from trimmedReadsChannel
@@ -365,11 +363,11 @@ process align_barcodes{
   output:
     set val(sample_id), "${sample_id}.mapped.bam" into mappedReadsChannel
     file "${sample_id}.mapped.bam.bai"
-    file ".command.log" into mappedLogChannel
+    file("${sample_id}.bowtie.log") into mappedLogChannel
     
   script:
   """
-  bowtie -v ${params.alnmismatches} --norc -t -p ${params.threads} --sam ${params.index} ${reads} | samtools view -Sb - | samtools sort - > ${sample_id}.mapped.bam
+  bowtie -v ${params.alnmismatches} --norc -t -p ${params.threads} --sam ${params.index} ${reads} 2> ${sample_id}.bowtie.log | samtools view -Sb - | samtools sort - > ${sample_id}.mapped.bam
   samtools index ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
   """
 }
@@ -412,14 +410,20 @@ process combine_barcode_counts{
 */
 
 // 09_multiqc_report
+params.multiqc_config = "$projectDir/config/multiqc_config.yaml"
+Channel.fromPath(params.multiqc_config, checkIfExists: true).set { ch_config_for_multiqc }
+
 process multiqc {
   label "process_low"
 
-  publishDir "${params.outdir}/qc", mode: 'copy', overwrite: 'true'
+  publishDir "${params.outdir}", mode: 'copy', overwrite: 'true'
 
   input:
+    file multiqc_config from ch_config_for_multiqc
     file (fastqc: 'qc/*') from ch_out_fastqc.collect().ifEmpty([])
-    file (bowtie: "${params.outdir}/mapped_reads/mappedLogChannel*") from mappedLogChannel.collect().ifEmpty([])
+    file (fastx: "${params.outdir}/filtered_reads/*.filter.log") from filteredLogChannel.collect().ifEmpty([])
+    file (cutadapt: "${params.outdir}/trimmed_reads/*.cutadapt.log") from trimmedLogChannel.collect().ifEmpty([])
+    file (bowtie: "${params.outdir}/mapped_reads/*.bowtie.log") from mappedLogChannel.collect().ifEmpty([])
 
   output:
     file "multiqc_report.html" into multiqc_report
@@ -429,7 +433,7 @@ process multiqc {
   """
   export LC_ALL=C.UTF-8
   export LANG=C.UTF-8
-  multiqc -v -f .
+  multiqc -v -f --config $multiqc_config .
   """
 }
 
