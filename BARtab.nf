@@ -390,7 +390,6 @@ process get_barcode_counts{
   """
 }
 
-/*
 // 08_combine_barcode_counts
 process combine_barcode_counts{
   label "process_low"
@@ -404,10 +403,9 @@ process combine_barcode_counts{
   
   script: 
   """
-  Rscript $PWD/scripts/combine_counts.R $PWD all_counts_combined.txt
+  Rscript $PWD/scripts/combine_counts.R $counts all_counts_combined.txt
   """
 }
-*/
 
 // 09_multiqc_report
 params.multiqc_config = "$projectDir/config/multiqc_config.yaml"
