@@ -333,22 +333,22 @@ process cutadapt_reads{
     file("${sample_id}.cutadapt.log") into trimmedLogChannel
   
   script:
-
-  if(params.merge)
+  if( params.merge )
     """
-      cutadapt -g "${params.upconstant}...${params.downconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -g "${params.upconstant}...${params.downconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
-  
-  if(params.merge && params.constants == "up")
+  else if( params.constants == "both" )
     """
-      cutadapt -g "${params.upconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -g "${params.upconstant}...${params.downconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
-  
-  if(params.constants == "up")
+  else if( params.merge && params.constants == "up" )
     """
-      cutadapt -g "${params.upconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -g "${params.upconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
-  
+  else
+    """
+    cutadapt -g "${params.upconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    """
 }
 
 // 06_align_barcodes
