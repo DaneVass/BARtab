@@ -26,5 +26,6 @@ nextflow run $BARtab --indir ${indir} \
     --minqual ${minqual} \
     --pctqual ${pctqual} \
     --constants = ${constants} \
-    --constantmismatches ${constantmismatches}
+    --constantmismatches ${constantmismatches} \
+    -profile slurm # slurm based execution
 
