@@ -403,7 +403,7 @@ process combine_barcode_counts{
   
   script: 
   """
-  Rscript $PWD/scripts/combine_counts.R $counts all_counts_combined.txt
+  Rscript $projectDir/scripts/combine_counts.R $counts all_counts_combined.txt
   """
 }
 

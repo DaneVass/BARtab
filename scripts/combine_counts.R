@@ -8,6 +8,10 @@ args = commandArgs(TRUE)
 files = args[1:length(args)-1]
 outname = args[length(args)]
 
+print(args)
+print(files)
+print(outname)
+
 #path = file.path(args[1])
 #files <- list.files(path = path, pattern = "*_rawcounts.txt", recursive = T, include.dirs = FALSE, full.names = T)
 files <- files[grep("*_rawcounts.txt", files)]
