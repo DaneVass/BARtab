@@ -335,19 +335,19 @@ process cutadapt_reads{
   script:
   if( params.merge )
     """
-    cutadapt -g "${params.upconstant}...${params.downconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -g "${params.upconstant}...${params.downconstant}" --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
   else if( params.constants == "both" )
     """
-    cutadapt -g "${params.upconstant}...${params.downconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -g "${params.upconstant}...${params.downconstant}" --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
   else if( params.merge && params.constants == "up" )
     """
-    cutadapt -g "${params.upconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -g "${params.upconstant}" --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
   else
     """
-    cutadapt -g "${params.upconstant}" --max-n=0 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -g "${params.upconstant}" --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
 }
 
