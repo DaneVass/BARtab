@@ -5,7 +5,7 @@ Author: Dane Vassiliadis
 Affiliation: PeterMac Cancer Epigenetics Laboratory
 
 Processes:
-- fastqc
+- fastqc on raw reads
 - [OPTIONAL] merge paired end reads using FLASh
 - Quality filter reads using Fastx-toolkit
 - filter barcode reads and trim 5' and/or 3' constant regions using Cutadapt
