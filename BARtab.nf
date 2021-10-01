@@ -45,7 +45,7 @@ log.info """
 
     Required arguments:
       --indir                        Directory containing raw *.fastq.gz files
-      --index                        Path to the bowtie2 index for the sgRNA library. Include prefix.
+      --index                        Path to the bowtie index for the sgRNA library. Include prefix.
 
     Filtering arguments:
       --minqual                      Minimum PHRED quality across read.
@@ -355,19 +355,20 @@ process cutadapt_reads{
 process align_barcodes{
   tag "bowtie on $sample_id"
   label "process_medium"
-  publishDir "${params.outdir}/mapped_reads/", mode: 'copy', overwrite: 'true'
+  publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
 
   input:
     tuple val(sample_id), file(reads) from trimmedReadsChannel
 
   output:
     set val(sample_id), "${sample_id}.mapped.bam" into mappedReadsChannel
+    file "${sample_id}.unmapped.sam"
     file "${sample_id}.mapped.bam.bai"
     file("${sample_id}.bowtie.log") into mappedLogChannel
     
   script:
   """
-  bowtie -v ${params.alnmismatches} --norc -t -p ${params.threads} --sam ${params.index} ${reads} 2> ${sample_id}.bowtie.log | samtools view -Sb - | samtools sort - > ${sample_id}.mapped.bam
+  bowtie -v ${params.alnmismatches} --norc -t -p ${params.threads} --un ${sample_id}.unmapped.sam --sam ${params.index} ${reads} 2> ${sample_id}.bowtie.log | samtools view -Sb - | samtools sort - > ${sample_id}.mapped.bam
   samtools index ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
   """
 }
