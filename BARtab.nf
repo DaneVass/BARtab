@@ -125,45 +125,6 @@ log.info " Email                    : ${params.email}"
 log.info " ======================"
 log.info ""
 
-// check and report on software versions used in the pipeline run
-/* process software_check {
-  label 'software_check'
-
-  publishDir params.outdir, mode: 'copy', overwrite: 'true'
-
-  output:
-    "${params.outdir}/software_check.txt"
-
-  script:
-  """
-  
-  echo "Nextflow version:" 
-  nextflow -v 
-
-  echo "fastQC version:" 
-  fastqc --version 
-
-  echo "FLASh version:" 
-  flash -v 
-
-  echo "fastx-toolkit - fastq_quality_filter version:" 
-  fastq_quality_filter -h
-  
-  echo "bowtie -version" 
-  bowtie --version 
-  
-  echo "cutadapt version:" 
-  cutadapt --version 
-
-  echo "starcode version:"
-  starcode -v
-
-  echo "R version:" 
-  R --version 
-   
-  """
-} */
-
 //--------------------------------------------------------------------------------------
 // Main Pipeline 
 //--------------------------------------------------------------------------------------
@@ -461,14 +422,33 @@ process multiqc {
   """
 }
 
-/*
+//--------------------------------------------------------------------------------------
+// Post processing
+//--------------------------------------------------------------------------------------
+
+// check and report on software versions used in the pipeline run
+process software_check {
+  label 'software_check'
+
+  publishDir params.outdir, mode: 'copy', overwrite: 'true'
+
+  output:
+    file("software_check.txt") into versionsChannel
+
+  script:
+  """
+  bash $projectDir/scripts/check_versions.sh software_check.txt
+  """
+}
+
 // Mail notification
 
 if (params.email == "yourmail@yourdomain" || params.email == "") { 
-    log.info 'Skipping the email\n'
+    log.info '\n'
 }
 else {
-    log.info "Sending the email to ${params.email}\n"
+    log.info "\n"
+    log.info "Sending runtime report to ${params.email}\n"
 
     workflow.onComplete {
 
@@ -483,17 +463,10 @@ else {
         Error report: ${workflow.errorReport ?: '-'}
         """
         .stripIndent()
-
-        sendMail(to: params.email, subject: "BARtab execution", body: msg)
-        //,  attach: "${outputMultiQC}/multiqc_report.html"
+    
+    sendMail(to: params.email, subject: "BARtab execution report", body: msg,  attach: "${params.outdir}/multiqc_report.html")
     }
 }
-
-workflow.onComplete {
-    println "BARtab pipeline completed at: $workflow.complete"
-    println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
-}
-*/
 
 // Print completion messages
 workflow.onComplete {
@@ -501,8 +474,6 @@ workflow.onComplete {
     GREEN='\033[0;32m'
     NC='\033[0m'
     
-    
-    log.info ""
     log.info " ---------------------- BARtab Pipeline has finished ----------------------"
     log.info ""
     log.info "Status:   " + (workflow.success ? "${GREEN}SUCCESS${NC}" : "${RED}ERROR${NC}")
