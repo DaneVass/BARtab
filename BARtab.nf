@@ -9,10 +9,13 @@ Processes:
 - [OPTIONAL] merge paired end reads using FLASh
 - Quality filter reads using Fastx-toolkit
 - filter barcode reads and trim 5' and/or 3' constant regions using Cutadapt
-- align to reference barcode library using Bowtie
-- [OPTIONAL] if no reference library, derive consensus barcode repertoire using Starcode
+- generate bowtie index using reference fasta
+- align to reference using Bowtie
 - count number of reads aligning per barcode using samtools
 - merge counts files for multiple samples
+
+- [OPTIONAL] if no reference library given, derive consensus barcode repertoire using Starcode
+
 - report metrics for individual samples
 
 **/
@@ -38,14 +41,14 @@ log.info """
 
   Usage: nextflow run BARtab.nf --input <input dir> 
                                 --output <output dir> 
-                                --index <path>/<prefix> 
+                                --ref <path>/<to>/<reference>/<fasta> 
                                 --contrasts CONTRASTS.csv 
                                 -profile local
                                 --help
 
     Required arguments:
       --indir                        Directory containing raw *.fastq.gz files
-      --index                        Path to the bowtie index for the sgRNA library. Include prefix.
+      --ref                          Path to a reference fasta file for the barcode / sgRNA library.
 
     Filtering arguments:
       --minqual                      Minimum PHRED quality across read.
@@ -109,7 +112,6 @@ log.info "    Run parameters: "
 log.info " ======================"
 log.info " input directory          : ${params.indir}"
 log.info " output directory         : ${params.outdir}"
-log.info " reference index          : ${params.index}"
 log.info " reference fasta          : ${params.ref}"
 log.info " upstream constant        : ${params.upconstant}"
 log.info " downstream constant      : ${params.downconstant}"
@@ -127,7 +129,7 @@ log.info ""
 /* process software_check {
   label 'software_check'
 
-  publishDir params.outdir
+  publishDir params.outdir, mode: 'copy', overwrite: 'true'
 
   output:
     "${params.outdir}/software_check.txt"
@@ -351,6 +353,28 @@ process cutadapt_reads{
     """
 }
 
+// check reference fasta
+referenceChannel = Channel.fromPath( "${params.ref}" , checkIfExists: true)
+
+// 06_generate_bowtie_index
+process buildIndex {
+  tag "bowtie_build on $reference"
+  label "process_medium"
+     
+  input:
+    file reference from referenceChannel
+      
+  output:
+    path 'genome.index*' into indexChannel
+  
+  script:
+  """
+  bowtie-build $reference genome.index
+  """
+}
+  
+//indexChannel.view { "file: $it" }
+
 // 06_align_barcodes
 process align_barcodes{
   tag "bowtie on $sample_id"
@@ -359,16 +383,17 @@ process align_barcodes{
 
   input:
     tuple val(sample_id), file(reads) from trimmedReadsChannel
+    path index from indexChannel
 
   output:
     set val(sample_id), "${sample_id}.mapped.bam" into mappedReadsChannel
-    file "${sample_id}.unmapped.sam"
+    file "${sample_id}.unmapped.fastq"
     file "${sample_id}.mapped.bam.bai"
     file("${sample_id}.bowtie.log") into mappedLogChannel
     
   script:
   """
-  bowtie -v ${params.alnmismatches} --norc -t -p ${params.threads} --un ${sample_id}.unmapped.sam --sam ${params.index} ${reads} 2> ${sample_id}.bowtie.log | samtools view -Sb - | samtools sort - > ${sample_id}.mapped.bam
+  bowtie -v ${params.alnmismatches} --norc -t -p ${params.threads} --un ${sample_id}.unmapped.fastq --sam genome.index ${reads} 2> ${sample_id}.bowtie.log | samtools view -Sb - | samtools sort - > ${sample_id}.mapped.bam
   samtools index ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
   """
 }
