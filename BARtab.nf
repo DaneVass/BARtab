@@ -315,7 +315,7 @@ process cutadapt_reads{
 }
 
 // check reference fasta
-referenceChannel = Channel.fromPath( "${params.ref}" , checkIfExists: true)
+//referenceChannel = Channel.fromPath( "${params.ref}" , checkIfExists: true)
 
 // 06_generate_bowtie_index
 process buildIndex {
@@ -323,7 +323,7 @@ process buildIndex {
   label "process_medium"
      
   input:
-    file reference from referenceChannel
+    path reference from params.ref
       
   output:
     path 'genome.index*' into indexChannel
