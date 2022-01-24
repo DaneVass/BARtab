@@ -1,11 +1,9 @@
 #!/bin/bash
 
-BARtab="/home/dvassiliadis/my_scripts/nextflow_pipelines/BARtab/BARtab.nf" # path to BARtab.nf
-
-indir="test/dat" # path to folder containing input fastq files
-outdir="test/test_out" # path to desired output directory
-index="$PWD/test/ref/mCHERRY_barcode" # path to bowtie index for reference genome (include index prefix)
-ref="test/ref/mCHERRY_barcode_reference_library.fasta" # path to reference genome fasta file
+BARtab="/home/dvassiliadis/my_scripts/nextflow_pipelines/BARtab/BARtab.nf" # FULL path to BARtab.nf
+indir="" # FULL path to folder containing input fastq files
+outdir="" # FULL path to desired output directory
+ref="" # FULL path to reference genome fasta file
 upconstant="CGATTGACTA" #SPLINTR 1st gen upstream constant region # upstream constant 
 downconstant="TGCTAATGCG" #SPLINTR 1st gen downstream constant region # downstream constant
 alnmismatches=1 # allowed mismatches during bowtie alignment
@@ -18,14 +16,13 @@ constantmismatches=0.1 # proportion of mismatches allowed in constant regions
 
 nextflow run $BARtab --indir ${indir} \
     --outdir ${outdir} \
-    --index ${index} \
     --ref ${ref} \
     --upconstant ${upconstant} \
     --downconstant ${downconstant} \
     --alnmismatches ${alnmismatches} \
     --minqual ${minqual} \
     --pctqual ${pctqual} \
-    --constants = ${constants} \
+    --constants ${constants} \
     --constantmismatches ${constantmismatches} \
     -profile slurm # slurm based execution
 

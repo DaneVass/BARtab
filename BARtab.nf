@@ -285,7 +285,7 @@ else {
 // 05_cutadapt // use cutadapt to filter for length
 process cutadapt_reads{
   tag "cutadapt on $sample_id"
-  label "process_high"
+  label "process_medium"
   publishDir "${params.outdir}/trimmed_reads/", mode: 'symlink'
 
   input:
