@@ -61,15 +61,24 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 * [bowtie1](http://bowtie-bio.sourceforge.net/index.shtml)
 * [samtools](http://www.htslib.org/)
 
-## Installing the pipeline
-1. `conda env create -f environment.yaml`
-2. `conda activate BARtab_env`
-3. `nextflow run BARtab.nf --help`
+## Installing the pipeline (Conda method)
+1. Install Nextflow using the instructions found here: https://www.nextflow.io/docs/latest/getstarted.html
+2. Install miniconda using the instructions found here: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html 
+3. Install BARtab dependencies by running `conda env create -f environment.yaml`
+4. Activate BARtab environment by running `conda activate BARtab_env`
+5. Print BARtab help message `nextflow run BARtab.nf --help`
 
 ## Running the pipeline
-
-1. Run the test datasets - `nextflow run BARtab.nf --indir test/dat`
-2. Setup directories containing input fastq files.
+1. Run the test datasets using `nextflow run BARtab.nf --indir test/dat`
+2. Setup a directory containing input fastq files.
 3. Run the pipeline - `nextflow run BARtab.nf -i <input_dir> -o <output_dir> <other args>`
+4. Alternatively, configure run parameters in `run_BARtab.sh` and run the pipeline using `bash run_BARtab.sh`
+5. If running the pipeline on a remote HPC it is recommended to run the pipeline within a tmux session as follows
+   1. Initialise a new tmux session called "bartab" by running `tmux new -s bartab`
+   2. Re activate the BARtab environment within the tmux session by running `conda activate BARtab_env`
+   3. Run the pipeline via steps 3. or 4. above.
+   4. exit the tmux session using ^B then ^D (Mac) or Ctrl+B then Ctrl+D Windows/UNIX
+   5. Continue working on something else
+   6. re-enter the tmux session by running `tmux a -t bartab`
 
 
