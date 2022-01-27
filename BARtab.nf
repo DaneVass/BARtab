@@ -348,7 +348,7 @@ process align_barcodes{
 
   output:
     set val(sample_id), "${sample_id}.mapped.bam" into mappedReadsChannel
-    file "${sample_id}.unmapped.fastq"
+    file "${sample_id}.unmapped.fastq" optional true into unmappedReadsChannel
     file "${sample_id}.mapped.bam.bai"
     file("${sample_id}.bowtie.log") into mappedLogChannel
     

@@ -77,7 +77,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
    1. Initialise a new tmux session called "bartab" by running `tmux new -s bartab`
    2. Re activate the BARtab environment within the tmux session by running `conda activate BARtab_env`
    3. Run the pipeline via steps 3. or 4. above.
-   4. exit the tmux session using ^B then ^D (Mac) or Ctrl+B then Ctrl+D Windows/UNIX
+   4. exit the tmux session using ^B then D (Mac) or Ctrl+B then D Windows/UNIX
    5. Continue working on something else
    6. re-enter the tmux session by running `tmux a -t bartab`
 
