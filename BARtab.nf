@@ -244,7 +244,7 @@ else {
 if(params.merge) {
   process filter_reads_PE{
     tag "fastx-toolkit fastq_filter_quality on $sample_id"
-    label "process_medium"
+    label "process_low"
     publishDir "${params.outdir}/filtered_reads/", mode: 'symlink'
 
     input:
@@ -264,7 +264,7 @@ if(params.merge) {
 else {
   process filter_reads_SE{
     tag "fastx-toolkit fastq_filter_quality on $sample_id"
-    label "process_medium"
+    label "process_low"
     publishDir "${params.outdir}/filtered_reads/", mode: 'symlink'
 
     input:
@@ -285,7 +285,7 @@ else {
 // 05_cutadapt // use cutadapt to filter for length
 process cutadapt_reads{
   tag "cutadapt on $sample_id"
-  label "process_medium"
+  label "process_low"
   publishDir "${params.outdir}/trimmed_reads/", mode: 'symlink'
 
   input:
@@ -339,7 +339,7 @@ process buildIndex {
 // 06_align_barcodes
 process align_barcodes{
   tag "bowtie on $sample_id"
-  label "process_medium"
+  label "process_low"
   publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
 
   input:
