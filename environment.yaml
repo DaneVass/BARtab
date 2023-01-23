@@ -1,10 +1,10 @@
-name: BARtab-env
+name: BARtab
 channels:
   - defaults
   - bioconda
   - conda-forge
 dependencies:
-  - python=3.9
+  - python=3.7
   - nextflow
   - r-base
   - r-dplyr

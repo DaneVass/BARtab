@@ -20,65 +20,7 @@ Processes:
 
 **/
 
-def helpMessage() {
-  log.info ""
-  log.info """
-▀█████████▄     ▄████████    ▄████████     ███        ▄████████ ▀█████████▄  
-  ███    ███   ███    ███   ███    ███ ▀█████████▄   ███    ███   ███    ███ 
-  ███    ███   ███    ███   ███    ███    ▀███▀▀██   ███    ███   ███    ███ 
- ▄███▄▄▄██▀    ███    ███  ▄███▄▄▄▄██▀     ███   ▀   ███    ███  ▄███▄▄▄██▀  
-▀▀███▀▀▀██▄  ▀███████████ ▀▀███▀▀▀▀▀       ███     ▀███████████ ▀▀███▀▀▀██▄  
-  ███    ██▄   ███    ███ ▀███████████     ███       ███    ███   ███    ██▄ 
-  ███    ███   ███    ███   ███    ███     ███       ███    ███   ███    ███ 
-▄█████████▀    ███    █▀    ███    ███    ▄████▀     ███    █▀  ▄█████████▀  
-                            ███    ███                                       
-"""
-// https://www.coolgenerator.com/ascii-text-generator Delta Corps Priest 1
-log.info ""
-log.info " ---------------------- Tabulate Barcode Counts in NGS ----------------------"
-log.info ""
-log.info """
-
-  Usage: nextflow run BARtab.nf --input <input dir> 
-                                --output <output dir> 
-                                --ref <path>/<to>/<reference>/<fasta> 
-                                --contrasts CONTRASTS.csv 
-                                -profile local
-                                --help
-
-    Required arguments:
-      --indir                        Directory containing raw *.fastq.gz files
-      --ref                          Path to a reference fasta file for the barcode / sgRNA library.
-
-    Filtering arguments:
-      --minqual                      Minimum PHRED quality across read.
-    
-    Trimming arguments:
-      --error                        Proportion of mismatches allowed in constant regions.
-
-    Mapping arguments:
-      --mismatches                   Number of allowed mismatches during reference mapping.
-
-    Optional arguments:
-      --contrasts                    CSV file detailing the comparisons to test [contrasts.csv]
-      -profile                       Configuration profile to use. Can use multiple (comma separated)
-                                            Available: local, singularity, slurm
-      --outdir                       Output directory to place output [./]
-      --threads                      Number of CPUs to use [4]
-      --help                         Print this help statement.
-
-
-    Profiles:
-      local                          local execution
-      singularity                    local execution with singularity
-      slurm                          SLURM execution 
-
-    Author:
-      Dane Vassiliadis (dane.vassiliadis@petermac.org)
-    
-    """
-    log.info ""
- }
+nextflow.enable.dsl = 2
 
 //--------------------------------------------------------------------------------------
 // Pipeline Config
@@ -106,10 +48,12 @@ log.info """
 // https://www.coolgenerator.com/ascii-text-generator Delta Corps Priest 1
 log.info ""
 log.info " ---------------------- Tabulate Barcode Counts in NGS ----------------------"
+log.info "                               Version = 1.1.0 "
 log.info ""
 
-log.info "    Run parameters: "
-log.info " ======================"
+
+log.info "      Run parameters: "
+log.info " ========================"
 log.info " input directory          : ${params.indir}"
 log.info " output directory         : ${params.outdir}"
 log.info " reference fasta          : ${params.ref}"
@@ -122,361 +66,44 @@ log.info " CPU threads              : ${params.threads}"
 log.info " Minimum PHRED quality    : ${params.minqual}"
 log.info " Quality percentage       : ${params.pctqual}"
 log.info " Email                    : ${params.email}"
-log.info " ======================"
+log.info " Merge paired-end reads   : ${params.merge}"
+log.info " Workflow                 : ${params.mode}"
+log.info " ========================"
 log.info ""
 
+
+
 //--------------------------------------------------------------------------------------
-// Main Pipeline 
+// Named workflow for pipeline
 //--------------------------------------------------------------------------------------
 
-//process 1 file unless --n used at run time, e.g. -n 32
-params.n = 1 
-
-// 00 Process inputs
-
-// assume single end reads by default
-// if --merge == true assume paired end reads and merge prior to filtering
-
-if(params.merge) {
-    println "Assuming paired-end reads"
-    println ""
-    Channel
-      .fromFilePairs( "${params.indir}/*_R{1,2}.{fastq,fq}.gz" )
-      .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.reads}" }
-      .into { readsChannel; qcChannel }
-}
-else {
-    println "Assuming single-end reads"
-    println ""
-    Channel
-      .fromPath( "${params.indir}/*.{fastq,fq}.gz" )
-      .map { file -> tuple( file.baseName.replaceAll(/\.fastq|\.fq/, ''), file ) }
-      .ifEmpty { error "Cannot find any *.{fastq,fq}.gz files in: ${params.indir}" }
-      .into { readsChannel; qcChannel }
-}
-
-//readsChannel.view { "file: $it" }
-//qcChannel.view { "file: $it" }
-
-// 01_FastQC
-process fastqc{
-  tag "FastQC on $sample_id"
-  label "process_low"
-  publishDir "${params.outdir}/qc/$sample_id", mode: 'copy'
-  
-  input:
-    tuple val(sample_id), path(reads) from qcChannel
-
-  output:
-    tuple file('*.html'), file('*.zip') into ch_out_fastqc
-  
-  script:
-
-  """
-  fastqc --threads ${params.threads} ${reads}
-  """
-}
-
- 
-//02_Read_merging
-if(params.merge) {
-    process merge_reads{
-      tag "FLASh on $sample_id"
-      label "process_high"
-      publishDir "${params.outdir}/merged_reads/$sample_id", mode: 'symlink'
-
-      input:
-        tuple val(sample_id), path(reads) from readsChannel
-
-      output:
-        set val(sample_id), file("${sample_id}.extendedFrags.fastq.gz") into mergedReadsChannel
-        file "${sample_id}.notCombined_1.fastq.gz"
-        file "${sample_id}.notCombined_2.fastq.gz"
-        file "${sample_id}.hist"
-        file "${sample_id}.histogram"
-        file "${sample_id}.flash.log" into mergedLogChannel
-
-      script: 
-      """
-      flash -z --min-overlap=10 -t ${params.threads} --output-prefix=${sample_id} ${reads} 2> "${sample_id}.flash.log"
-      """
-    }
-//mergedReadsChannel.view { "file: $it" }
-}
-
-// 03_gunzip_files
-if(params.merge) {
-  process gunzip_reads_PE{
-    tag "gunzip -f on $sample_id"
-    label "process_low"
-  
-    input:
-      tuple val(sample_id), path(reads) from mergedReadsChannel
-
-    output:
-      set val(sample_id), file("${sample_id}.extendedFrags.fastq") into prefilterReadsChannel
-  
-    script:
-    """
-    gunzip -f ${reads}
-    """
-    }
-  }
-else {
-  process gunzip_reads_SE{
-    tag "gunzip -f on $sample_id"
-    label "process_low"
-
-    input:
-      tuple val(sample_id), path(reads) from readsChannel
-
-    output:
-      set val(sample_id), file("*.fastq") into prefilterReadsChannel
-  
-    script:
-    """
-    gunzip -f ${reads}
-    """
-  }
-}
-
-// 04_Filter_reads_on_quality
-if(params.merge) {
-  process filter_reads_PE{
-    tag "fastx-toolkit fastq_filter_quality on $sample_id"
-    label "process_low"
-    publishDir "${params.outdir}/filtered_reads/", mode: 'symlink'
-
-    input:
-      tuple val(sample_id), path(reads) from prefilterReadsChannel
-
-    output:
-      set val(sample_id), file("${sample_id}.filtered.fastq.gz") into filteredReadsChannel
-      file("${sample_id}.filter.log") into filteredLogChannel
-
-    script:
-    """
-    fastq_quality_filter -z -v -p ${params.pctqual} -q ${params.minqual} -i ${reads} > ${sample_id}.filtered.fastq.gz 2> ${sample_id}.filter.log
-    """
-  }
-  //filteredReadsChannel.view { "file: $it" }
-}
-else {
-  process filter_reads_SE{
-    tag "fastx-toolkit fastq_filter_quality on $sample_id"
-    label "process_low"
-    publishDir "${params.outdir}/filtered_reads/", mode: 'symlink'
-
-    input:
-      tuple val(sample_id), path(reads) from prefilterReadsChannel
-
-    output:
-      set val(sample_id), file("${sample_id}.filtered.fastq.gz") into filteredReadsChannel
-      file("${sample_id}.filter.log") into filteredLogChannel
-  
-    script:
-    """
-    fastq_quality_filter -z -v -p ${params.pctqual} -q ${params.minqual} -i ${reads} > ${sample_id}.filtered.fastq.gz 2> ${sample_id}.filter.log
-    """ 
-  }
-  //filteredReadsChannel.view { "file: $it" }
-}
-
-// 05_cutadapt // use cutadapt to filter for length
-process cutadapt_reads{
-  tag "cutadapt on $sample_id"
-  label "process_low"
-  publishDir "${params.outdir}/trimmed_reads/", mode: 'symlink'
-
-  input:
-    tuple val(sample_id), path(reads) from filteredReadsChannel
-
-  output:
-    set val(sample_id), file("${sample_id}.trimmed.fastq") into trimmedReadsChannel
-    file("${sample_id}.cutadapt.log") into trimmedLogChannel
-  
-  script:
-  if( params.merge )
-    """
-    cutadapt -g "${params.upconstant}...${params.downconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
-    """
-  else if( params.constants == "both" )
-    """
-    cutadapt -g "${params.upconstant}...${params.downconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
-    """
-  else if( params.merge && params.constants == "up" )
-    """
-    cutadapt -g "${params.upconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
-    """
-  else
-    """
-    cutadapt -g "${params.upconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
-    """
-}
-
-// check reference fasta
-//referenceChannel = Channel.fromPath( "${params.ref}" , checkIfExists: true)
-
-// 06_generate_bowtie_index
-process buildIndex {
-  tag "bowtie_build on $reference"
-  label "process_medium"
-     
-  input:
-    path reference from params.ref
-      
-  output:
-    path 'genome.index*' into indexChannel
-  
-  script:
-  """
-  bowtie-build $reference genome.index
-  """
-}
-  
-//indexChannel.view { "file: $it" }
-
-// 06_align_barcodes
-process align_barcodes{
-  tag "bowtie on $sample_id"
-  label "process_low"
-  publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
-
-  input:
-    tuple val(sample_id), file(reads) from trimmedReadsChannel
-    path index from indexChannel
-
-  output:
-    set val(sample_id), "${sample_id}.mapped.bam" into mappedReadsChannel
-    file "${sample_id}.unmapped.fastq" optional true into unmappedReadsChannel
-    file "${sample_id}.mapped.bam.bai"
-    file("${sample_id}.bowtie.log") into mappedLogChannel
+if (params.mode == "single-bulk") {
+  include { single_bulk } from './workflows/single-bulk'
+  println "Running single-end bulk workflow"
+  println ""
     
-  script:
-  """
-  bowtie -v ${params.alnmismatches} --norc -t -p ${params.threads} --un ${sample_id}.unmapped.fastq --sam genome.index ${reads} 2> ${sample_id}.bowtie.log | samtools view -Sb - | samtools sort - > ${sample_id}.mapped.bam
-  samtools index ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
-  """
+  workflow {
+    single_bulk ()
+  }
 }
 
-// 07_get_barcode_counts
-process get_barcode_counts{
-  tag "samtools idxstats on $sample_id"
-  label "process_low"
-  publishDir "${params.outdir}/counts/", mode: 'copy'
+if (params.mode == "paired-bulk") {
+  //include { paired-bulk } from './workflows/paired-bulk'
+  println "Running paired-end bulk workflow"
+  println ""
 
-  input:
-    tuple val(sample_id), file(reads) from mappedReadsChannel
-
-  output:
-    set val(sample_id), file("${sample_id}_rawcounts.txt") into rawCountsChannel
-  
-  shell:
-  """
-  samtools idxstats ${reads} | cut -f1,3 > ${sample_id}_rawcounts.txt
-  """
+  //workflow paired-bulk {
+  //  paired-bulk ()
+  //}
 }
 
-// 08_combine_barcode_counts
-process combine_barcode_counts{
-  label "process_low"
-  publishDir "${params.outdir}/counts/", mode: 'copy'
+if (params.mode == "single-cell") {
+  //include { single-cell } from './workflows/single-cell'
+  println "Running single-cell workflow"
+  println ""
 
-  input:
-  file(counts) from rawCountsChannel.collect()
-
-  output:
-    file "all_counts_combined.txt"
-  
-  script: 
-  """
-  Rscript $projectDir/scripts/combine_counts.R $counts all_counts_combined.txt
-  """
+  //workflow single-cell {
+  //  single-cell ()
+  //}
 }
 
-// 09_multiqc_report
-params.multiqc_config = "$projectDir/config/multiqc_config.yaml"
-Channel.fromPath(params.multiqc_config, checkIfExists: true).set { ch_config_for_multiqc }
-
-process multiqc {
-  label "process_low"
-
-  publishDir "${params.outdir}", mode: 'copy', overwrite: 'true'
-
-  input:
-    file multiqc_config from ch_config_for_multiqc
-    file (fastqc: 'qc/*') from ch_out_fastqc.collect().ifEmpty([])
-    file (fastx: "${params.outdir}/filtered_reads/*.filter.log") from filteredLogChannel.collect().ifEmpty([])
-    file (cutadapt: "${params.outdir}/trimmed_reads/*.cutadapt.log") from trimmedLogChannel.collect().ifEmpty([])
-    file (bowtie: "${params.outdir}/mapped_reads/*.bowtie.log") from mappedLogChannel.collect().ifEmpty([])
-
-  output:
-    file "multiqc_report.html" into multiqc_report
-    file "multiqc_data"
-
-  script:
-  """
-  export LC_ALL=C.UTF-8
-  export LANG=C.UTF-8
-  multiqc -v -f --config $multiqc_config .
-  """
-}
-
-//--------------------------------------------------------------------------------------
-// Post processing
-//--------------------------------------------------------------------------------------
-
-// check and report on software versions used in the pipeline run
-process software_check {
-  label 'software_check'
-
-  publishDir params.outdir, mode: 'copy', overwrite: 'true'
-
-  output:
-    file("software_check.txt") into versionsChannel
-
-  script:
-  """
-  bash $projectDir/scripts/check_versions.sh software_check.txt
-  """
-}
-
-// Mail notification
-
-if (params.email == "yourmail@yourdomain" || params.email == "") { 
-    log.info '\n'
-}
-else {
-    log.info "\n"
-    log.info "Sending runtime report to ${params.email}\n"
-
-    workflow.onComplete {
-
-    def msg = """\
-        Pipeline execution summary
-        ---------------------------
-        Completed at: ${workflow.complete}
-        Duration    : ${workflow.duration}
-        Success     : ${workflow.success}
-        workDir     : ${workflow.workDir}
-        exit status : ${workflow.exitStatus}
-        Error report: ${workflow.errorReport ?: '-'}
-        """
-        .stripIndent()
-    
-    sendMail(to: params.email, subject: "BARtab execution report", body: msg,  attach: "${params.outdir}/multiqc_report.html")
-    }
-}
-
-// Print completion messages
-workflow.onComplete {
-    RED='\033[0;31m'
-    GREEN='\033[0;32m'
-    NC='\033[0m'
-    
-    log.info " ---------------------- BARtab Pipeline has finished ----------------------"
-    log.info ""
-    log.info "Status:   " + (workflow.success ? "${GREEN}SUCCESS${NC}" : "${RED}ERROR${NC}")
-    log.info "Pipeline completed at: $workflow.complete"
-    log.info "Pipeline runtime: ${workflow.duration}\n"
-}
