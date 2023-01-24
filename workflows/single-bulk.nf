@@ -112,6 +112,9 @@ process cutadapt_reads{
     """
 }
 
+// see here for syntax re: alignment indexes
+// https://biocorecrg.github.io/SIB_course_nextflow_Nov_2021/docs/fourth.html
+
 // 05_generate_bowtie_index
 reference = file(params.ref)
 process build_index {
@@ -129,9 +132,7 @@ process build_index {
     """
 }
 
-/*
- * Process 3. Bowtie alignment
- */
+/// 06_bowtie_align
 process bowtie_align {
     tag { "bowtie on ${sample_id}" }
     label "process_low"
@@ -161,6 +162,7 @@ process bowtie_align {
     """
 }
 
+// 07_samtools
 process samtools {
     tag { "samtools on ${sample_id}" }
     label "process_low"
@@ -179,65 +181,8 @@ process samtools {
     samtools index ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
     """
 }
-/*
 
-// check reference fasta
-Channel
-  .fromPath( "${params.ref}" , checkIfExists: true)
-  .set { referenceChannel }
-
-process buildIndex {
-  tag "bowtie_build on $reference"
-  label "process_medium"
-
-  input:
-    path reference
-    
-  output:
-    path 'genome.index*'
-  
-  script:
-  """
-  bowtie-build ${reference} genome.index
-  """
-}
-
-// 06_align_barcodes
-process align_barcodes{
-  tag "bowtie on $sample_id"
-  label "process_low"
-  publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
-
-  input:
-    path index
-    tuple val(sample_id), path(reads)
-
-  output:
-    tuple val(sample_id), file("${sample_id}.mapped.bam")
-    file("${sample_id}.unmapped.fastq")
-    file("${sample_id}.mapped.bam.bai")
-    file("${sample_id}.bowtie.log")
-    
-  script:
-  """
-  bowtie \\
-    -v ${params.alnmismatches} \\
-    --norc \\
-    -t \\
-    -p ${params.threads} \\
-    --un ${sample_id}.unmapped.fastq \\
-    ${reads} \\
-    -x genome.index \\
-    --sam \\
-    2> ${sample_id}.bowtie.log \\
-    | samtools view -Sb - | samtools sort - > ${sample_id}.mapped.bam
-  samtools index ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
-  """
-}
-
-*/
-
-// 07_get_barcode_counts
+// 08_get_barcode_counts
 process get_barcode_counts{
   tag "samtools idxstats on $sample_id"
   label "process_low"
@@ -255,7 +200,7 @@ process get_barcode_counts{
   """
 }
 
-// 08_combine_barcode_counts
+// 09_combine_barcode_counts
 process combine_barcode_counts{
   label "process_low"
   publishDir "${params.outdir}/counts/", mode: 'copy'
@@ -272,7 +217,7 @@ process combine_barcode_counts{
   """
 }
 
-// 09_multiqc_report
+// 10_multiqc_report
 params.multiqc_config = "$projectDir/config/multiqc_config.yaml"
 Channel
   .fromPath(params.multiqc_config, checkIfExists: true)
@@ -301,6 +246,7 @@ process multiqc {
 
 }
 
+// 11_software_check
 // check and report on software versions used in the pipeline run
 process software_check {
   label 'software_check'
