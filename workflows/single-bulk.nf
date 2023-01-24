@@ -112,12 +112,80 @@ process cutadapt_reads{
     """
 }
 
+// 05_generate_bowtie_index
+reference = file(params.ref)
+process build_index {
+    tag { "bowtie_build on ${ref}" }
+
+    input:
+    path ref
+
+    output:
+    tuple val("${ref}"), path ("${ref}*.ebwt")
+
+    script:
+    """
+    bowtie-build ${ref} ${ref}
+    """
+}
+
+/*
+ * Process 3. Bowtie alignment
+ */
+process bowtie_align {
+    tag { "bowtie on ${sample_id}" }
+    label "process_low"
+    publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
+
+    input:
+    tuple val(refname), path (ref_files)
+    tuple val(sample_id), path(reads)
+
+    output:
+    tuple val(sample_id), file("${sample_id}.mapped.sam")
+    file("${sample_id}.unmapped.fastq")
+    file("${sample_id}.bowtie.log")
+
+    script:
+    """
+    bowtie \\
+    -p ${params.threads} \\
+    -v ${params.alnmismatches} \\
+    --norc \\
+    -t \\
+    ${refname} \\
+    ${reads} \\
+    --un ${sample_id}.unmapped.fastq \\
+    -S > ${sample_id}.mapped.sam \\
+    2> ${sample_id}.bowtie.log \\
+    """
+}
+
+process samtools {
+    tag { "samtools on ${sample_id}" }
+    label "process_low"
+    publishDir "${params.outdir}/mapped_reads/", mode: 'copy'
+
+    input:
+    tuple val(sample_id), path(reads)
+
+    output:
+    tuple val(sample_id), file("${sample_id}.mapped.bam")
+    file("${sample_id}.mapped.bam.bai")
+    
+    script:
+    """
+    samtools view -Sb ${reads} | samtools sort - > ${sample_id}.mapped.bam
+    samtools index ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
+    """
+}
+/*
+
 // check reference fasta
 Channel
   .fromPath( "${params.ref}" , checkIfExists: true)
   .set { referenceChannel }
 
-// 05_generate_bowtie_index
 process buildIndex {
   tag "bowtie_build on $reference"
   label "process_medium"
@@ -130,7 +198,7 @@ process buildIndex {
   
   script:
   """
-  bowtie-build $reference genome.index
+  bowtie-build ${reference} genome.index
   """
 }
 
@@ -141,14 +209,14 @@ process align_barcodes{
   publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
 
   input:
-    tuple val(sample_id), file(reads)
     path index
+    tuple val(sample_id), path(reads)
 
   output:
     tuple val(sample_id), file("${sample_id}.mapped.bam")
-    tuple val(sample_id), file("${sample_id}.unmapped.fastq")
-    tuple val(sample_id), file("${sample_id}.mapped.bam.bai")
-    tuple val(sample_id), file("${sample_id}.bowtie.log")
+    file("${sample_id}.unmapped.fastq")
+    file("${sample_id}.mapped.bam.bai")
+    file("${sample_id}.bowtie.log")
     
   script:
   """
@@ -167,6 +235,8 @@ process align_barcodes{
   """
 }
 
+*/
+
 // 07_get_barcode_counts
 process get_barcode_counts{
   tag "samtools idxstats on $sample_id"
@@ -174,7 +244,7 @@ process get_barcode_counts{
   publishDir "${params.outdir}/counts/", mode: 'copy'
 
   input:
-    tuple val(sample_id), file(reads)
+    tuple val(sample_id), path(reads)
 
   output:
     tuple val(sample_id), file("${sample_id}_rawcounts.txt")
@@ -231,6 +301,21 @@ process multiqc {
 
 }
 
+// check and report on software versions used in the pipeline run
+process software_check {
+  label 'software_check'
+
+  publishDir params.outdir, mode: 'copy', overwrite: 'true'
+
+  output:
+    file("software_check.txt")
+
+  script:
+  """
+  bash $projectDir/scripts/check_versions.sh software_check.txt
+  """
+}
+
 //--------------------------------------------------------------------------------------
 // Workflow run
 //--------------------------------------------------------------------------------------
@@ -239,41 +324,29 @@ workflow single_bulk {
   fastqc(readsChannel)
   gunzip_reads(readsChannel)
   filter_reads(gunzip_reads.out)
-  //filter_reads.out[0].view{ it }
   cutadapt_reads(filter_reads.out[0])
-  cutadapt_reads.out[0].view{ it }
-  buildIndex(referenceChannel)
-  align_barcodes(cutadapt_reads.out[0], buildIndex.out[0])
-  //align_barcodes.out[0].view{ it }
-  get_barcode_counts(align_barcodes.out[0])
+  bowtie_index = build_index(reference)
+  bowtie_align(bowtie_index, cutadapt_reads.out[0])
+  samtools(bowtie_align.out[0])
+  get_barcode_counts(samtools.out[0])
   combine_barcode_counts(get_barcode_counts.out.collect())
   multiqc(multiqcConfig,
     fastqc.out,
     filter_reads.out[1].collect().ifEmpty([]), 
     cutadapt_reads.out[1].collect().ifEmpty([]), 
-    align_barcodes.out[1].collect().ifEmpty([])
+    bowtie_align.out[1].collect().ifEmpty([])
     )
+  software_check()
+  
+  // to view outputs
+  //filter_reads.out[0].view{ it }
+  //cutadapt_reads.out[0].view{ it }
+  //bowtieAlign.out[0].view{ it }
 }
-
 
 //--------------------------------------------------------------------------------------
 // Post processing
 //--------------------------------------------------------------------------------------
-
-// check and report on software versions used in the pipeline run
-process software_check {
-  label 'software_check'
-
-  publishDir params.outdir, mode: 'copy', overwrite: 'true'
-
-  output:
-    file("software_check.txt") into versionsChannel
-
-  script:
-  """
-  bash $projectDir/scripts/check_versions.sh software_check.txt
-  """
-}
 
 // Mail notification
 
