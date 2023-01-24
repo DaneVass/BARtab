@@ -135,59 +135,84 @@ process cutadapt_reads{
     """
 }
 
-// check reference fasta
-Channel
-  .fromPath( "${params.ref}" , checkIfExists: true)
-  .set { referenceChannel }
+// see here for syntax re: alignment indexes
+// https://biocorecrg.github.io/SIB_course_nextflow_Nov_2021/docs/fourth.html
 
 // 06_generate_bowtie_index
-process buildIndex {
-  tag "bowtie_build on $reference"
-  label "process_medium"
+reference = file(params.ref)
+process build_index {
+    tag { "bowtie_build on ${ref}" }
 
-  input:
-    path reference
-      
-  output:
-    path 'genome.index*'
-  
-  script:
-  """
-  bowtie-build $reference genome.index
-  """
+    input:
+    path ref
+
+    output:
+    tuple val("${ref}"), path ("${ref}*.ebwt")
+
+    script:
+    """
+    bowtie-build ${ref} ${ref}
+    """
 }
 
-// 07_align_barcodes
-process align_barcodes{
-  tag "bowtie on $sample_id"
-  label "process_low"
-  publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
+/// 07_bowtie_align
+process bowtie_align {
+    tag { "bowtie on ${sample_id}" }
+    label "process_low"
+    publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
 
-  input:
-    tuple val(sample_id), file(reads)
-    path index
+    input:
+    tuple val(refname), path (ref_files)
+    tuple val(sample_id), path(reads)
 
-  output:
-    tuple val(sample_id), file("${sample_id}.mapped.bam")
+    output:
+    tuple val(sample_id), file("${sample_id}.mapped.sam")
     file("${sample_id}.unmapped.fastq")
-    file("${sample_id}.mapped.bam.bai")
     file("${sample_id}.bowtie.log")
-    
-  script:
-  """
-  bowtie -v ${params.alnmismatches} --norc -t -p ${params.threads} --un ${sample_id}.unmapped.fastq --sam genome.index ${reads} 2> ${sample_id}.bowtie.log | samtools view -Sb - | samtools sort - > ${sample_id}.mapped.bam
-  samtools index ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
-  """
+
+    script:
+    """
+    bowtie \\
+    -p ${params.threads} \\
+    -v ${params.alnmismatches} \\
+    --norc \\
+    -t \\
+    ${refname} \\
+    ${reads} \\
+    --un ${sample_id}.unmapped.fastq \\
+    -S > ${sample_id}.mapped.sam \\
+    2> ${sample_id}.bowtie.log \\
+    """
 }
 
-// 08_get_barcode_counts
+// 08_samtools
+process samtools {
+    tag { "samtools on ${sample_id}" }
+    label "process_low"
+    publishDir "${params.outdir}/mapped_reads/", mode: 'copy'
+
+    input:
+    tuple val(sample_id), path(reads)
+
+    output:
+    tuple val(sample_id), file("${sample_id}.mapped.bam")
+    file("${sample_id}.mapped.bam.bai")
+    
+    script:
+    """
+    samtools view -Sb ${reads} | samtools sort - > ${sample_id}.mapped.bam
+    samtools index ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
+    """
+}
+
+// 09_get_barcode_counts
 process get_barcode_counts{
   tag "samtools idxstats on $sample_id"
   label "process_low"
   publishDir "${params.outdir}/counts/", mode: 'copy'
 
   input:
-    tuple val(sample_id), file(reads)
+    tuple val(sample_id), path(reads)
 
   output:
     tuple val(sample_id), file("${sample_id}_rawcounts.txt")
@@ -198,7 +223,7 @@ process get_barcode_counts{
   """
 }
 
-// 09_combine_barcode_counts
+// 10_combine_barcode_counts
 process combine_barcode_counts{
   label "process_low"
   publishDir "${params.outdir}/counts/", mode: 'copy'
@@ -215,10 +240,11 @@ process combine_barcode_counts{
   """
 }
 
-/*
-// 10_multiqc_report
+// 11_multiqc_report
 params.multiqc_config = "$projectDir/config/multiqc_config.yaml"
-Channel.fromPath(params.multiqc_config, checkIfExists: true).set { ch_config_for_multiqc }
+Channel
+  .fromPath(params.multiqc_config, checkIfExists: true)
+  .set { multiqcConfig }
 
 process multiqc {
   label "process_low"
@@ -226,30 +252,24 @@ process multiqc {
   publishDir "${params.outdir}", mode: 'copy', overwrite: 'true'
 
   input:
-    file multiqc_config from ch_config_for_multiqc
-    file (fastqc: 'qc/*') from ch_out_fastqc.collect().ifEmpty([])
-    file (fastx: "${params.outdir}/filtered_reads/*.filter.log") from filteredLogChannel.collect().ifEmpty([])
-    file (cutadapt: "${params.outdir}/trimmed_reads/*.cutadapt.log") from trimmedLogChannel.collect().ifEmpty([])
-    file (bowtie: "${params.outdir}/mapped_reads/*.bowtie.log") from mappedLogChannel.collect().ifEmpty([])
+    path multiqcConfig
+    file ("qc/*")
+    file (fastx)
+    file (cutadapt)
+    file (bowtie)
 
   output:
-    file "multiqc_report.html" into multiqc_report
+    file "multiqc_report.html"
     file "multiqc_data"
 
   script:
   """
-  export LC_ALL=C.UTF-8
-  export LANG=C.UTF-8
-  multiqc -v -f --config $multiqc_config .
+  multiqc . -f
   """
+
 }
 
-*/
-
-//--------------------------------------------------------------------------------------
-// Post processing
-//--------------------------------------------------------------------------------------
-
+// 12_software_check
 // check and report on software versions used in the pipeline run
 process software_check {
   label 'software_check'
@@ -257,13 +277,17 @@ process software_check {
   publishDir params.outdir, mode: 'copy', overwrite: 'true'
 
   output:
-    file("software_check.txt") into versionsChannel
+    file("software_check.txt")
 
   script:
   """
   bash $projectDir/scripts/check_versions.sh software_check.txt
   """
 }
+
+//--------------------------------------------------------------------------------------
+// Post processing
+//--------------------------------------------------------------------------------------
 
 // Mail notification
 
