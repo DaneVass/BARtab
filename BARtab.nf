@@ -22,15 +22,91 @@ Processes:
 
 nextflow.enable.dsl = 2
 
+
+//--------------------------------------------------------------------------------------
+// Help message
+//--------------------------------------------------------------------------------------
+
+// https://www.coolgenerator.com/ascii-text-generator Delta Corps Priest 1
+
+def helpMessage() {
+  log.info """
+
+▀█████████▄     ▄████████    ▄████████     ███        ▄████████ ▀█████████▄  
+  ███    ███   ███    ███   ███    ███ ▀█████████▄   ███    ███   ███    ███ 
+  ███    ███   ███    ███   ███    ███    ▀███▀▀██   ███    ███   ███    ███ 
+ ▄███▄▄▄██▀    ███    ███  ▄███▄▄▄▄██▀     ███   ▀   ███    ███  ▄███▄▄▄██▀  
+▀▀███▀▀▀██▄  ▀███████████ ▀▀███▀▀▀▀▀       ███     ▀███████████ ▀▀███▀▀▀██▄  
+  ███    ██▄   ███    ███ ▀███████████     ███       ███    ███   ███    ██▄ 
+  ███    ███   ███    ███   ███    ███     ███       ███    ███   ███    ███ 
+▄█████████▀    ███    █▀    ███    ███    ▄████▀     ███    █▀  ▄█████████▀  
+                            ███    ███                                       
+
+---------------------- Tabulate Barcode Counts in NGS ----------------------
+
+  Usage: nextflow run BARtab.nf --indir <input dir> 
+                                --outdir <output dir> 
+                                --ref <path/to/reference/fasta> 
+                                --mode <single-bulk | paired-bulk | single-cell> 
+                                -profile local
+                                --help
+
+    Required arguments:
+      --input                    Directory containing raw *.fastq.gz files
+      --ref                      Path to a reference fasta file for the barcode / sgRNA library.
+                                        If null, reference-free workflow will be used for single-bulk and paired-bulk modes
+      --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell> [default = 'single-bulk']
+
+    Read merging arguments:
+      --merge                    Boolean. Merge overlapping reads? [default = FALSE]
+      --mergeoverlap             Length of overlap required to merge paired-end reads [default = 10]
+
+    Filtering arguments:
+      --minqual                  Minimum PHRED quality per base [default = 20]
+      --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
+      --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
+      --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
+  
+      --constants                Which constant regions flanking barcode to search for in reads <up, down, both> [default = 'up']
+
+    Trimming arguments:
+      --error                    Proportion of mismatches allowed in constant regions [default = 0.1]
+
+    Mapping arguments:
+      --alnmismatches               Number of allowed mismatches during reference mapping [default = 2]
+
+    Optional arguments:
+      -profile                   Configuration profile to use. Can use multiple (comma separated)
+                                        Available: local, singularity, slurm
+      --outdir                   Output directory to place output [default = './']
+      --threads                  Number of CPUs to use [default = 4]
+      --email                    Direct output messages to this address [default = '']
+      --help                     Print this help statement.
+
+    Modes:
+      single-bulk                single-end bulk workflow
+      paired-bulk                paired-end bulk workflow
+      single-cell                paired-end single-cell annotation workflow
+
+    Profiles:
+      local                      local execution
+      singularity                use singularity container
+      slurm                      SLURM execution 
+
+    Author:
+      Dane Vassiliadis (dane.vassiliadis@petermac.org)
+    """
+}
+
 //--------------------------------------------------------------------------------------
 // Pipeline Config
 //--------------------------------------------------------------------------------------
 
 // Show help message
- if (params.help) {
-     helpMessage()
-     exit 0
- }
+if (params.help) {
+  helpMessage()
+  exit 0
+}
 
 // setup run info for logging
 log.info ""

@@ -217,11 +217,30 @@ process combine_barcode_counts{
   """
 }
 
+// state dependency for multiqc - ensure all upstream processes are done
+// https://nextflow-io.github.io/patterns/state-dependency/
+process check_outputs {
+    input:
+      val(sample_id)
+    
+    output: 
+      val true
+
+    script:
+    """
+    echo "Processing of ${sample_id} complete - running multiqc"
+    """
+}
+
 // 10_multiqc_report
 params.multiqc_config = "$projectDir/config/multiqc_config.yaml"
 Channel
   .fromPath(params.multiqc_config, checkIfExists: true)
   .set { multiqcConfig }
+
+Channel
+  .fromPath( params.outdir, type: 'dir', relative: true)
+  .set { output }
 
 process multiqc {
   label "process_low"
@@ -230,10 +249,8 @@ process multiqc {
 
   input:
     path multiqcConfig
-    file ("qc/*")
-    file (fastx)
-    file (cutadapt)
-    file (bowtie)
+    path output
+    val ready
 
   output:
     file "multiqc_report.html"
@@ -241,7 +258,7 @@ process multiqc {
 
   script:
   """
-  multiqc . -f
+  multiqc $output -f
   """
 
 }
@@ -251,7 +268,7 @@ process multiqc {
 process software_check {
   label 'software_check'
 
-  publishDir params.outdir, mode: 'copy', overwrite: 'true'
+  publishDir "${params.outdir}/reports", mode: 'copy', overwrite: 'true'
 
   output:
     file("software_check.txt")
@@ -265,8 +282,8 @@ process software_check {
 //--------------------------------------------------------------------------------------
 // Workflow run
 //--------------------------------------------------------------------------------------
-
 workflow single_bulk {
+  software_check()
   fastqc(readsChannel)
   gunzip_reads(readsChannel)
   filter_reads(gunzip_reads.out)
@@ -276,13 +293,8 @@ workflow single_bulk {
   samtools(bowtie_align.out[0])
   get_barcode_counts(samtools.out[0])
   combine_barcode_counts(get_barcode_counts.out.collect())
-  multiqc(multiqcConfig,
-    fastqc.out,
-    filter_reads.out[1].collect().ifEmpty([]), 
-    cutadapt_reads.out[1].collect().ifEmpty([]), 
-    bowtie_align.out[1].collect().ifEmpty([])
-    )
-  software_check()
+  check_outputs(get_barcode_counts.out[0].collect())
+  multiqc(multiqcConfig, output, check_outputs.out) 
   
   // to view outputs
   //filter_reads.out[0].view{ it }

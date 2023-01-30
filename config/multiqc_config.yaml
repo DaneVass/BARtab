@@ -1,5 +1,6 @@
 use_filename_as_sample_name:
   - cutadapt
+  - bowtie1
 
 sample_names_ignore:
   - "command"
@@ -22,3 +23,8 @@ run_modules:
 
 top_modules:
   - "fastqc"
+
+module_order:
+  - "fastqc"
+  - "cutadapt"
+  - "bowtie1"
