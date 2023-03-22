@@ -8,16 +8,6 @@
 params.n = 1 
 
 // 00 Process inputs - assume paired-end reads
-
-// if --merge == false throw error because paired end reads should be merged
-try {
-    params.merge
-} catch(Exception e) {
-    logger("mode has been set to "paired-bulk" but params.merge is FALSE."+e,e)
-    logger("BARtab does not currently support paired-end bulk mode without merging. Exiting"+e,e)
-    System.exit(0)
-}
-
 Channel
   .fromFilePairs( "${params.indir}/*_R{1,2}.{fastq,fq}.gz" )
   .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.reads}" }

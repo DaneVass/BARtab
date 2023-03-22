@@ -52,7 +52,7 @@ def helpMessage() {
                                 --help
 
     Required arguments:
-      --input                    Directory containing raw *.fastq.gz files
+      --input                    Directory containing input *.fastq.gz files
       --ref                      Path to a reference fasta file for the barcode / sgRNA library.
                                         If null, reference-free workflow will be used for single-bulk and paired-bulk modes
       --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell> [default = 'single-bulk']
@@ -66,17 +66,16 @@ def helpMessage() {
       --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
       --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
-  
       --constants                Which constant regions flanking barcode to search for in reads <up, down, both> [default = 'up']
 
     Trimming arguments:
-      --error                    Proportion of mismatches allowed in constant regions [default = 0.1]
+      --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
 
     Mapping arguments:
-      --alnmismatches               Number of allowed mismatches during reference mapping [default = 2]
+      --alnmismatches            Number of allowed mismatches during reference mapping [default = 1]
 
     Optional arguments:
-      -profile                   Configuration profile to use. Can use multiple (comma separated)
+      -profile                   Configuration profile to use. Can use multiple (comma separated) [default = 'local']
                                         Available: local, singularity, slurm
       --outdir                   Output directory to place output [default = './']
       --threads                  Number of CPUs to use [default = 4]
@@ -99,7 +98,7 @@ def helpMessage() {
 }
 
 //--------------------------------------------------------------------------------------
-// Pipeline Config
+// Preflight checks
 //--------------------------------------------------------------------------------------
 
 // Show help message
@@ -107,6 +106,23 @@ if (params.help) {
   helpMessage()
   exit 0
 }
+
+// if --merge == true throw error because single end reads should not be merged
+if (!params.merge && params.mode == "single-bulk") {
+  log.info("mode has been set to 'single-bulk' but params.merge is TRUE. Exiting.")
+  exit 0
+}
+
+// if --merge == false throw error because paired end reads should be merged
+if (params.merge && params.mode == "paired-bulk") {    
+  log.info("mode has been set to "paired-bulk" but params.merge is FALSE."+e,e)
+  log.info("BARtab does not currently support paired-end bulk mode without merging. Exiting"+e,e)
+  exit 0
+}
+
+//--------------------------------------------------------------------------------------
+// Pipeline Config
+//--------------------------------------------------------------------------------------
 
 // setup run info for logging
 log.info ""

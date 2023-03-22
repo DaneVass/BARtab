@@ -8,15 +8,6 @@
 params.n = 1 
 
 // 00 Process inputs - assume single end reads
-
-// if --merge == true throw error because single end reads should not be merged
-try {
-    !params.merge
-} catch(Exception e) {
-    logger("mode has been set to "single-bulk" but params.merge is TRUE. Exiting."+e,e)
-    System.exit(0)
-}
-
 Channel
     .fromPath( ["${params.indir}/*.fq.gz", "${params.indir}/*.fastq.gz"] )
     .map { file -> tuple( file.baseName.replaceAll(/\.fastq|\.fq/, ''), file ) }
