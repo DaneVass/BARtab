@@ -226,7 +226,7 @@ process combine_barcode_counts{
   
   script: 
   """
-  Rscript $projectDir/scripts/combine_counts.R $counts all_counts_combined.txt
+  Rscript $projectDir/bin/combine_counts.R $counts all_counts_combined.txt
   """
 }
 
@@ -271,7 +271,7 @@ process software_check {
 
   script:
   """
-  bash $projectDir/scripts/check_versions.sh software_check.txt
+  bash $projectDir/bin/check_versions.sh software_check.txt
   """
 }
 
