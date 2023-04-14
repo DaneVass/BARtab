@@ -1,0 +1,21 @@
+name: bartab-1.0
+channels:
+  - defaults
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=3.9
+  - nextflow
+  - r-base
+  - r-dplyr
+  - r-purrr
+  - r-ggplot2
+  - r-magrittr
+  - fastqc
+  - cutadapt
+  - starcode
+  - flash
+  - fastx_toolkit
+  - bowtie
+  - samtools=>1.10
+  - multiqc
