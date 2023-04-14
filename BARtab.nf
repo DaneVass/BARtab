@@ -108,13 +108,13 @@ if (params.help) {
 }
 
 // if --merge == true throw error because single end reads should not be merged
-if (!params.merge && params.mode == "single-bulk") {
+if (params.merge && params.mode == "single-bulk") {
   log.info("mode has been set to 'single-bulk' but params.merge is TRUE. Exiting.")
   exit 0
 }
 
 // if --merge == false throw error because paired end reads should be merged
-if (params.merge && params.mode == "paired-bulk") {    
+if (!params.merge && params.mode == "paired-bulk") {    
   log.info("mode has been set to "paired-bulk" but params.merge is FALSE."+e,e)
   log.info("BARtab does not currently support paired-end bulk mode without merging. Exiting"+e,e)
   exit 0
