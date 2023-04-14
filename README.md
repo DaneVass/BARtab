@@ -69,7 +69,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 5. Print BARtab help message `nextflow run BARtab.nf --help`
 
 ## Running the pipeline
-1. Run the test datasets using `nextflow run BARtab.nf --indir test/dat`
+1. Run the test datasets using `nextflow run BARtab.nf --indir test/dat/test_SE`
 2. Setup a directory containing input fastq files.
 3. Run the pipeline - `nextflow run BARtab.nf -i <input_dir> -o <output_dir> <other args>`
 4. Alternatively, configure run parameters in `run_BARtab.sh` and run the pipeline using `bash run_BARtab.sh`
