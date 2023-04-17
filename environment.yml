@@ -19,3 +19,4 @@ dependencies:
   - bowtie
   - samtools=>1.10
   - multiqc
+  - umi_tools
