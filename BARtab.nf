@@ -169,35 +169,32 @@ log.info ""
 // Named workflow for pipeline
 //--------------------------------------------------------------------------------------
 
-if (params.mode == "single-bulk") {
   include { SINGLE_BULK } from './workflows/single_bulk'
-  // include { single_bulk } from './workflows/single-bulk'
+include { PAIRED_BULK } from './workflows/paired_bulk'
+//include { single-cell } from './workflows/single-cell'
+
+workflow {
+if (params.mode == "single-bulk") {
+
   println "Running single-end bulk workflow"
   println ""
     
-  workflow {
     SINGLE_BULK ()
-    // single_bulk ()
-  }
 }
 
 if (params.mode == "paired-bulk") {
-  //include { paired-bulk } from './workflows/paired-bulk'
+  
   println "Running paired-end bulk workflow"
   println ""
 
-  //workflow paired-bulk {
-  //  paired-bulk ()
-  //}
+  PAIRED_BULK ()
 }
 
 if (params.mode == "single-cell") {
-  //include { single-cell } from './workflows/single-cell'
   println "Running single-cell workflow"
   println ""
 
-  //workflow single-cell {
   //  single-cell ()
-  //}
+}
 }
 
