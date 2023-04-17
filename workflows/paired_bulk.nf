@@ -56,13 +56,7 @@ workflow PAIRED_BULK {
         SAMTOOLS(BOWTIE_ALIGN.out.mapped_reads)
         GET_BARCODE_COUNTS(SAMTOOLS.out.bam)
 
-        GET_BARCODE_COUNTS.out.view{ it }
-        GET_BARCODE_COUNTS.out.collect().view{ it }
-
         COMBINE_BARCODE_COUNTS(GET_BARCODE_COUNTS.out.collect())
-
-        println "Processing of samples complete - running multiqc"
-        // CHECK_OUTPUTS(GET_BARCODE_COUNTS.out.collect())
 
         // pass counts to multiqc so it waits to run until all samples are processed
         MULTIQC(multiqcConfig, output, COMBINE_BARCODE_COUNTS.out) 

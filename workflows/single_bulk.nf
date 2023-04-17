@@ -8,7 +8,6 @@ include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
 include { SAMTOOLS } from '../modules/local/samtools'
 include { GET_BARCODE_COUNTS } from '../modules/local/get_barcode_counts'
 include { COMBINE_BARCODE_COUNTS } from '../modules/local/combine_barcode_counts'
-include { CHECK_OUTPUTS } from '../modules/local/check_outputs'
 include { MULTIQC } from '../modules/local/multiqc'
 
 
@@ -26,7 +25,6 @@ workflow SINGLE_BULK {
         .fromPath( ["${params.indir}/*.fq.gz", "${params.indir}/*.fastq.gz"] )
         .map { file -> tuple( file.baseName.replaceAll(/\.fastq|\.fq/, ''), file ) }
         .ifEmpty { error "Cannot find any *.{fastq,fq}.gz files in: ${params.indir}" }
-        // .set { readsChannel }
 
         readsChannel.view { "file: $it" }
 
@@ -57,13 +55,7 @@ workflow SINGLE_BULK {
         SAMTOOLS(BOWTIE_ALIGN.out.mapped_reads)
         GET_BARCODE_COUNTS(SAMTOOLS.out.bam)
 
-        GET_BARCODE_COUNTS.out.view{ it }
-        GET_BARCODE_COUNTS.out.collect().view{ it }
-
         COMBINE_BARCODE_COUNTS(GET_BARCODE_COUNTS.out.collect())
-
-        println "Processing of samples complete - running multiqc"
-        // CHECK_OUTPUTS(GET_BARCODE_COUNTS.out.collect())
 
         // pass counts to multiqc so it waits to run until all samples are processed
         MULTIQC(multiqcConfig, output, COMBINE_BARCODE_COUNTS.out) 
