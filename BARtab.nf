@@ -170,12 +170,14 @@ log.info ""
 //--------------------------------------------------------------------------------------
 
 if (params.mode == "single-bulk") {
-  include { single_bulk } from './workflows/single-bulk'
+  include { SINGLE_BULK } from './workflows/single_bulk'
+  // include { single_bulk } from './workflows/single-bulk'
   println "Running single-end bulk workflow"
   println ""
     
   workflow {
-    single_bulk ()
+    SINGLE_BULK ()
+    // single_bulk ()
   }
 }
 
