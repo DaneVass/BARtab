@@ -12,7 +12,14 @@ process CUTADAPT_READS{
     path "${sample_id}.cutadapt.log", emit: log
   
   script:
-  if( params.merge )
+  if(params.mode == "single-cell") {
+    // TODO check parameters
+    """
+    cutadapt -g "CGATTGACTA" --trimmed-only --max-n=0 -e 0.2 -m 20 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -a "TGCTAATGCG" --trimmed-only --max-n=0 -e 0.2 -m 20 ${reads} > ${sample_id}.trimmed.R.fastq 2>> ${sample_id}.cutadapt.log
+    """
+  }
+  else if( params.merge )
     """
     cutadapt -g "${params.upconstant}...${params.downconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """

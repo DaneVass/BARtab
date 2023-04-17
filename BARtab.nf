@@ -169,9 +169,9 @@ log.info ""
 // Named workflow for pipeline
 //--------------------------------------------------------------------------------------
 
-  include { SINGLE_BULK } from './workflows/single_bulk'
+include { SINGLE_BULK } from './workflows/single_bulk'
 include { PAIRED_BULK } from './workflows/paired_bulk'
-//include { single-cell } from './workflows/single-cell'
+include { SINGLE_CELL } from './workflows/single_cell'
 
 workflow {
 if (params.mode == "single-bulk") {
@@ -179,7 +179,7 @@ if (params.mode == "single-bulk") {
   println "Running single-end bulk workflow"
   println ""
     
-    SINGLE_BULK ()
+  SINGLE_BULK ()
 }
 
 if (params.mode == "paired-bulk") {
@@ -194,7 +194,51 @@ if (params.mode == "single-cell") {
   println "Running single-cell workflow"
   println ""
 
-  //  single-cell ()
+  SINGLE_CELL ()
 }
 }
 
+// //--------------------------------------------------------------------------------------
+// // Post processing
+// //--------------------------------------------------------------------------------------
+
+// // Mail notification
+
+// if (params.email == "yourmail@yourdomain" || params.email == "") { 
+//     log.info '\n'
+// }
+// else {
+//     log.info "\n"
+//     log.info "Sending runtime report to ${params.email}\n"
+
+//     workflow.onComplete {
+
+//     def msg = """\
+//         Pipeline execution summary
+//         ---------------------------
+//         Completed at: ${workflow.complete}
+//         Duration    : ${workflow.duration}
+//         Success     : ${workflow.success}
+//         workDir     : ${workflow.workDir}
+//         exit status : ${workflow.exitStatus}
+//         Error report: ${workflow.errorReport ?: '-'}
+//         """
+//         .stripIndent()
+    
+//     sendMail(to: params.email, subject: "BARtab execution report", body: msg,  attach: "${params.outdir}/multiqc_report.html")
+//     }
+// }
+
+// // Print completion messages
+// workflow.onComplete {
+//     RED='\033[0;31m'
+//     GREEN='\033[0;32m'
+//     NC='\033[0m'
+    
+//     log.info ""
+//     log.info " ---------------------- BARtab Pipeline has finished ----------------------"
+//     log.info ""
+//     log.info "Status:   " + (workflow.success ? "${GREEN}SUCCESS${NC}" : "${RED}ERROR${NC}")
+//     log.info "Pipeline completed at: $workflow.complete"
+//     log.info "Pipeline runtime: ${workflow.duration}\n"
+// }
