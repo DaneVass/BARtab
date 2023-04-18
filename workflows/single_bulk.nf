@@ -3,6 +3,7 @@ include { FASTQC } from '../modules/local/fastqc'
 include { GUNZIP_READS } from '../modules/local/gunzip_reads'
 include { FILTER_READS } from '../modules/local/filter_reads'
 include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
+include { STARCODE } from '../modules/local/starcode'
 include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
 include { SAMTOOLS } from '../modules/local/samtools'
@@ -48,6 +49,9 @@ workflow SINGLE_BULK {
         GUNZIP_READS(readsChannel)
         FILTER_READS(GUNZIP_READS.out)
         CUTADAPT_READS(FILTER_READS.out.reads)
+
+        // if reference-free, use starcode to cluster barcodes
+        // STARCODE(CUTADAPT_READS.out.reads)
 
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
         BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
