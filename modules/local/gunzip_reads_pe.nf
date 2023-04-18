@@ -6,7 +6,7 @@ process GUNZIP_READS_PE {
     tuple val(sample_id), path(reads)
 
   output:
-    tuple val(sample_id), file("${sample_id}.extendedFrags.fastq")
+    tuple val(sample_id), path("${sample_id}.extendedFrags.fastq")
   
   script:
   """

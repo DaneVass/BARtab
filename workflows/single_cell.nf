@@ -29,7 +29,7 @@ workflow SINGLE_CELL {
 
         scChannel.view { "file: $it" }
 
-        reference = file(params.ref)
+        reference = path(params.ref)
 
         UMITOOLS_WHITELIST(scChannel)
         UMITOOLS_EXTRACT(scChannel, UMITOOLS_WHITELIST.out)

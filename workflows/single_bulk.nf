@@ -29,7 +29,7 @@ workflow SINGLE_BULK {
 
         readsChannel.view { "file: $it" }
 
-        reference = file(params.ref)
+        reference = path(params.ref)
 
         // 10_multiqc_report
         params.multiqc_config = "$baseDir/config/multiqc_config.yaml"
