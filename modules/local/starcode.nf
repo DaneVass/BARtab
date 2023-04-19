@@ -7,7 +7,7 @@ process STARCODE {
     tuple val(sample_id), path(reads)
 
     output:
-    tuple val(sample_id), path("${sample_id}_starcode.txt")
+    path "${sample_id}_starcode.txt"
     
     script:
     """
