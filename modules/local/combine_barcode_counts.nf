@@ -3,7 +3,7 @@ process COMBINE_BARCODE_COUNTS {
   publishDir "${params.outdir}/counts/", mode: 'copy'
 
   input:
-    tuple val(sample_id), path(counts)
+    path counts
 
   output:
     path "all_counts_combined.txt"

@@ -7,7 +7,8 @@ process GET_BARCODE_COUNTS {
     tuple val(sample_id), path(reads)
 
   output:
-    tuple val(sample_id), path("${sample_id}_rawcounts.txt")
+    // tuple val(sample_id), path("${sample_id}_rawcounts.txt")
+    path "${sample_id}_rawcounts.txt"
   
   shell:
   """
