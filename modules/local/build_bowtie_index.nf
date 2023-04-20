@@ -11,6 +11,6 @@ process BUILD_BOWTIE_INDEX {
 
     script:
     """
-    bowtie-build ${ref} ${ref}
+    bowtie-build --threads ${params.threads} ${ref} ${ref}
     """
 }
