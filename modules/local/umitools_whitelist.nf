@@ -13,6 +13,7 @@ process UMITOOLS_WHITELIST {
     """
     umi_tools whitelist --stdin ${reads[0]} \\
       --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \\
+      --set-cell-number ${params.cellnumber} \\
       --log2stderr > ${sample_id}_whitelist.txt
     """
 }
