@@ -7,11 +7,10 @@ process GET_BARCODE_COUNTS {
     tuple val(sample_id), path(reads)
 
   output:
-    // tuple val(sample_id), path("${sample_id}_rawcounts.txt")
     path "${sample_id}_rawcounts.txt"
   
   shell:
   """
-  samtools idxstats ${reads} | cut -f1,3 > ${sample_id}_rawcounts.txt
+  samtools idxstats -@ ${params.threads} ${reads} | cut -f1,3 > ${sample_id}_rawcounts.txt
   """
 }

@@ -12,7 +12,7 @@ process SAMTOOLS {
     
     script:
     """
-    samtools view -Sb ${reads} | samtools sort - > ${sample_id}.mapped.bam
-    samtools index ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
+    samtools view -@ ${params.threads} -Sb ${reads} | samtools sort -@ ${params.threads} - > ${sample_id}.mapped.bam
+    samtools index -@ ${params.threads} ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
     """
 }

@@ -15,26 +15,27 @@ process CUTADAPT_READS{
   if(params.mode == "single-cell") {
     // TODO check parameters
     """
-    cutadapt -g "${params.upconstant}...${params.downconstant}" --trimmed-only --max-n=0 -e 0.2 -m 20 ${reads} > ${sample_id}.trimmed_1.fastq 2> ${sample_id}.cutadapt.log
-    cutadapt -g ${params.upconstant} --trimmed-only --max-n=0 -e 0.2 -m 20 ${reads} > ${sample_id}.trimmed_2.fastq 2>> ${sample_id}.cutadapt.log
-    cutadapt -a ${params.downconstant} --trimmed-only --max-n=0 -e 0.2 -m 20 ${reads} > ${sample_id}.trimmed_3.fastq 2>> ${sample_id}.cutadapt.log
+    cutadapt -j ${params.threads} -g "${params.upconstant}...${params.downconstant}" --trimmed-only --max-n=0 -e 0.2 -m 20 ${reads} > ${sample_id}.trimmed_1.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -j ${params.threads} -g ${params.upconstant} --trimmed-only --max-n=0 -e 0.2 -m 20 ${reads} > ${sample_id}.trimmed_2.fastq 2>> ${sample_id}.cutadapt.log
+    cutadapt -j ${params.threads} -a ${params.downconstant} --trimmed-only --max-n=0 -e 0.2 -m 20 ${reads} > ${sample_id}.trimmed_3.fastq 2>> ${sample_id}.cutadapt.log
     cat ${sample_id}.trimmed_*.fastq > ${sample_id}.trimmed.fastq
     """
   }
+  // TODO replace params.merge
   else if( params.merge )
     """
-    cutadapt -g "${params.upconstant}...${params.downconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -j ${params.threads} -g "${params.upconstant}...${params.downconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
   else if( params.constants == "both" )
     """
-    cutadapt -g "${params.upconstant}...${params.downconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -j ${params.threads} -g "${params.upconstant}...${params.downconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
   else if( params.merge && params.constants == "up" )
     """
-    cutadapt -g "${params.upconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -j ${params.threads} -g "${params.upconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
   else
     """
-    cutadapt -g "${params.upconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
+    cutadapt -j ${params.threads} -g "${params.upconstant}" --trimmed-only --max-n=0 -m 15 ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt.log
     """
 }
