@@ -1,5 +1,5 @@
 process PARSE_BARCODES_SC {
-    publishDir "${params.outdir}", mode: 'symlink'
+    publishDir "${params.outdir}", mode: 'copy'
     input:
         tuple val(sample_id), path(counts)
 
@@ -10,6 +10,6 @@ process PARSE_BARCODES_SC {
         
     script:
     """
-    parse_barcodes.R $counts $sample_id
+    parse_barcodes.R ${counts} ${sample_id}_cell-barcode-anno.tsv
     """
 }
