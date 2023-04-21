@@ -16,9 +16,15 @@ workflow SINGLE_CELL {
 
     main:
 
-        readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}.{fastq,fq}.gz" )
-            .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
-
+        if (params.bam) {
+            readsChannel = Channel.fromPath( "${params.indir}/*.bam" )
+                // creates the sample name
+                .map { file -> tuple( file.baseName.replaceAll(/\.bam/, ''), file ) }
+                .ifEmpty { error "Cannot find any *.{fastq,fq}.gz files in: ${params.indir}" }
+        } else {
+            readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}*.{fastq,fq}.gz" )
+                .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
+        }
         readsChannel.view { "file: $it" }
 
         reference = file(params.ref)
@@ -32,15 +38,22 @@ workflow SINGLE_CELL {
         // TODO add single-cell tools and starcode?
         SOFTWARE_CHECK()
 
-        FASTQC(readsChannel)
+        if (!params.bam) {
+            FASTQC(readsChannel)
 
-        // filtering
+            // filtering
 
-        UMITOOLS_WHITELIST(readsChannel)
-        UMITOOLS_EXTRACT(readsChannel, UMITOOLS_WHITELIST.out)
+            // extract reads with cell barcode from fastq input
+            UMITOOLS_WHITELIST(readsChannel)
+            r2_fastq = UMITOOLS_EXTRACT(readsChannel, UMITOOLS_WHITELIST.out)
+        }
+        else {
+            // extract unmapped reads with cell barcode from cell ranger bam output
+            r2_fastq = PROCESS_CR()
+        }
 
         // TODO cutadapt module needs to be adapted, merging 
-        CUTADAPT_READS(UMITOOLS_EXTRACT.out)
+        CUTADAPT_READS(r2_fastq)
 
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
         BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
