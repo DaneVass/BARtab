@@ -20,6 +20,9 @@ process PROCESS_CR {
     # Filter alignments. Use LC_ALL=C to set C locale instead of UTF-8
     samtools view -@ ${params.threads} $bam | LC_ALL=C grep 'CB:Z:' | LC_ALL=C grep 'UB:Z:' > filtered_SAM_body.sam
 
+    # Combine header and body
+    cat SAM_header.sam filtered_SAM_body.sam > ${sample_id}.filtered.sam
+
     # Convert filtered.sam to BAM format
     samtools view -@ ${params.threads} -b ${sample_id}.filtered.sam > ${sample_id}.filtered.bam
 
