@@ -43,18 +43,18 @@ workflow SINGLE_CELL {
         if (!params.bam) {
             FASTQC(readsChannel)
 
-            // filtering
+            // filtering reads for quality
 
             // extract reads with cell barcode from fastq input
             UMITOOLS_WHITELIST(readsChannel)
             r2_fastq = UMITOOLS_EXTRACT(readsChannel, UMITOOLS_WHITELIST.out)
         }
         else {
-            // extract unmapped reads with cell barcode from cell ranger bam output
+            // extract reads with cell barcode and UMI and convert to fastq
             r2_fastq = PROCESS_CR(readsChannel)
         }
 
-        // TODO cutadapt module needs to be adapted, merging 
+        // TODO cutadapt module needs to be adapted, merge paramter
         CUTADAPT_READS(r2_fastq)
 
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
@@ -67,8 +67,6 @@ workflow SINGLE_CELL {
             mapped_reads = BOWTIE_ALIGN.out.mapped_reads
         }
         SAMTOOLS(mapped_reads)
-
-        // cellranger input instead
 
         UMITOOLS_COUNT(SAMTOOLS.out.bam, SAMTOOLS.out.bai)
 
