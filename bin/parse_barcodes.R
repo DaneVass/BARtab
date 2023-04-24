@@ -17,8 +17,7 @@ library(ggplot2)
 args <- commandArgs(TRUE)
 
 dat <- args[1]
-samplename <- args[2]
-outfile <- args[3]
+outfile <- args[2]
 
 # read in barcode-cell pairs
 dat <- read.delim(dat, header = TRUE)
