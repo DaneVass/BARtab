@@ -4,9 +4,11 @@ include { FASTQC } from '../modules/local/fastqc'
 // include { FILTER_READS } from '../modules/local/filter_reads'
 include { UMITOOLS_WHITELIST } from '../modules/local/umitools_whitelist'
 include { UMITOOLS_EXTRACT } from '../modules/local/umitools_extract'
+include { PROCESS_CR } from '../modules/local/process_cr'
 include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
 include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
+include { RENAME_READS } from '../modules/local/rename_reads'
 include { SAMTOOLS } from '../modules/local/samtools'
 include { UMITOOLS_COUNT } from '../modules/local/umitools_count'
 include { PARSE_BARCODES_SC } from '../modules/local/parse_barcodes_sc'
@@ -17,10 +19,10 @@ workflow SINGLE_CELL {
     main:
 
         if (params.bam) {
-            readsChannel = Channel.fromPath( "${params.indir}/*.bam" )
+            readsChannel = Channel.fromPath( "${params.bam}" )
                 // creates the sample name
                 .map { file -> tuple( file.baseName.replaceAll(/\.bam/, ''), file ) }
-                .ifEmpty { error "Cannot find any *.{fastq,fq}.gz files in: ${params.indir}" }
+                .ifEmpty { error "Cannot find file ${params.bam}" }
         } else {
             readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}*.{fastq,fq}.gz" )
                 .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
@@ -49,7 +51,7 @@ workflow SINGLE_CELL {
         }
         else {
             // extract unmapped reads with cell barcode from cell ranger bam output
-            r2_fastq = PROCESS_CR()
+            r2_fastq = PROCESS_CR(readsChannel)
         }
 
         // TODO cutadapt module needs to be adapted, merging 
@@ -58,7 +60,13 @@ workflow SINGLE_CELL {
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
         BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
 
-        SAMTOOLS(BOWTIE_ALIGN.out.mapped_reads)
+        if (params.bam) {
+            // add CB and UMI info in header
+            mapped_reads = RENAME_READS(BOWTIE_ALIGN.out.mapped_reads, readsChannel)
+        } else {
+            mapped_reads = BOWTIE_ALIGN.out.mapped_reads
+        }
+        SAMTOOLS(mapped_reads)
 
         // cellranger input instead
 
