@@ -20,19 +20,19 @@ process RENAME_READS {
     samtools view -H $sam > SAM_header.sam
 
     # get lines from input bam (containing cb and umi info) that are mapped to ref
-    awk -F"\t" 'FNR==NR {lines[\$1]; next} \$1 in lines' <(samtools view $sam) <(samtools view -@ ${params.threads} $bam) > ${sample_id}_rename_helper.bam
+    awk -F"\t" 'FNR==NR {lines[\$1]; next} \$1 in lines' <(samtools view $sam) <(samtools view -@ ${params.threads} $bam) > ${sample_id}_rename_helper.sam
 
     # create header that contains cb and umi, needed for umi_tools count
     # first column is original header to merge on later
-    samtools view -@ ${params.threads} ${sample_id}_rename_helper.bam | sed 's/^\\([^\t]*\\).*CB:Z:\\([^\t]*\\)-1.*UB:Z:\\([^\t]*\\).*/\\1\t\\1_\\2_\\3/g' > read_names.txt
+    samtools view -@ ${params.threads} ${sample_id}_rename_helper.sam | sed 's/^\\([^\t]*\\).*CB:Z:\\([^\t]*\\)-1.*UB:Z:\\([^\t]*\\).*/\\1\t\\1_\\2_\\3/g' | sort -S 2G -k1,1 > read_names.txt
 
     # join based on first column, then print all but first column
-    join -j1 -t "\$(echo -e "\t")" read_names.txt <(samtools view $sam) |\\
+    join -j1 -t "\$(echo -e "\t")" read_names.txt <(samtools view $sam | sort -S 2G -k1,1) |\\
       awk -v OFS="\t" '{\$1=""; print substr(\$0,2)}' > SAM_body_renamed.sam
 
     # Combine header and body
     cat SAM_header.sam SAM_body_renamed.sam | samtools view -@ ${params.threads} -b > ${sample_id}.mapped_renamed.bam
 
-    rm SAM_header.sam ${sample_id}_rename_helper.bam read_names.txt
+    rm SAM_header.sam ${sample_id}_rename_helper.bam read_names.txt SAM_body_renamed.sam
     """
 }
