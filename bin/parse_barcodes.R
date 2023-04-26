@@ -86,8 +86,6 @@ p <- ggplot(max.umi.per.cell, aes(x = max)) +
   xlab("UMI supporting the most frequent barcode") +
   ylab("Fraction of cells") +
   ggtitle("UMI supporting the most frequent barcode") +
-  # x-axis until 100 or max
-  coord_cartesian(xlim = c(0, max(max(max.umi.per.cell$max), 100))) +
   theme_classic()
 
 ggsave("UMIs_per_bc.pdf", p)
