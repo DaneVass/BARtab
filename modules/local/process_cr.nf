@@ -24,10 +24,10 @@ process PROCESS_CR {
     cat SAM_header.sam filtered_SAM_body.sam > ${sample_id}.filtered.sam
 
     # Convert filtered.sam to BAM format
-    samtools view -@ ${params.threads} -b ${sample_id}.filtered.sam > ${sample_id}.filtered.bam
+    # samtools view -@ ${params.threads} -b ${sample_id}.filtered.sam > ${sample_id}.filtered.bam
 
     # convert BAM to fastq. CR output only contains R2
-    samtools fastq -@ ${params.threads} ${sample_id}.filtered.bam \\
+    samtools fastq -@ ${params.threads} ${sample_id}.filtered.sam \\
     -0 ${sample_id}_R2.fastq.gz
 
     rm SAM_header.sam filtered_SAM_body.sam
