@@ -1,4 +1,4 @@
-name: bartab-1.0
+name: bartab-1.1
 channels:
   - defaults
   - bioconda
@@ -11,6 +11,7 @@ dependencies:
   - r-purrr
   - r-ggplot2
   - r-magrittr
+  - r-data.table
   - fastqc
   - cutadapt
   - starcode
@@ -20,3 +21,5 @@ dependencies:
   - samtools=>1.10
   - multiqc
   - umi_tools
+  - parallel
+  - conda-forge::ncurses=6.3
