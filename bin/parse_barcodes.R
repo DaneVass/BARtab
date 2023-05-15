@@ -1,9 +1,10 @@
 #!/usr/bin/env Rscript
 
-# TODO synopsis, argument parsing, (split into 2 scripts, 1 for parsing and 1 for plotting)
-
 # INPUT
-# - takes 2 command line arguments, 1. path to counts and 2. sample name
+# - takes 2 command line arguments, 1. path to counts and 2. output path for tabulated barcode counts
+# OUTPUT
+# - a table with UMI counts per barcode per cell
+# - 2 plots in pdf: barcodes_per_cell.pdf and UMIs_per_bc.pdf
 
 library(data.table)
 library(dplyr)
