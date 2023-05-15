@@ -15,7 +15,7 @@ process UMITOOLS_COUNT {
     """
     umi_tools count \\
     --per-contig --per-cell \\
-    --edit-distance-threshold=1 \\
+    --edit-distance-threshold=${params.umi_dist} \\
     --random-seed=10101 \\
     -I ${bam} \\
     -S ${sample_id}.counts.tsv
