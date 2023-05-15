@@ -29,9 +29,7 @@ nextflow.enable.dsl = 2
 
 // https://www.coolgenerator.com/ascii-text-generator Delta Corps Priest 1
 
-def helpMessage() {
-  log.info """
-
+logo = """
 ▀█████████▄     ▄████████    ▄████████     ███        ▄████████ ▀█████████▄  
   ███    ███   ███    ███   ███    ███ ▀█████████▄   ███    ███   ███    ███ 
   ███    ███   ███    ███   ███    ███    ▀███▀▀██   ███    ███   ███    ███ 
@@ -41,6 +39,10 @@ def helpMessage() {
   ███    ███   ███    ███   ███    ███     ███       ███    ███   ███    ███ 
 ▄█████████▀    ███    █▀    ███    ███    ▄████▀     ███    █▀  ▄█████████▀  
                             ███    ███                                       
+"""
+
+def helpMessage() {
+  log.info logo + """
 
 ---------------------- Tabulate Barcode Counts in NGS ----------------------
 
@@ -64,13 +66,13 @@ def helpMessage() {
     Filtering arguments:
       --minqual                  Minimum PHRED quality per base [default = 20]
       --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
-      --min_readlength           Minimum read length [default = 15]
 
     Trimming arguments:
       --constants                Which constant regions flanking barcode to search for in reads <up, down, both> [default = 'up']
       --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
+      --min_readlength           Minimum read length [default = 15]
 
     Mapping arguments:
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 1]
@@ -87,11 +89,6 @@ def helpMessage() {
       --threads                  Number of CPUs to use [default = 4]
       --email                    Direct output messages to this address [default = '']
       --help                     Print this help statement.
-
-    Modes:
-      single-bulk                single-end bulk workflow
-      paired-bulk                paired-end bulk workflow
-      single-cell                paired-end single-cell annotation workflow
 
     Profiles:
       local                      local execution
@@ -134,17 +131,7 @@ if (params.constants != "up" && params.constants != "down" && params.constants !
 
 // setup run info for logging
 log.info ""
-log.info """
-▀█████████▄     ▄████████    ▄████████     ███        ▄████████ ▀█████████▄  
-  ███    ███   ███    ███   ███    ███ ▀█████████▄   ███    ███   ███    ███ 
-  ███    ███   ███    ███   ███    ███    ▀███▀▀██   ███    ███   ███    ███ 
- ▄███▄▄▄██▀    ███    ███  ▄███▄▄▄▄██▀     ███   ▀   ███    ███  ▄███▄▄▄██▀  
-▀▀███▀▀▀██▄  ▀███████████ ▀▀███▀▀▀▀▀       ███     ▀███████████ ▀▀███▀▀▀██▄  
-  ███    ██▄   ███    ███ ▀███████████     ███       ███    ███   ███    ██▄ 
-  ███    ███   ███    ███   ███    ███     ███       ███    ███   ███    ███ 
-▄█████████▀    ███    █▀    ███    ███    ▄████▀     ███    █▀  ▄█████████▀  
-                            ███    ███                                       
-"""
+log.info logo
 // https://www.coolgenerator.com/ascii-text-generator Delta Corps Priest 1
 log.info ""
 log.info " ---------------------- Tabulate Barcode Counts in NGS ----------------------"
@@ -154,21 +141,42 @@ log.info ""
 
 log.info "      Run parameters: "
 log.info " ========================"
-log.info " input directory          : ${params.indir}"
-log.info " output directory         : ${params.outdir}"
-log.info " reference fasta          : ${params.ref}"
-log.info " upstream constant        : ${params.upconstant}"
-log.info " downstream constant      : ${params.downconstant}"
-log.info " constants to use         : ${params.constants}"
-log.info " constant mismatches      : ${params.constantmismatches}"
-log.info " alignment mismatches     : ${params.alnmismatches}"
-log.info " CPU threads              : ${params.threads}"
-log.info " Minimum PHRED quality    : ${params.minqual}"
-log.info " Quality percentage       : ${params.pctqual}"
-log.info " Email                    : ${params.email}"
-log.info " Mode                 : ${params.mode}"
-log.info " ========================"
-log.info ""
+if (params.indir) {
+  log.info " Input directory          : ${params.indir}"
+}
+if (params.bam) {
+  log.info " BAM file                 : ${params.bam}"
+}
+  log.info " Output directory         : ${params.outdir}"
+  log.info " Mode                     : ${params.mode}"
+if (params.ref) {
+  log.info " Reference fasta          : ${params.ref}"
+}
+if (params.mode == "paired-bulk") {
+  log.info " Merge overlap            : ${params.mergeoverlap}"
+}
+if (params.mode != "single-cell") {
+  log.info " Minimum PHRED quality    : ${params.minqual}"
+  log.info " Quality percentage       : ${params.pctqual}"
+}
+  log.info " Upstream constant        : ${params.upconstant}"
+  log.info " Downstream constant      : ${params.downconstant}"
+  log.info " Constants to use         : ${params.constants}"
+  log.info " Constant mismatches      : ${params.constantmismatches}"
+  log.info " Minimum read length      : ${params.min_readlength}"
+if (params.ref) {
+  log.info " Alignment mismatches     : ${params.alnmismatches}"
+}
+if (params.mode == "single-cell") {
+  log.info " UMI distance             : ${params.umi_dist}"
+}
+if (params.mode == "single-cell" && !params.bam) {
+  log.info " Cell number              : ${params.cellnumber}"
+}
+  log.info " CPU threads              : ${params.threads}"
+  log.info " Email                    : ${params.email}"
+  log.info " ========================"
+  log.info ""
 
 
 
