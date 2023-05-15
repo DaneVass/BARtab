@@ -51,28 +51,34 @@ def helpMessage() {
                                 -profile local
                                 --help
 
-    Required arguments:
-      --input                    Directory containing input *.fastq.gz files
+    Input arguments:
+      --input                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
+                                        For single-cell mode, a BAM file can be provided instead (see --bam)
       --ref                      Path to a reference fasta file for the barcode / sgRNA library.
-                                        If null, reference-free workflow will be used for single-bulk and paired-bulk modes
+                                        If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
       --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell> [default = 'single-bulk']
 
     Read merging arguments:
-      --merge                    Boolean. Merge overlapping reads? [default = FALSE]
       --mergeoverlap             Length of overlap required to merge paired-end reads [default = 10]
 
     Filtering arguments:
       --minqual                  Minimum PHRED quality per base [default = 20]
       --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
-      --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
-      --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
-      --constants                Which constant regions flanking barcode to search for in reads <up, down, both> [default = 'up']
+      --min_readlength           Minimum read length [default = 15]
 
     Trimming arguments:
+      --constants                Which constant regions flanking barcode to search for in reads <up, down, both> [default = 'up']
+      --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
+      --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
 
     Mapping arguments:
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 1]
+
+    Sincle-cell arguments:
+      --bam                      Path to BAM file output of Cell Ranger, containing reads that do not map to the reference genome. Only permitted in single-cell mode
+      --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
+      --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
 
     Optional arguments:
       -profile                   Configuration profile to use. Can use multiple (comma separated) [default = 'local']
@@ -110,7 +116,7 @@ if (params.help) {
 if (!params.indir && !params.bam && params.mode != "single-cell") {
   error "Error: please provide the location of fastq files via the parameter indir."
 } else if (!params.indir && !params.bam && params.mode == "single-cell") {
-  error "Error: please either provide the location of fastq files via the parameter indir or a bam file containing unmapped reads."
+  error "Error: please either provide the location of fastq files via the parameter indir or a bam file."
 }
 if (!params.outdir) {
   error "Error: please specify location of output directory via parameter outdir."
@@ -119,7 +125,7 @@ if (params.mode == "single-cell" && !params.ref) {
   error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
 }
 if (params.constants != "up" && params.constants != "down" && params.constants != "both") {
-  error "Error: unsupported value for parameter constants. Choose either up, down or both (default both)."
+  error "Error: unsupported value for parameter constants. Choose either up, down or both (default up)."
 }
 
 //--------------------------------------------------------------------------------------
@@ -160,8 +166,7 @@ log.info " CPU threads              : ${params.threads}"
 log.info " Minimum PHRED quality    : ${params.minqual}"
 log.info " Quality percentage       : ${params.pctqual}"
 log.info " Email                    : ${params.email}"
-log.info " Merge paired-end reads   : ${params.merge}"
-log.info " Workflow                 : ${params.mode}"
+log.info " Mode                 : ${params.mode}"
 log.info " ========================"
 log.info ""
 

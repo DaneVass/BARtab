@@ -30,14 +30,12 @@ workflow BULK {
                 .ifEmpty { error "Cannot find any *.{fastq,fq}.gz files in: ${params.indir}" }
         } else if (params.mode == "paired-bulk") {
             readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}.{fastq,fq}.gz" )
-                // todo deal with fastq/fq wildcard / how is the sample name created?
                 .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
         }
 
         readsChannel.view { "file: $it" }
 
         if (params.ref) {
-            // TODO should maybe be a channel but if channel, alignment will only run for 1 sample
             reference = file(params.ref)
         }
 
