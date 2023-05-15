@@ -23,3 +23,5 @@ dependencies:
   - umi_tools
   - parallel
   - conda-forge::ncurses=6.3
+variables:
+  PERL5LIB: $CONDA_PREFIX/lib/perl5/site_perl/5.22.0/
