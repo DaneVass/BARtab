@@ -37,7 +37,6 @@ workflow SINGLE_CELL {
 
         output = Channel.fromPath( params.outdir, type: 'dir', relative: true)
 
-        // TODO add single-cell tools and starcode?
         SOFTWARE_CHECK()
 
         if (!params.bam) {
@@ -54,7 +53,6 @@ workflow SINGLE_CELL {
             r2_fastq = PROCESS_CR(readsChannel)
         }
 
-        // TODO cutadapt module needs to be adapted, merge paramter
         CUTADAPT_READS(r2_fastq)
 
         bowtie_index = BUILD_BOWTIE_INDEX(reference)

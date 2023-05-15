@@ -13,7 +13,6 @@ process CUTADAPT_READS{
   
   script:
   if(params.mode == "single-cell") {
-    // TODO check parameters
     """
     cutadapt -j ${params.threads} -g "${params.upconstant}...${params.downconstant}" --trimmed-only --max-n=0  -m ${params.min_readlength} -e ${params.constantmismatches} ${reads} > ${sample_id}.trimmed_1.fastq 2> ${sample_id}.cutadapt.log
     cutadapt -j ${params.threads} -g ${params.upconstant} --trimmed-only --max-n=0 -m ${params.min_readlength} -e ${params.constantmismatches} ${reads} > ${sample_id}.trimmed_2.fastq 2>> ${sample_id}.cutadapt.log
