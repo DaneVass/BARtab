@@ -107,17 +107,19 @@ if (params.help) {
   exit 0
 }
 
-// if --merge == true throw error because single end reads should not be merged
-if (params.merge && params.mode == "single-bulk") {
-  log.info("mode has been set to 'single-bulk' but params.merge is TRUE. Exiting.")
-  exit 0
+if (!params.indir && !params.bam && params.mode != "single-cell") {
+  error "Error: please provide the location of fastq files via the parameter indir."
+} else if (!params.indir && !params.bam && params.mode == "single-cell") {
+  error "Error: please either provide the location of fastq files via the parameter indir or a bam file containing unmapped reads."
 }
-
-// if --merge == false throw error because paired end reads should be merged
-if (!params.merge && params.mode == "paired-bulk") {    
-  log.info("mode has been set to "paired-bulk" but params.merge is FALSE."+e,e)
-  log.info("BARtab does not currently support paired-end bulk mode without merging. Exiting"+e,e)
-  exit 0
+if (!params.outdir) {
+  error "Error: please specify location of output directory via parameter outdir."
+}
+if (params.mode == "single-cell" && !params.ref) {
+  error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
+}
+if (params.constants != "up" && params.constants != "down" && params.constants != "both") {
+  error "Error: unsupported value for parameter constants. Choose either up, down or both (default both)."
 }
 
 //--------------------------------------------------------------------------------------
