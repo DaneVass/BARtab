@@ -21,8 +21,8 @@ process BOWTIE_ALIGN {
     -t \\
     ${refname} \\
     ${reads} \\
-    --un ${sample_id}.unmapped.fastq \\
+    --no-unal \\
     -S > ${sample_id}.mapped.sam \\
-    2> ${sample_id}.bowtie.log \\
+    2> ${sample_id}.bowtie.log
     """
 }
