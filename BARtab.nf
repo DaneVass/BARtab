@@ -44,7 +44,7 @@ logo = """
 def helpMessage() {
   log.info logo + """
 
----------------------- Tabulate Barcode Counts in NGS ----------------------
+---------------------- Tabulate Barcode Counts in NGS data ----------------------
 
   Usage: nextflow run BARtab.nf --indir <input dir> 
                                 --outdir <output dir> 

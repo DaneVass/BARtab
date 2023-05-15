@@ -2,38 +2,54 @@
 A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
 ```
-    Usage: nextflow run BARtab.nf --input <input dir> 
-                                  --output <output dir> 
-                                  --index <path>/<prefix> 
-                                  --contrasts CONTRASTS.csv 
-                                  -profile local
-                                  --help
+  Usage: nextflow run BARtab.nf --indir <input dir> 
+                                --outdir <output dir> 
+                                --ref <path/to/reference/fasta> 
+                                --mode <single-bulk | paired-bulk | single-cell> 
+                                -profile local
+                                --help
 
-    Required arguments:
-      --indir                     Directory containing raw *.fastq.gz files
-      --index                     Path to the bowtie2 index for the sgRNA library. Include prefix.
+    Input arguments:
+      --input                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
+                                        For single-cell mode, a BAM file can be provided instead (see --bam)
+      --ref                      Path to a reference fasta file for the barcode / sgRNA library.
+                                        If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
+      --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell> [default = 'single-bulk']
+
+    Read merging arguments:
+      --mergeoverlap             Length of overlap required to merge paired-end reads [default = 10]
 
     Filtering arguments:
-      --minqual                   Minimum PHRED quality across read.
-    
+      --minqual                  Minimum PHRED quality per base [default = 20]
+      --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
+
     Trimming arguments:
-      --error                     Proportion of mismatches allowed in constant regions.
+      --constants                Which constant regions flanking barcode to search for in reads <up, down, both> [default = 'up']
+      --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
+      --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
+      --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
+      --min_readlength           Minimum read length [default = 15]
 
     Mapping arguments:
-      --mismatches                Number of allowed mismatches during reference mapping.
+      --alnmismatches            Number of allowed mismatches during reference mapping [default = 1]
+
+    Sincle-cell arguments:
+      --bam                      Path to BAM file output of Cell Ranger, containing reads that do not map to the reference genome. Only permitted in single-cell mode
+      --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
+      --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
 
     Optional arguments:
-      --contrasts                 CSV file detailing the comparisons to test [contrasts.csv]
-      -profile                    Configuration profile to use. Can use multiple (comma separated)
-                                         Available: local, singularity, slurm
-      --outdir                    Output directory to place output [./]
-      --threads                   Number of CPUs to use [4]
-      --help                      Print this help statement.
-
+      -profile                   Configuration profile to use. Can use multiple (comma separated) [default = 'local']
+                                        Available: local, singularity, slurm
+      --outdir                   Output directory to place output [default = './']
+      --threads                  Number of CPUs to use [default = 4]
+      --email                    Direct output messages to this address [default = '']
+      --help                     Print this help statement.
 
     Profiles:
-      local                       local execution
-      slurm                       SLURM execution 
+      local                      local execution
+      singularity                use singularity container
+      slurm                      SLURM execution 
 
     Author:
       Dane Vassiliadis (dane.vassiliadis@petermac.org)
