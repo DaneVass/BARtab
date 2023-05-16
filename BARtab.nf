@@ -129,6 +129,8 @@ log.info ""
 // Main Pipeline 
 //--------------------------------------------------------------------------------------
 
+nextflow.enable.dsl=1
+
 //process 1 file unless --n used at run time, e.g. -n 32
 params.n = 1 
 
@@ -323,7 +325,7 @@ process buildIndex {
   label "process_medium"
      
   input:
-    path reference from params.ref
+    path reference from "${baseDir}/${params.ref}"
       
   output:
     path 'genome.index*' into indexChannel
