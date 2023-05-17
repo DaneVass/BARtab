@@ -122,7 +122,7 @@ if (!params.outdir) {
 if (params.mode == "single-cell" && !params.ref) {
   error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
 }
-if (params.constants != "up" && params.constants != "down" && params.constants != "both") {
+if (params.constants != "up" && params.constants != "down" && params.constants != "both" && params.constants != "all") {
   error "Error: unsupported value for parameter constants. Choose either up, down or both (default up)."
 }
 
@@ -142,6 +142,7 @@ log.info ""
 
 log.info "      Run parameters: "
 log.info " ========================"
+  log.info " Mode                     : ${params.mode}"
 if (params.indir) {
   log.info " Input directory          : ${params.indir}"
 }
@@ -149,7 +150,6 @@ if (params.bam) {
   log.info " BAM file                 : ${params.bam}"
 }
   log.info " Output directory         : ${params.outdir}"
-  log.info " Mode                     : ${params.mode}"
 if (params.ref) {
   log.info " Reference fasta          : ${params.ref}"
 }
@@ -217,7 +217,7 @@ workflow {
 
 // Mail notification
 
-if (params.email == "yourmail@yourdomain" || params.email == "") { 
+if (!params.email) { 
     log.info '\n'
 }
 else {
