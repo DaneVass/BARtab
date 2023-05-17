@@ -68,7 +68,8 @@ def helpMessage() {
       --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
 
     Trimming arguments:
-      --constants                Which constant regions flanking barcode to search for in reads <up, down, both> [default = 'up']
+      --constants                Which constant regions flanking barcode to search for in reads: up, down or both. "all" runs all 3 modes and combines the results. 
+                                 Single-cell mode always runs with "all". <up, down, both, all> [default = 'up']
       --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
