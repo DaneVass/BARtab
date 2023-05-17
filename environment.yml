@@ -1,4 +1,4 @@
-name: bartab-1.1
+name: bartab-1.2
 channels:
   - defaults
   - bioconda
