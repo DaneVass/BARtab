@@ -9,7 +9,6 @@ process BOWTIE_ALIGN {
 
     output:
     tuple val(sample_id), path("${sample_id}.mapped.sam"), emit: mapped_reads
-    path "${sample_id}.unmapped.fastq", emit: unmapped_reads
     path "${sample_id}.bowtie.log", emit: log
 
     script:
