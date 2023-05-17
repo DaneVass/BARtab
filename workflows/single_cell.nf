@@ -31,7 +31,7 @@ workflow SINGLE_CELL {
 
         reference = file(params.ref)
 
-        params.multiqc_config = "$baseDir/config/multiqc_config.yaml"
+        params.multiqc_config = "$baseDir/assets/multiqc_config.yaml"
 
         multiqcConfig = Channel.fromPath(params.multiqc_config, checkIfExists: true)
 
@@ -68,9 +68,8 @@ workflow SINGLE_CELL {
 
         UMITOOLS_COUNT(SAMTOOLS.out.bam, SAMTOOLS.out.bai)
 
-        // TODO does not work properly potentially 
         PARSE_BARCODES_SC(UMITOOLS_COUNT.out)
 
         // pass counts to multiqc so it waits to run until all samples are processed
-        // MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out) 
+        MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out) 
 }

@@ -39,7 +39,7 @@ workflow BULK {
             reference = file(params.ref)
         }
 
-        params.multiqc_config = "$baseDir/config/multiqc_config.yaml"
+        params.multiqc_config = "$baseDir/assets/multiqc_config.yaml"
 
         multiqcConfig = Channel.fromPath(params.multiqc_config, checkIfExists: true)
 
