@@ -71,5 +71,5 @@ workflow SINGLE_CELL {
         PARSE_BARCODES_SC(UMITOOLS_COUNT.out)
 
         // pass counts to multiqc so it waits to run until all samples are processed
-        // MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out) 
+        // MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out.counts)
 }
