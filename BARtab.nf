@@ -49,9 +49,7 @@ def helpMessage() {
   Usage: nextflow run BARtab.nf --indir <input dir> 
                                 --outdir <output dir> 
                                 --ref <path/to/reference/fasta> 
-                                --mode <single-bulk | paired-bulk | single-cell> 
-                                -profile local
-                                --help
+                                --mode <single-bulk | paired-bulk | single-cell>
 
     Input arguments:
       --input                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
@@ -84,17 +82,12 @@ def helpMessage() {
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
 
     Optional arguments:
-      -profile                   Configuration profile to use. Can use multiple (comma separated) [default = 'local']
-                                        Available: local, singularity, slurm
+      -profile                   Configuration profile to use. Can use multiple (comma separated)
+                                        Available: conda, singularity, docker, slurm
       --outdir                   Output directory to place output [default = './']
       --threads                  Number of CPUs to use [default = 4]
       --email                    Direct output messages to this address [default = '']
       --help                     Print this help statement.
-
-    Profiles:
-      local                      local execution
-      singularity                use singularity container
-      slurm                      SLURM execution 
 
     Author:
       Dane Vassiliadis (dane.vassiliadis@petermac.org)

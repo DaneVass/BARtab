@@ -5,9 +5,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
   Usage: nextflow run BARtab.nf --indir <input dir> 
                                 --outdir <output dir> 
                                 --ref <path/to/reference/fasta> 
-                                --mode <single-bulk | paired-bulk | single-cell> 
-                                -profile local
-                                --help
+                                --mode <single-bulk | paired-bulk | single-cell>
 
     Input arguments:
       --input                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
@@ -39,17 +37,12 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
 
     Optional arguments:
-      -profile                   Configuration profile to use. Can use multiple (comma separated) [default = 'local']
-                                        Available: local, singularity, slurm
+      -profile                   Configuration profile to use. Can use multiple (comma separated)
+                                        Available: conda, singularity, docker, slurm
       --outdir                   Output directory to place output [default = './']
       --threads                  Number of CPUs to use [default = 4]
       --email                    Direct output messages to this address [default = '']
       --help                     Print this help statement.
-
-    Profiles:
-      local                      local execution
-      singularity                use singularity container
-      slurm                      SLURM execution 
 
     Author:
       Dane Vassiliadis (dane.vassiliadis@petermac.org)
@@ -77,24 +70,41 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 * [bowtie1](http://bowtie-bio.sourceforge.net/index.shtml)
 * [samtools](http://www.htslib.org/)
 
-## Installing the pipeline (Conda method)
-1. Install Nextflow using the instructions found here: https://www.nextflow.io/docs/latest/getstarted.html
-2. Install miniconda using the instructions found here: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html 
-3. Install BARtab dependencies by running `conda env create -f environment.yaml`
-4. Activate BARtab environment by running `conda activate BARtab_env`
-5. Print BARtab help message `nextflow run BARtab.nf --help`
+## Installing the pipeline
+1. Install Nextflow using the instructions found [here](https://www.nextflow.io/docs/latest/getstarted.html) (and [here](https://www.nextflow.io/blog/2021/nextflow-developer-environment.html))
+    ```
+    curl get.nextflow.io | bash
+    sudo mv nextflow /usr/local/bin
+    ```
+
+2. Clone this repository
+    ```
+    git clone git@github.com:DaneVass/BARtab.git
+    ```
+
+2. Install dependencies
+    ### Conda
+    1. Install miniconda using the instructions found here: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html 
+    3. It is recommended to use mamba to create the conda environment `conda install -c conda-forge mamba`
+    4. Install BARtab dependencies by running `mamba env create -f environment.yaml` or `conda env create -f environment.yaml`
+    5. Run the pipeline with `nextflow run BARtab.nf -profile conda [options]` 
+    
+    The location of the conda environment is specified in `conf/conda.config`.
+
+    ### Docker
+    
+    ### Singularity
 
 ## Running the pipeline
-1. Run the test datasets using `nextflow run BARtab.nf --indir test/dat`
-2. Setup a directory containing input fastq files.
-3. Run the pipeline - `nextflow run BARtab.nf -i <input_dir> -o <output_dir> <other args>`
-4. Alternatively, configure run parameters in `run_BARtab.sh` and run the pipeline using `bash run_BARtab.sh`
-5. If running the pipeline on a remote HPC it is recommended to run the pipeline within a tmux session as follows
-   1. Initialise a new tmux session called "bartab" by running `tmux new -s bartab`
-   2. Re activate the BARtab environment within the tmux session by running `conda activate BARtab_env`
-   3. Run the pipeline via steps 3. or 4. above.
-   4. exit the tmux session using ^B then D (Mac) or Ctrl+B then D Windows/UNIX
-   5. Continue working on something else
-   6. re-enter the tmux session by running `tmux a -t bartab`
+Print the help message with `nextflow run BARtab.nf --help`
 
+Run any of the test datasets using `nextflow run BARtab.nf -profile <test_SE,test_PE, test_SE_ref_free,test_sc,test_sc_bam>,<conda,docker,singularity>`
 
+Run the pipeline with your own data
+- Single-end bulk workflow: `nextflow run BARtab.nf --mode single-bulk --indir <input_dir> --outdir <output_dir> --ref <reference> [options]`
+- Paired-end bulk workflow: `nextflow run BARtab.nf --mode paired-bulk --indir <input_dir> --outdir <output_dir> --ref <reference> [options]`
+- Reference-free single-end bulk workflow: `nextflow run BARtab.nf --mode single-bulk --indir <input_dir> --outdir <output_dir> [options]`
+- Single-cell workflow with fastq input: `nextflow run BARtab.nf --mode single-cell --indir <input_dir> --outdir <output_dir> --ref <reference> [options]`
+- Single-cell workflow with BAM file input: `nextflow run BARtab.nf --mode single-cell --bam <input_dir> --outdir <output_dir> --ref <reference> [options]`
+
+Use `-w` to specify the location of the work directory and `-resume` when only parts of the input have changed or only a subset of process has to be re-run. 
