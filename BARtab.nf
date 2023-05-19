@@ -29,9 +29,7 @@ nextflow.enable.dsl = 2
 
 // https://www.coolgenerator.com/ascii-text-generator Delta Corps Priest 1
 
-def helpMessage() {
-  log.info """
-
+logo = """
 ▀█████████▄     ▄████████    ▄████████     ███        ▄████████ ▀█████████▄  
   ███    ███   ███    ███   ███    ███ ▀█████████▄   ███    ███   ███    ███ 
   ███    ███   ███    ███   ███    ███    ▀███▀▀██   ███    ███   ███    ███ 
@@ -41,56 +39,55 @@ def helpMessage() {
   ███    ███   ███    ███   ███    ███     ███       ███    ███   ███    ███ 
 ▄█████████▀    ███    █▀    ███    ███    ▄████▀     ███    █▀  ▄█████████▀  
                             ███    ███                                       
+"""
 
----------------------- Tabulate Barcode Counts in NGS ----------------------
+def helpMessage() {
+  log.info logo + """
+
+---------------------- Tabulate Barcode Counts in NGS data ----------------------
 
   Usage: nextflow run BARtab.nf --indir <input dir> 
                                 --outdir <output dir> 
                                 --ref <path/to/reference/fasta> 
-                                --mode <single-bulk | paired-bulk | single-cell> 
-                                -profile local
-                                --help
+                                --mode <single-bulk | paired-bulk | single-cell>
 
-    Required arguments:
-      --input                    Directory containing input *.fastq.gz files
+    Input arguments:
+      --input                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
+                                        For single-cell mode, a BAM file can be provided instead (see --bam)
       --ref                      Path to a reference fasta file for the barcode / sgRNA library.
-                                        If null, reference-free workflow will be used for single-bulk and paired-bulk modes
-      --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell> [default = 'single-bulk']
+                                        If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
+      --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell>
 
     Read merging arguments:
-      --merge                    Boolean. Merge overlapping reads? [default = FALSE]
       --mergeoverlap             Length of overlap required to merge paired-end reads [default = 10]
 
     Filtering arguments:
       --minqual                  Minimum PHRED quality per base [default = 20]
       --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
-      --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
-      --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
-      --constants                Which constant regions flanking barcode to search for in reads <up, down, both> [default = 'up']
 
     Trimming arguments:
+      --constants                Which constant regions flanking barcode to search for in reads: up, down or both. "all" runs all 3 modes and combines the results. 
+                                 Single-cell mode always runs with "all". <up, down, both, all> [default = 'up']
+      --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
+      --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
+      --min_readlength           Minimum read length [default = 15]
 
     Mapping arguments:
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 1]
 
+    Sincle-cell arguments:
+      --bam                      Path to BAM file output of Cell Ranger, containing reads that do not map to the reference genome. Only permitted in single-cell mode
+      --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
+      --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
+
     Optional arguments:
-      -profile                   Configuration profile to use. Can use multiple (comma separated) [default = 'local']
-                                        Available: local, singularity, slurm
+      -profile                   Configuration profile to use. Can use multiple (comma separated)
+                                        Available: conda, singularity, docker, slurm
       --outdir                   Output directory to place output [default = './']
       --threads                  Number of CPUs to use [default = 4]
       --email                    Direct output messages to this address [default = '']
       --help                     Print this help statement.
-
-    Modes:
-      single-bulk                single-end bulk workflow
-      paired-bulk                paired-end bulk workflow
-      single-cell                paired-end single-cell annotation workflow
-
-    Profiles:
-      local                      local execution
-      singularity                use singularity container
-      slurm                      SLURM execution 
 
     Author:
       Dane Vassiliadis (dane.vassiliadis@petermac.org)
@@ -107,17 +104,22 @@ if (params.help) {
   exit 0
 }
 
-// if --merge == true throw error because single end reads should not be merged
-if (!params.merge && params.mode == "single-bulk") {
-  log.info("mode has been set to 'single-bulk' but params.merge is TRUE. Exiting.")
-  exit 0
+if (!params.mode) {
+  error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
 }
-
-// if --merge == false throw error because paired end reads should be merged
-if (params.merge && params.mode == "paired-bulk") {    
-  log.info("mode has been set to "paired-bulk" but params.merge is FALSE."+e,e)
-  log.info("BARtab does not currently support paired-end bulk mode without merging. Exiting"+e,e)
-  exit 0
+if (!params.indir && !params.bam && params.mode != "single-cell") {
+  error "Error: please provide the location of fastq files via the parameter indir."
+} else if (!params.indir && !params.bam && params.mode == "single-cell") {
+  error "Error: please either provide the location of fastq files via the parameter indir or a bam file."
+}
+if (!params.outdir) {
+  error "Error: please specify location of output directory via parameter outdir."
+}
+if (params.mode == "single-cell" && !params.ref) {
+  error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
+}
+if (params.constants != "up" && params.constants != "down" && params.constants != "both" && params.constants != "all") {
+  error "Error: unsupported value for parameter constants. Choose either up, down or both (default up)."
 }
 
 //--------------------------------------------------------------------------------------
@@ -126,17 +128,7 @@ if (params.merge && params.mode == "paired-bulk") {
 
 // setup run info for logging
 log.info ""
-log.info """
-▀█████████▄     ▄████████    ▄████████     ███        ▄████████ ▀█████████▄  
-  ███    ███   ███    ███   ███    ███ ▀█████████▄   ███    ███   ███    ███ 
-  ███    ███   ███    ███   ███    ███    ▀███▀▀██   ███    ███   ███    ███ 
- ▄███▄▄▄██▀    ███    ███  ▄███▄▄▄▄██▀     ███   ▀   ███    ███  ▄███▄▄▄██▀  
-▀▀███▀▀▀██▄  ▀███████████ ▀▀███▀▀▀▀▀       ███     ▀███████████ ▀▀███▀▀▀██▄  
-  ███    ██▄   ███    ███ ▀███████████     ███       ███    ███   ███    ██▄ 
-  ███    ███   ███    ███   ███    ███     ███       ███    ███   ███    ███ 
-▄█████████▀    ███    █▀    ███    ███    ▄████▀     ███    █▀  ▄█████████▀  
-                            ███    ███                                       
-"""
+log.info logo
 // https://www.coolgenerator.com/ascii-text-generator Delta Corps Priest 1
 log.info ""
 log.info " ---------------------- Tabulate Barcode Counts in NGS ----------------------"
@@ -146,22 +138,42 @@ log.info ""
 
 log.info "      Run parameters: "
 log.info " ========================"
-log.info " input directory          : ${params.indir}"
-log.info " output directory         : ${params.outdir}"
-log.info " reference fasta          : ${params.ref}"
-log.info " upstream constant        : ${params.upconstant}"
-log.info " downstream constant      : ${params.downconstant}"
-log.info " constants to use         : ${params.constants}"
-log.info " constant mismatches      : ${params.constantmismatches}"
-log.info " alignment mismatches     : ${params.alnmismatches}"
-log.info " CPU threads              : ${params.threads}"
-log.info " Minimum PHRED quality    : ${params.minqual}"
-log.info " Quality percentage       : ${params.pctqual}"
-log.info " Email                    : ${params.email}"
-log.info " Merge paired-end reads   : ${params.merge}"
-log.info " Workflow                 : ${params.mode}"
-log.info " ========================"
-log.info ""
+  log.info " Mode                     : ${params.mode}"
+if (params.indir) {
+  log.info " Input directory          : ${params.indir}"
+}
+if (params.bam) {
+  log.info " BAM file                 : ${params.bam}"
+}
+  log.info " Output directory         : ${params.outdir}"
+if (params.ref) {
+  log.info " Reference fasta          : ${params.ref}"
+}
+if (params.mode == "paired-bulk") {
+  log.info " Merge overlap            : ${params.mergeoverlap}"
+}
+if (params.mode != "single-cell") {
+  log.info " Minimum PHRED quality    : ${params.minqual}"
+  log.info " Quality percentage       : ${params.pctqual}"
+}
+  log.info " Upstream constant        : ${params.upconstant}"
+  log.info " Downstream constant      : ${params.downconstant}"
+  log.info " Constants to use         : ${params.constants}"
+  log.info " Constant mismatches      : ${params.constantmismatches}"
+  log.info " Minimum read length      : ${params.min_readlength}"
+if (params.ref) {
+  log.info " Alignment mismatches     : ${params.alnmismatches}"
+}
+if (params.mode == "single-cell") {
+  log.info " UMI distance             : ${params.umi_dist}"
+}
+if (params.mode == "single-cell" && !params.bam) {
+  log.info " Cell number              : ${params.cellnumber}"
+}
+  log.info " CPU threads              : ${params.threads}"
+  log.info " Email                    : ${params.email}"
+  log.info " ========================"
+  log.info ""
 
 
 
@@ -169,33 +181,73 @@ log.info ""
 // Named workflow for pipeline
 //--------------------------------------------------------------------------------------
 
-if (params.mode == "single-bulk") {
-  include { single_bulk } from './workflows/single-bulk'
-  println "Running single-end bulk workflow"
-  println ""
+include { SINGLE_CELL } from './workflows/single_cell'
+include { BULK } from './workflows/bulk'
+
+workflow {
+  if (params.mode == "single-bulk") {
+
+    println "Running single-end bulk workflow"
+    println ""
+
+    BULK ()
+  }
+  else if (params.mode == "paired-bulk") {
     
-  workflow {
-    single_bulk ()
+    println "Running paired-end bulk workflow"
+    println ""
+
+    BULK ()
+  }
+  else if (params.mode == "single-cell") {
+    println "Running single-cell workflow"
+    println ""
+
+    SINGLE_CELL ()
   }
 }
 
-if (params.mode == "paired-bulk") {
-  //include { paired-bulk } from './workflows/paired-bulk'
-  println "Running paired-end bulk workflow"
-  println ""
+//--------------------------------------------------------------------------------------
+// Post processing
+//--------------------------------------------------------------------------------------
 
-  //workflow paired-bulk {
-  //  paired-bulk ()
-  //}
+// Mail notification
+
+if (!params.email) { 
+    log.info '\n'
+}
+else {
+    log.info "\n"
+    log.info "Sending runtime report to ${params.email}\n"
+
+    workflow.onComplete {
+
+    def msg = """\
+        Pipeline execution summary
+        ---------------------------
+        Completed at: ${workflow.complete}
+        Duration    : ${workflow.duration}
+        Success     : ${workflow.success}
+        workDir     : ${workflow.workDir}
+        exit status : ${workflow.exitStatus}
+        Error report: ${workflow.errorReport ?: '-'}
+        """
+        .stripIndent()
+    
+    sendMail(to: params.email, subject: "BARtab execution report", body: msg,  attach: "${params.outdir}/multiqc_report.html")
+    }
 }
 
-if (params.mode == "single-cell") {
-  //include { single-cell } from './workflows/single-cell'
-  println "Running single-cell workflow"
-  println ""
-
-  //workflow single-cell {
-  //  single-cell ()
-  //}
+// Print completion messages
+workflow.onComplete {
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    NC='\033[0m'
+    
+    log.info ""
+    log.info " ---------------------- BARtab Pipeline has finished ----------------------"
+    log.info ""
+    log.info "Status:   " + (workflow.success ? "${GREEN}SUCCESS${NC}" : "${RED}ERROR${NC}")
+    log.info "Pipeline completed at: $workflow.complete"
+    log.info "Pipeline runtime: ${workflow.duration}\n"
 }
-
