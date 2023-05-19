@@ -56,7 +56,7 @@ def helpMessage() {
                                         For single-cell mode, a BAM file can be provided instead (see --bam)
       --ref                      Path to a reference fasta file for the barcode / sgRNA library.
                                         If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
-      --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell> [default = 'single-bulk']
+      --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell>
 
     Read merging arguments:
       --mergeoverlap             Length of overlap required to merge paired-end reads [default = 10]
@@ -104,6 +104,9 @@ if (params.help) {
   exit 0
 }
 
+if (!params.mode) {
+  error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
+}
 if (!params.indir && !params.bam && params.mode != "single-cell") {
   error "Error: please provide the location of fastq files via the parameter indir."
 } else if (!params.indir && !params.bam && params.mode == "single-cell") {
