@@ -4,7 +4,7 @@ include { FASTQC } from '../modules/local/fastqc'
 // include { FILTER_READS } from '../modules/local/filter_reads'
 include { UMITOOLS_WHITELIST } from '../modules/local/umitools_whitelist'
 include { UMITOOLS_EXTRACT } from '../modules/local/umitools_extract'
-include { PROCESS_CR } from '../modules/local/process_cr'
+include { PROCESS_BAM } from '../modules/local/process_bam'
 include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
 include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
@@ -50,7 +50,7 @@ workflow SINGLE_CELL {
         }
         else {
             // extract reads with cell barcode and UMI and convert to fastq
-            r2_fastq = PROCESS_CR(readsChannel)
+            r2_fastq = PROCESS_BAM(readsChannel)
         }
 
         CUTADAPT_READS(r2_fastq)
