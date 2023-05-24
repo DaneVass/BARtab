@@ -12,10 +12,9 @@ process FILTER_READS{
   
   script:
   """
-  fastq_quality_filter \\
+  gunzip -f -c ${reads} | fastq_quality_filter \\
     -z -v -p ${params.pctqual} \\
     -q ${params.minqual} \\
-    -i ${reads} \\
     > ${sample_id}.filtered.fastq.gz \\
     2> ${sample_id}.filter.log
   """ 

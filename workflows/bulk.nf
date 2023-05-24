@@ -1,8 +1,6 @@
 include { SOFTWARE_CHECK } from '../modules/local/software_check'
 include { FASTQC } from '../modules/local/fastqc'
 include { MERGE_READS } from '../modules/local/merge_reads'
-include { GUNZIP_READS } from '../modules/local/gunzip_reads'
-include { GUNZIP_READS_PE } from '../modules/local/gunzip_reads_pe'
 include { FILTER_READS } from '../modules/local/filter_reads'
 include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
 include { STARCODE } from '../modules/local/starcode'
@@ -33,8 +31,6 @@ workflow BULK {
                 .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
         }
 
-        readsChannel.view { "file: $it" }
-
         if (params.ref) {
             reference = file(params.ref)
         }
@@ -54,13 +50,13 @@ workflow BULK {
         FASTQC(readsChannel)
 
         if (params.mode == "single-bulk") {
-            unzipped_reads = GUNZIP_READS(readsChannel)
+            reads = readsChannel
         } else if (params.mode == "paired-bulk") {
             MERGE_READS(readsChannel)
-            unzipped_reads = GUNZIP_READS_PE(MERGE_READS.out.merged_reads)
+            reads = MERGE_READS.out.merged_reads
         }
         
-        FILTER_READS(unzipped_reads)
+        FILTER_READS(reads)
 
         CUTADAPT_READS(FILTER_READS.out.reads)
 

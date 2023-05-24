@@ -1,6 +1,5 @@
 include { SOFTWARE_CHECK } from '../modules/local/software_check'
 include { FASTQC } from '../modules/local/fastqc'
-// include { GUNZIP_READS } from '../modules/local/gunzip_reads'
 // include { FILTER_READS } from '../modules/local/filter_reads'
 include { UMITOOLS_WHITELIST } from '../modules/local/umitools_whitelist'
 include { UMITOOLS_EXTRACT } from '../modules/local/umitools_extract'
@@ -27,7 +26,6 @@ workflow SINGLE_CELL {
             readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}*.{fastq,fq}.gz" )
                 .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
         }
-        readsChannel.view { "file: $it" }
 
         reference = file(params.ref)
 
