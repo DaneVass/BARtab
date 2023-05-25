@@ -14,14 +14,14 @@ process BOWTIE_ALIGN {
     script:
     """
     bowtie \\
-    -p ${task.cpus}\\
+    -x ${refname} \\
+    -q ${reads} \\
+    -p ${task.cpus} \\
     -v ${params.alnmismatches} \\
     --norc \\
     -t \\
-    ${refname} \\
-    ${reads} \\
     --no-unal \\
-    -S > ${sample_id}.mapped.sam \\
+    -S ${sample_id}.mapped.sam \\
     2> ${sample_id}.bowtie.log
     """
 }
