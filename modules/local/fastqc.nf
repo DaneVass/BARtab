@@ -12,6 +12,6 @@ process FASTQC {
   script:
 
   """
-  fastqc --threads ${params.threads} ${reads}
+  fastqc --threads ${task.cpus} ${reads}
   """
 }

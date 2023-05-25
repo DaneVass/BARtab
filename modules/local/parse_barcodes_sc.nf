@@ -1,5 +1,6 @@
 process PARSE_BARCODES_SC {
     publishDir "${params.outdir}", mode: 'copy'
+    label "process_low"
     input:
         tuple val(sample_id), path(counts)
 

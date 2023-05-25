@@ -40,7 +40,6 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       -profile                   Configuration profile to use. Can use multiple (comma separated)
                                         Available: conda, singularity, docker, slurm
       --outdir                   Output directory to place output [default = './']
-      --threads                  Number of CPUs to use [default = 4]
       --email                    Direct output messages to this address [default = '']
       --help                     Print this help statement.
 

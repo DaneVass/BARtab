@@ -85,7 +85,6 @@ def helpMessage() {
       -profile                   Configuration profile to use. Can use multiple (comma separated)
                                         Available: conda, singularity, docker, slurm
       --outdir                   Output directory to place output [default = './']
-      --threads                  Number of CPUs to use [default = 4]
       --email                    Direct output messages to this address [default = '']
       --help                     Print this help statement.
 
@@ -170,7 +169,6 @@ if (params.mode == "single-cell") {
 if (params.mode == "single-cell" && !params.bam) {
   log.info " Cell number              : ${params.cellnumber}"
 }
-  log.info " CPU threads              : ${params.threads}"
   log.info " Email                    : ${params.email}"
   log.info " ========================"
   log.info ""

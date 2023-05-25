@@ -11,6 +11,6 @@ process GET_BARCODE_COUNTS {
   
   shell:
   """
-  samtools idxstats -@ ${params.threads} ${reads} | cut -f1,3 > ${sample_id}_rawcounts.txt
+  samtools idxstats -@ ${task.cpus} ${reads} | cut -f1,3 > ${sample_id}_rawcounts.txt
   """
 }

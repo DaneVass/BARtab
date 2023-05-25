@@ -1,6 +1,6 @@
 process UMITOOLS_WHITELIST {
   tag "umi_tools whitelist on $sample_id"
-  label "process_med"
+  label "process_medium"
   publishDir "${params.outdir}/extract", mode: 'symlink'
 
   input:

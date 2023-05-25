@@ -1,6 +1,6 @@
 process UMITOOLS_EXTRACT {
   tag "umi_tools extract on $sample_id"
-  label "process_med"
+  label "process_medium"
   publishDir "${params.outdir}/extract", mode: 'symlink'
 
   input:

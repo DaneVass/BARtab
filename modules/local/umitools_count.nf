@@ -1,6 +1,6 @@
 process UMITOOLS_COUNT {
   tag "umi_tools count on $sample_id"
-  label "process_med"
+  label "process_medium"
   publishDir "${params.outdir}/counts", mode: 'symlink'
 
   input:

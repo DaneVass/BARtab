@@ -1,6 +1,6 @@
 // check and report on software versions used in the pipeline run
 process SOFTWARE_CHECK {
-  label 'software_check'
+  label 'process_single'
 
   publishDir "${params.outdir}/reports", mode: 'copy', overwrite: 'true'
 

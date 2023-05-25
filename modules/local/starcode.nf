@@ -1,6 +1,6 @@
 process STARCODE {
     tag { "starcode on ${sample_id}" }
-    label "process_low"
+    label "process_medium"
     publishDir "${params.outdir}/starcode/", mode: 'copy'
 
     input:
@@ -11,6 +11,6 @@ process STARCODE {
     
     script:
     """
-    starcode -t 8 $reads > ${sample_id}_starcode.txt
+    starcode -t ${task.cpus} $reads > ${sample_id}_starcode.txt
     """
 }
