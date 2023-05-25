@@ -81,6 +81,11 @@ def helpMessage() {
       --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
 
+    Resources:
+      --max_cpus                  Maximum number of CPUs [default = 6]
+      --max_memory                Maximum memory [default = "14.GB"]
+      --max_time                  Maximum time [default = "40.h"]
+
     Optional arguments:
       -profile                   Configuration profile to use. Can use multiple (comma separated)
                                         Available: conda, singularity, docker, slurm
