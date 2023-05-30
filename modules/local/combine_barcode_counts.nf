@@ -1,5 +1,5 @@
 process COMBINE_BARCODE_COUNTS {
-  label "process_low"
+  label "process_high"
   publishDir "${params.outdir}/counts/", mode: 'copy'
 
   input:
@@ -10,6 +10,6 @@ process COMBINE_BARCODE_COUNTS {
   
   script: 
   """
-  combine_counts.R $counts all_counts_combined.txt
+  combine_counts.py $counts all_counts_combined.txt
   """
 }
