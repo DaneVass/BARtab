@@ -65,7 +65,7 @@ workflow BULK {
             BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
 
             SAMTOOLS(BOWTIE_ALIGN.out.mapped_reads)
-            GET_BARCODE_COUNTS(SAMTOOLS.out.bam)
+            GET_BARCODE_COUNTS(SAMTOOLS.out)
 
             combined_reads = COMBINE_BARCODE_COUNTS(GET_BARCODE_COUNTS.out.collect())
         } 
