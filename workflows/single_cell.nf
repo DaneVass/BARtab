@@ -1,10 +1,9 @@
 include { SOFTWARE_CHECK } from '../modules/local/software_check'
 include { FASTQC } from '../modules/local/fastqc'
-// include { GUNZIP_READS } from '../modules/local/gunzip_reads'
 // include { FILTER_READS } from '../modules/local/filter_reads'
 include { UMITOOLS_WHITELIST } from '../modules/local/umitools_whitelist'
 include { UMITOOLS_EXTRACT } from '../modules/local/umitools_extract'
-include { PROCESS_CR } from '../modules/local/process_cr'
+include { PROCESS_BAM } from '../modules/local/process_bam'
 include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
 include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
@@ -27,7 +26,6 @@ workflow SINGLE_CELL {
             readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}*.{fastq,fq}.gz" )
                 .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
         }
-        readsChannel.view { "file: $it" }
 
         reference = file(params.ref)
 
@@ -46,14 +44,14 @@ workflow SINGLE_CELL {
 
             // extract reads with cell barcode from fastq input
             UMITOOLS_WHITELIST(readsChannel)
-            r2_fastq = UMITOOLS_EXTRACT(readsChannel, UMITOOLS_WHITELIST.out)
+            r2_fastq = UMITOOLS_EXTRACT(readsChannel, UMITOOLS_WHITELIST.out.whitelist)
         }
         else {
             // extract reads with cell barcode and UMI and convert to fastq
-            r2_fastq = PROCESS_CR(readsChannel)
+            r2_fastq = PROCESS_BAM(readsChannel)
         }
 
-        CUTADAPT_READS(r2_fastq)
+        CUTADAPT_READS(r2_fastq.reads)
 
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
         BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
@@ -68,7 +66,7 @@ workflow SINGLE_CELL {
 
         UMITOOLS_COUNT(SAMTOOLS.out.bam, SAMTOOLS.out.bai)
 
-        PARSE_BARCODES_SC(UMITOOLS_COUNT.out)
+        PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts)
 
         // pass counts to multiqc so it waits to run until all samples are processed
         // MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out.counts)

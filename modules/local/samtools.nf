@@ -1,6 +1,6 @@
 process SAMTOOLS {
     tag { "samtools on ${sample_id}" }
-    label "process_low"
+    label "process_medium"
     publishDir "${params.outdir}/mapped_reads/", mode: 'copy'
 
     input:
@@ -12,7 +12,7 @@ process SAMTOOLS {
     
     script:
     """
-    samtools view -@ ${params.threads} -Sb ${reads} | samtools sort -@ ${params.threads} - > ${sample_id}.mapped.bam
-    samtools index -@ ${params.threads} ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
+    samtools sort -@ ${task.cpus} ${reads} -o ${sample_id}.mapped.bam
+    samtools index -@ ${task.cpus} ${sample_id}.mapped.bam ${sample_id}.mapped.bam.bai
     """
 }

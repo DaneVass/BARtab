@@ -16,6 +16,6 @@ process MERGE_READS {
 
   script: 
   """
-  flash -z --min-overlap=${params.mergeoverlap} -t ${params.threads} --output-prefix=${sample_id} ${reads} 2> "${sample_id}.flash.log"
+  flash -z --min-overlap=${params.mergeoverlap} -t ${task.cpus} --output-prefix=${sample_id} ${reads} 2> "${sample_id}.flash.log"
   """
 }

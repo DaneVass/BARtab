@@ -11,12 +11,15 @@ process FILTER_READS{
     path "${sample_id}.filter.log", emit: log
   
   script:
+  // Must write decompressed file, otherwise EOFError if piping gunzip output directly into fastq_quality_filter
   """
-  fastq_quality_filter \\
+  gunzip -c ${reads} > ${sample_id}.tmp.fastq
+  fastq_quality_filter -i ${sample_id}.tmp.fastq \\
     -z -v -p ${params.pctqual} \\
     -q ${params.minqual} \\
-    -i ${reads} \\
     > ${sample_id}.filtered.fastq.gz \\
     2> ${sample_id}.filter.log
-  """ 
+
+  rm ${sample_id}.tmp.fastq
+  """
 }

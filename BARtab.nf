@@ -81,11 +81,15 @@ def helpMessage() {
       --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
 
+    Resources:
+      --max_cpus                  Maximum number of CPUs [default = 6]
+      --max_memory                Maximum memory [default = "14.GB"]
+      --max_time                  Maximum time [default = "40.h"]
+
     Optional arguments:
       -profile                   Configuration profile to use. Can use multiple (comma separated)
                                         Available: conda, singularity, docker, slurm
       --outdir                   Output directory to place output [default = './']
-      --threads                  Number of CPUs to use [default = 4]
       --email                    Direct output messages to this address [default = '']
       --help                     Print this help statement.
 
@@ -170,7 +174,6 @@ if (params.mode == "single-cell") {
 if (params.mode == "single-cell" && !params.bam) {
   log.info " Cell number              : ${params.cellnumber}"
 }
-  log.info " CPU threads              : ${params.threads}"
   log.info " Email                    : ${params.email}"
   log.info " ========================"
   log.info ""

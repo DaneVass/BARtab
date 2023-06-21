@@ -1,6 +1,6 @@
 process BOWTIE_ALIGN {
     tag { "bowtie on ${sample_id}" }
-    label "process_low"
+    label "process_medium"
     publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
 
     input:
@@ -14,14 +14,14 @@ process BOWTIE_ALIGN {
     script:
     """
     bowtie \\
-    -p ${params.threads} \\
+    -x ${refname} \\
+    -q ${reads} \\
+    -p ${task.cpus} \\
     -v ${params.alnmismatches} \\
     --norc \\
     -t \\
-    ${refname} \\
-    ${reads} \\
     --no-unal \\
-    -S > ${sample_id}.mapped.sam \\
+    -S ${sample_id}.mapped.sam \\
     2> ${sample_id}.bowtie.log
     """
 }

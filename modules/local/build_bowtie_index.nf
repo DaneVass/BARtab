@@ -2,6 +2,7 @@
 // https://biocorecrg.github.io/SIB_course_nextflow_Nov_2021/docs/fourth.html
 process BUILD_BOWTIE_INDEX {
     tag { "bowtie_build on ${ref}" }
+    label "process_medium"
 
     input:
     path ref
@@ -11,6 +12,6 @@ process BUILD_BOWTIE_INDEX {
 
     script:
     """
-    bowtie-build --threads ${params.threads} ${ref} ${ref}
+    bowtie-build --threads ${task.cpus} ${ref} ${ref}
     """
 }
