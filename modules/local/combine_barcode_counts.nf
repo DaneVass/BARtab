@@ -6,10 +6,10 @@ process COMBINE_BARCODE_COUNTS {
     path counts
 
   output:
-    path "all_counts_combined.txt"
+    path "all_counts_combined.tsv"
   
   script: 
   """
-  combine_counts.py $counts all_counts_combined.txt
+  combine_counts.py $counts all_counts_combined.tsv
   """
 }
