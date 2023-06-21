@@ -44,14 +44,14 @@ workflow SINGLE_CELL {
 
             // extract reads with cell barcode from fastq input
             UMITOOLS_WHITELIST(readsChannel)
-            r2_fastq = UMITOOLS_EXTRACT(readsChannel, UMITOOLS_WHITELIST.out)
+            r2_fastq = UMITOOLS_EXTRACT(readsChannel, UMITOOLS_WHITELIST.out.whitelist)
         }
         else {
             // extract reads with cell barcode and UMI and convert to fastq
             r2_fastq = PROCESS_BAM(readsChannel)
         }
 
-        CUTADAPT_READS(r2_fastq)
+        CUTADAPT_READS(r2_fastq.reads)
 
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
         BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
@@ -66,7 +66,7 @@ workflow SINGLE_CELL {
 
         UMITOOLS_COUNT(SAMTOOLS.out.bam, SAMTOOLS.out.bai)
 
-        PARSE_BARCODES_SC(UMITOOLS_COUNT.out)
+        PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts)
 
         // pass counts to multiqc so it waits to run until all samples are processed
         // MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out.counts)
