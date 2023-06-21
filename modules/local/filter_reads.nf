@@ -1,6 +1,6 @@
 process FILTER_READS{
   tag "fastx-toolkit fastq_filter_quality on $sample_id"
-  label "process_low"
+  label "process_medium"
   publishDir "${params.outdir}/filtered_reads/", mode: 'symlink'
 
   input:
