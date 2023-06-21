@@ -18,7 +18,7 @@ library(ggplot2)
 args <- commandArgs(TRUE)
 
 dat <- args[1]
-outfile <- args[2]
+sample_id <- args[2]
 
 # read in barcode-cell pairs
 dat <- read.delim(dat, header = TRUE)
@@ -42,7 +42,7 @@ names(bc.counts) <- c("barcode", "bc.umi.count")
 
 # write final output
 write.table(bc.counts,
-            outfile,
+            paste0(sample_id, "_cell-barcode-anno.tsv"),
             quote = FALSE,
             row.names = TRUE)
 
@@ -73,7 +73,7 @@ p <- ggplot(lineagePerCell.dist.df, aes(x = number_of_lineage_barcodes)) +
   ggtitle("Detected barcodes per cell") +
   theme_classic()
 
-ggsave("barcodes_per_cell.pdf", p)
+ggsave(paste0(sample_id, "_barcodes_per_cell.pdf"), p)
 
 # Number of UMIs supporting the most frequent barcode
 max.umi.per.cell <- setDT(dat)[, .(max = max(count)), by = list(cell)]
@@ -89,4 +89,4 @@ p <- ggplot(max.umi.per.cell, aes(x = max)) +
   ggtitle("UMI supporting the most frequent barcode") +
   theme_classic()
 
-ggsave("UMIs_per_bc.pdf", p)
+ggsave(paste0(sample_id, "_UMIs_per_bc.pdf"), p)
