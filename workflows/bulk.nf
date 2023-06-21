@@ -72,7 +72,7 @@ workflow BULK {
         else {
             // if reference-free, use starcode to cluster barcodes
             STARCODE(CUTADAPT_READS.out.reads)
-            combined_reads = COMBINE_BARCODE_COUNTS(STARCODE.out.collect())
+            combined_reads = COMBINE_BARCODE_COUNTS(STARCODE.out.counts.collect())
         }
 
         // pass counts to multiqc so it waits to run until all samples are processed
