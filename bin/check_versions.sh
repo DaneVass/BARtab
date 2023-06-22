@@ -26,7 +26,7 @@ cutadapt --version >> $out
 
 echo "------------------------------------" >> $out
 echo "starcode version:" >> $out
-starcode --version >> $out
+starcode --version 2>> $out
 
 echo "------------------------------------" >> $out
 echo "R version:" >> $out
