@@ -1,7 +1,7 @@
 /**
 BARtab: A Nextflow pipeline to tabulate synthetic barcode counts from NGS data.
 
-Author: Dane Vassiliadis
+Author: Dane Vassiliadis, Henrietta Holze
 Affiliation: PeterMac Cancer Epigenetics Laboratory
 
 Processes:
@@ -95,6 +95,7 @@ def helpMessage() {
 
     Author:
       Dane Vassiliadis (dane.vassiliadis@petermac.org)
+      Henrietta Holze (henrietta.holze@petermac.org)
     """
 }
 
