@@ -19,7 +19,11 @@ for count_file in files:
 print("merging count tables")
 
 if len(samples) > 1:
-    combined_counts = samples[0].merge(*samples[1:], how="outer", left_index=True, right_index=True).fillna(0).astype(int).reset_index(names="Barcode")
+    # in case of multiple samples, do an iterative outer join
+    combined_counts = samples[0]
+    for i in range(1, len(samples)):
+        combined_counts = combined_counts.merge(samples[i], how="outer", left_index=True, right_index=True)
+    combined_counts = combined_counts.fillna(0).astype(int).reset_index(names="Barcode")
 else:
     combined_counts = samples[0].reset_index(names="Barcode")
 
