@@ -104,7 +104,8 @@ avg_seq_len <- sam %>%
   mutate(sequence_length = nchar(as.character(sequence))) %>%
   select(-sequence) %>%
   group_by(barcode) %>%
-  summarize(avg_sequence_length = mean(sequence_length))
+  summarize(avg_sequence_length = mean(sequence_length)) %>%
+  arrange(desc(avg_sequence_length))
 
 # save data to be able to filter barcodes on their avg seq length later on
 
