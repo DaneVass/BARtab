@@ -20,6 +20,6 @@ process UMITOOLS_COUNT {
     --random-seed=10101 \\
     -I ${bam} \\
     -S ${sample_id}.counts.tsv \\
-    -L ${sample_id}_count.log
+    -L ${sample_id}_counts.log
     """  
 }
