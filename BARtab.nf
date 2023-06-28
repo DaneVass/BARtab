@@ -52,8 +52,9 @@ def helpMessage() {
                                 --mode <single-bulk | paired-bulk | single-cell>
 
     Input arguments:
-      --input                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
-                                        For single-cell mode, a BAM file can be provided instead (see --bam)
+      --indir                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
+                                        For single-cell mode, directory can contain BAM files.
+      --input_type               Input file type, either fastq or bam, only relevant for single-cell mode [default = fastq]
       --ref                      Path to a reference fasta file for the barcode / sgRNA library.
                                         If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
       --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell>
@@ -77,7 +78,6 @@ def helpMessage() {
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 1]
 
     Sincle-cell arguments:
-      --bam                      Path to BAM file output of Cell Ranger, containing reads that do not map to the reference genome. Only permitted in single-cell mode
       --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
 
@@ -112,10 +112,11 @@ if (params.help) {
 if (!params.mode) {
   error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
 }
-if (!params.indir && !params.bam && params.mode != "single-cell") {
-  error "Error: please provide the location of fastq files via the parameter indir."
-} else if (!params.indir && !params.bam && params.mode == "single-cell") {
-  error "Error: please either provide the location of fastq files via the parameter indir or a bam file."
+if (params.input_type != "fastq" && !params.input_type != "bam") {
+  error "Error: please choose a valid value for --input_type <fastq,bam>."
+}
+if (!params.indir) {
+  error "Error: please provide the location of input files via the parameter indir."
 }
 if (!params.outdir) {
   error "Error: please specify location of output directory via parameter outdir."
@@ -144,12 +145,8 @@ log.info ""
 log.info "      Run parameters: "
 log.info " ========================"
   log.info " Mode                     : ${params.mode}"
-if (params.indir) {
   log.info " Input directory          : ${params.indir}"
-}
-if (params.bam) {
-  log.info " BAM file                 : ${params.bam}"
-}
+  log.info " Input type               : ${params.input_type}"
   log.info " Output directory         : ${params.outdir}"
 if (params.ref) {
   log.info " Reference fasta          : ${params.ref}"
@@ -172,7 +169,7 @@ if (params.ref) {
 if (params.mode == "single-cell") {
   log.info " UMI distance             : ${params.umi_dist}"
 }
-if (params.mode == "single-cell" && !params.bam) {
+if (params.mode == "single-cell" && params.input_type != "bam") {
   log.info " Cell number              : ${params.cellnumber}"
 }
   log.info " Email                    : ${params.email}"

@@ -17,11 +17,11 @@ workflow SINGLE_CELL {
 
     main:
 
-        if (params.bam) {
-            readsChannel = Channel.fromPath( "${params.bam}" )
+        if (params.input_type == "bam") {
+            readsChannel = Channel.fromPath( "${params.indir}/*.bam" )
                 // creates the sample name
                 .map { file -> tuple( file.baseName.replaceAll(/\.bam/, ''), file ) }
-                .ifEmpty { error "Cannot find file ${params.bam}" }
+                .ifEmpty { error "Cannot find any *.bam files in: ${params.indir}" }
         } else {
             readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}*.{fastq,fq}.gz" )
                 .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
@@ -37,7 +37,7 @@ workflow SINGLE_CELL {
 
         SOFTWARE_CHECK()
 
-        if (!params.bam) {
+        if (params.input_type == "fastq") {
             FASTQC(readsChannel)
 
             // filtering reads for quality
@@ -56,7 +56,7 @@ workflow SINGLE_CELL {
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
         BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
 
-        if (params.bam) {
+        if (params.input_type == "bam") {
             // add CB and UMI info in header
             mapped_reads = RENAME_READS(BOWTIE_ALIGN.out.mapped_reads, readsChannel)
         } else {

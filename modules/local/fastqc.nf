@@ -7,7 +7,7 @@ process FASTQC {
     tuple val(sample_id), path(reads)
 
   output:
-    tuple path('*.html'), path('*.zip')
+    tuple path("${sample_id}*.html"), path("${sample_id}*.zip")
   
   script:
 
