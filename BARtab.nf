@@ -112,7 +112,7 @@ if (params.help) {
 if (!params.mode) {
   error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
 }
-if (params.input_type != "fastq" && !params.input_type != "bam") {
+if (params.input_type != "fastq" && params.input_type != "bam") {
   error "Error: please choose a valid value for --input_type <fastq,bam>."
 }
 if (!params.indir) {
