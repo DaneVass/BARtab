@@ -125,7 +125,7 @@ p <- merge(counts_agg, avg_seq_len, by="barcode") %>%
   geom_point(alpha=0.2) +
   ggtitle("Average length of sequences mapped to barcode reference") +
   ylab("Average mapped sequence length") +
-  xlab("UMI count")
+  xlab("cells")
 
 # save plot
 ggsave(paste0(sample_id, "_avg_sequence_length.pdf"), p)
