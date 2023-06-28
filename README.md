@@ -305,3 +305,5 @@ Output files:
 - `counts/<sample_id>_cell-barcode-anno.tsv`: aggregated barcode counts per cell with cell barcode as row index and barcode and UMI count as columns
 - `counts/<sample_id>_barcodes_per_cell.pdf`: QC plot, number of detected barcode per cell
 - `counts/<sample_id>_UMIs_per_bc.pdf`: QC plot, UMIs supporting the most frequent barcode per cell
+- `counts/<sample_id>_avg_sequence_length.pdf`: QC plot, average mapped sequence length per barcode
+- `counts/<sample_id>_avg_sequence_length.tsv`: average mapped sequence length per barcode as table

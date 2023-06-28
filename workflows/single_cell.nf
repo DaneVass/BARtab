@@ -66,7 +66,7 @@ workflow SINGLE_CELL {
 
         UMITOOLS_COUNT(SAMTOOLS.out.bam, SAMTOOLS.out.bai)
 
-        PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts)
+        PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts, BOWTIE_ALIGN.out.mapped_reads)
 
         // pass counts to multiqc so it waits to run until all samples are processed
         // MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out.counts)
