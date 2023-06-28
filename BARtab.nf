@@ -46,10 +46,10 @@ def helpMessage() {
 
 ---------------------- Tabulate Barcode Counts in NGS data ----------------------
 
-  Usage: nextflow run BARtab.nf --indir <input dir> 
-                                --outdir <output dir> 
-                                --ref <path/to/reference/fasta> 
-                                --mode <single-bulk | paired-bulk | single-cell>
+  Usage: nextflow run danevas/bartab --indir <input dir> 
+                                     --outdir <output dir> 
+                                     --ref <path/to/reference/fasta> 
+                                     --mode <single-bulk | paired-bulk | single-cell>
 
     Input arguments:
       --indir                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.

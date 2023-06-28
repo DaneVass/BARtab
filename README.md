@@ -2,18 +2,18 @@
 A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
 ```
-  Usage: nextflow run danevas/bartab --indir <input dir> 
-                                --outdir <output dir> 
-                                --ref <path/to/reference/fasta> 
-                                --mode <single-bulk | paired-bulk | single-cell>
+  Usage: nextflow run danevas/bartab --indir <input dir>
+                                     --outdir <output dir>
+                                     --ref <path/to/reference/fasta> 
+                                     --mode <single-bulk | paired-bulk | single-cell>
 
     Input arguments:
-      --input                    Directory containing input fastq files. Must match pattern *.{fastq,fq}.gz if running in mode single-bulk. 
-                                        Must contain R1 and R2 if running in mode paired-bulk or single-cell (*_R{1,2}.{fastq,fq}.gz).
-                                        For single-cell mode, a BAM file can be provided instead (see --bam)
+      --indir                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
+                                        For single-cell mode, directory can contain BAM files.
+      --input_type               Input file type, either fastq or bam, only relevant for single-cell mode [default = fastq]
       --ref                      Path to a reference fasta file for the barcode / sgRNA library.
                                         If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
-      --mode                     Workflow to run. <single-bulk,paired-bulk,single-cell>
+      --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell>
 
     Read merging arguments:
       --mergeoverlap             Length of overlap required to merge paired-end reads [default = 10]
@@ -23,7 +23,8 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
 
     Trimming arguments:
-      --constants                Which constant regions flanking barcode to search for in reads <up, down, both> [default = 'up']
+      --constants                Which constant regions flanking barcode to search for in reads: up, down or both. "all" runs all 3 modes and combines the results. 
+                                 Single-cell mode always runs with "all". <up, down, both, all> [default = 'up']
       --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
@@ -33,7 +34,6 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 1]
 
     Sincle-cell arguments:
-      --bam                      Path to BAM file output of Cell Ranger, containing reads that do not map to the reference genome. Only permitted in single-cell mode
       --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
 
@@ -57,9 +57,8 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 ## Pipeline summary 
 
 The pipeline can extract barcode counts from bulk or single-cell RNA-seq data. 
-For bulk RNA-seq data, paired-end or single-end data can be provided. BARtab can perform reference-free barcode extraction or perform alignment to a reference. 
-Single-cell data can be provided as BAM file containing reads that do not map to the reference. 
-Alternatively, fastq files can be provided. 
+For bulk RNA-seq data, paired-end or single-end fastq files can be provided. BARtab can perform reference-free barcode extraction or perform alignment to a reference. 
+Single-cell data can be provided as either BAM files containing reads that do not map to the reference or fastq files.
 
 ### Bulk workflow
 
@@ -76,12 +75,15 @@ The bulk workflow is executed with mode `single-bulk` and `paired-bulk` for sing
 - Report metrics for individual samples [MULTIQC](#multiqc)
 
 ### Single-cell workflow
-The single-cell workflow either expects fastq files or a BAM file as input. 
+The single-cell workflow either expects fastq files or a BAM files as input. 
+
 Fastq files must match the regex `*_R{1,2}*.{fastq,fq}.gz`.
 
-Alternatively, if raw data was already processed with Cell Ranger, a BAM file can be used as input. This way, cell calling and UMI extraction can be skipped. 
+Alternatively, if raw data was already processed with Cell Ranger, BAM files can be used as input. 
+This way, cell calling and UMI extraction can be skipped. 
 Unmapped reads can be extracted from the BAM file produced by cellranger with  
-`samtools view -b -f 4 <sample_id>/outs/possorted_genome_bam.bam > <sample_id>_unmapped_reads.bam`.
+`samtools view -b -f 4 <sample_id>/outs/possorted_genome_bam.bam > <sample_id>_unmapped_reads.bam`.  
+All BAM files can then be symlinked to an input directory and the parameter `input_type` set to `bam`.
 
 - [fastq] Check raw data quality using `fastqc` [FASTQC](#fastqc)
 - [fastq] Extraction of cell barcodes and UMIs using `umi-tools` [UMITOOLS_WHITELIST](#umitools_whitelist), [UMITOOLS_EXTRACT](#umitools_extract)
@@ -152,7 +154,7 @@ Run the pipeline with your own data
 - Paired-end bulk workflow: `nextflow run danevas/bartab --mode paired-bulk --indir <input_dir> --outdir <output_dir> --ref <reference> [options]`
 - Reference-free single-end bulk workflow: `nextflow run danevas/bartab --mode single-bulk --indir <input_dir> --outdir <output_dir> [options]`
 - Single-cell workflow with fastq input: `nextflow run danevas/bartab --mode single-cell --indir <input_dir> --outdir <output_dir> --ref <reference> [options]`
-- Single-cell workflow with BAM file input: `nextflow run danevas/bartab --mode single-cell --bam <bam_file> --outdir <output_dir> --ref <reference> [options]`
+- Single-cell workflow with BAM file input: `nextflow run danevas/bartab --mode single-cell --indir <input_dir> --input_type bam --outdir <output_dir> --ref <reference> [options]`
 
 Use `-w` to specify the location of the work directory and `-resume` when only parts of the input have changed or only a subset of process has to be re-run. 
 
