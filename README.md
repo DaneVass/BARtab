@@ -36,6 +36,8 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
     Sincle-cell arguments:
       --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
+      --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
+      --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell (barcode supported by most UMIs) [default = 0.3]
 
     Resources:
       --max_cpus                  Maximum number of CPUs [default = 6]
