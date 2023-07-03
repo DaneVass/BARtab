@@ -56,12 +56,13 @@ bc.counts$cell <- NULL
 names(bc.counts) <- c("barcode", "bc.umi.count")
 
 # write final output
-write.table(bc.counts,
-            paste0(sample_id, "_cell-barcode-anno.tsv"),
-            quote = FALSE,
-            row.names = TRUE,
-            sep = "\t"
-            )
+write.table(
+  bc.counts,
+  paste0(sample_id, "_cell-barcode-anno.tsv"),
+  quote = FALSE,
+  row.names = TRUE,
+  sep = "\t"
+)
 
 ###########
 ## Plots ##
@@ -92,8 +93,8 @@ p <- lineagePerCell.dist.df %>%
     axis.title = element_text(size = 16, face = "bold")
   ) +
   geom_bar(stat = "identity",
-    fill = "blue",
-            width=.5) +
+           fill = "blue",
+           width = .5) +
   ylim(c(0, 1)) +
   xlab("Detected barcodes per cell") +
   ylab("Fraction of cells") +
@@ -110,28 +111,29 @@ lineagePerCell.dist.df.filtered <- counts_data_filtered %>%
   dplyr::tally(., name = "number_of_lineage_barcodes") %>%
   dplyr::arrange(dplyr::desc(number_of_lineage_barcodes))
 
-  p <- lineagePerCell.dist.df.filtered %>%
-    dplyr::count(number_of_lineage_barcodes) %>%
-    mutate(frac = n / nrow(lineagePerCell.dist.df)) %>%
-    ggplot(aes(x = number_of_lineage_barcodes, y = frac)) +
-    theme(
-      axis.text = element_text(size = 18, face = "bold"),
-      axis.title = element_text(size = 16, face = "bold")
+p <- lineagePerCell.dist.df.filtered %>%
+  dplyr::count(number_of_lineage_barcodes) %>%
+  mutate(frac = n / nrow(lineagePerCell.dist.df)) %>%
+  ggplot(aes(x = number_of_lineage_barcodes, y = frac)) +
+  theme(
+    axis.text = element_text(size = 18, face = "bold"),
+    axis.title = element_text(size = 16, face = "bold")
   ) +
-    geom_bar(stat = "identity",
-             fill = "blue",
-             width=.5) +
-    ylim(c(0, 1)) +
+  geom_bar(stat = "identity",
+           fill = "blue",
+           width = .5) +
+  ylim(c(0, 1)) +
   xlab("Detected barcodes per cell") +
   ylab("Fraction of cells") +
   ggtitle("Detected barcodes per cell") +
-    theme_classic() +
-    scale_x_continuous(breaks = integer_breaks())
+  theme_classic() +
+  scale_x_continuous(breaks = integer_breaks())
 
 ggsave(paste0(sample_id, "_barcodes_per_cell_filtered.pdf"), p)
 
 # Number of UMIs supporting the most frequent barcode
-max.umi.per.cell <- setDT(counts_data)[, .(max = max(count)), by = list(cell)]
+max.umi.per.cell <-
+  setDT(counts_data)[, .(max = max(count)), by = list(cell)]
 
 p <- max.umi.per.cell %>%
   dplyr::count(max) %>%
@@ -151,7 +153,8 @@ p <- max.umi.per.cell %>%
 
 ggsave(paste0(sample_id, "_UMIs_per_bc.pdf"), p)
 
-max.umi.per.cell.filtered <- setDT(counts_data_filtered)[, .(max = max(count)), by = list(cell)]
+max.umi.per.cell.filtered <-
+  setDT(counts_data_filtered)[, .(max = max(count)), by = list(cell)]
 
 p <- max.umi.per.cell.filtered %>%
   dplyr::count(max) %>%
@@ -173,10 +176,14 @@ ggsave(paste0(sample_id, "_UMIs_per_bc_filtered.pdf"), p)
 
 
 # read SAM file of aligned sequences
-sam <- read.delim(sam_file, sep ="\t", comment.char = "@", header = F)
+sam <-
+  read.delim(sam_file,
+             sep = "\t",
+             comment.char = "@",
+             header = F)
 # select columns of read name, barcode and sequence
-sam <- unique(sam[,c(1,3,10)])
-sam <- sam[,c(2,3)]
+sam <- unique(sam[, c(1, 3, 10)])
+sam <- sam[, c(2, 3)]
 colnames(sam) <- c("barcode", "sequence")
 # calculate average sequence length per barcode
 avg_seq_len <- sam %>%
@@ -188,11 +195,13 @@ avg_seq_len <- sam %>%
 
 # save data to be able to filter barcodes on their avg seq length later on
 
-write.table(avg_seq_len,
-            paste0(sample_id, "_avg_sequence_length.tsv"),
-            quote = FALSE,
-            row.names = TRUE,
-            sep = "\t")
+write.table(
+  avg_seq_len,
+  paste0(sample_id, "_avg_sequence_length.tsv"),
+  quote = FALSE,
+  row.names = TRUE,
+  sep = "\t"
+)
 
 # count in how many cells each barcode is detected, allows for detection of multiple barcodes in a cell
 counts_agg <-
@@ -200,9 +209,9 @@ counts_agg <-
 colnames(counts_agg) <- c("barcode", "count")
 
 # merge count and sequence length data and plot
-p <- merge(counts_agg, avg_seq_len, by="barcode") %>%
-  ggplot(aes(x=count, y=avg_sequence_length)) +
-  geom_point(alpha=0.2) +
+p <- merge(counts_agg, avg_seq_len, by = "barcode") %>%
+  ggplot(aes(x = count, y = avg_sequence_length)) +
+  geom_point(alpha = 0.2) +
   ggtitle("Average length of sequences mapped to barcode reference") +
   ylab("Average mapped sequence length") +
   xlab("cells")
@@ -215,9 +224,9 @@ counts_agg <-
 colnames(counts_agg) <- c("barcode", "count")
 
 # merge count and sequence length data and plot
-p <- merge(counts_agg, avg_seq_len, by="barcode") %>%
-  ggplot(aes(x=count, y=avg_sequence_length)) +
-  geom_point(alpha=0.2) +
+p <- merge(counts_agg, avg_seq_len, by = "barcode") %>%
+  ggplot(aes(x = count, y = avg_sequence_length)) +
+  geom_point(alpha = 0.2) +
   ggtitle("Average length of sequences mapped to barcode reference") +
   ylab("Average mapped sequence length") +
   xlab("cells")
