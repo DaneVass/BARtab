@@ -45,7 +45,7 @@ bc.counts <- as.data.frame(dcast(
   cell ~ .,
   value.var = c("gene", "count"),
   fun.aggregate = function(x) {
-    paste(x, collapse = ",")
+    paste(x, collapse = ";")
   }
 ))
 
@@ -59,7 +59,9 @@ names(bc.counts) <- c("barcode", "bc.umi.count")
 write.table(bc.counts,
             paste0(sample_id, "_cell-barcode-anno.tsv"),
             quote = FALSE,
-            row.names = TRUE)
+            row.names = TRUE,
+            sep = "\t"
+            )
 
 ###########
 ## Plots ##
