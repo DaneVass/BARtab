@@ -51,6 +51,15 @@ write.table(bc.counts,
 ## Plots ##
 ###########
 
+integer_breaks <- function(n = 5, ...) {
+  fxn <- function(x) {
+    breaks <- floor(pretty(x, n, ...))
+    names(breaks) <- attr(breaks, "labels")
+    breaks
+  }
+  return(fxn)
+}
+
 # Detected lineage barcodes per cell
 lineagePerCell.dist.df <- counts_data %>%
   dplyr::select(cell, gene) %>%
@@ -58,16 +67,26 @@ lineagePerCell.dist.df <- counts_data %>%
   dplyr::tally(., name = "number_of_lineage_barcodes") %>%
   dplyr::arrange(dplyr::desc(number_of_lineage_barcodes))
 
-p <- ggplot(lineagePerCell.dist.df, aes(x = number_of_lineage_barcodes)) +
+p <- lineagePerCell.dist.df %>%
+  dplyr::count(number_of_lineage_barcodes) %>%
+  mutate(frac = n / nrow(lineagePerCell.dist.df)) %>%
+  ggplot(aes(x = number_of_lineage_barcodes, y = frac)) +
   theme(
     axis.text = element_text(size = 18, face = "bold"),
     axis.title = element_text(size = 16, face = "bold")
   ) +
-  geom_histogram(
-    aes(y = ..count.. / sum(..count..)),
+  geom_bar(stat = "identity",
     fill = "blue",
-    binwidth = 0.5,
-    alpha = 0.5
+            width=.5) +
+  ylim(c(0, 1)) +
+  xlab("Detected barcodes per cell") +
+  ylab("Fraction of cells") +
+  ggtitle("Detected barcodes per cell") +
+  theme_classic() +
+  scale_x_continuous(breaks = integer_breaks())
+
+ggsave(paste0(sample_id, "_barcodes_per_cell.pdf"), p)
+
   ) +
   xlab("Detected barcodes per cell") +
   ylab("Fraction of cells") +
@@ -79,16 +98,21 @@ ggsave(paste0(sample_id, "_barcodes_per_cell.pdf"), p)
 # Number of UMIs supporting the most frequent barcode
 max.umi.per.cell <- setDT(counts_data)[, .(max = max(count)), by = list(cell)]
 
-p <- ggplot(max.umi.per.cell, aes(x = max)) +
+p <- max.umi.per.cell %>%
+  dplyr::count(max) %>%
+  mutate(frac = n / nrow(max.umi.per.cell)) %>%
+  ggplot(aes(x = max, y = frac)) +
   theme(
     axis.text = element_text(size = 18, face = "bold"),
     axis.title = element_text(size = 16, face = "bold")
   ) +
-  geom_histogram(aes(y = ..count.. / sum(..count..)), binwidth = 0.6) +
+  geom_bar(stat = "identity") +
   xlab("UMI supporting the most frequent barcode") +
   ylab("Fraction of cells") +
   ggtitle("UMI supporting the most frequent barcode") +
-  theme_classic()
+  coord_cartesian(xlim = c(0, NA)) +
+  theme_classic() +
+  scale_x_continuous(breaks = integer_breaks())
 
 ggsave(paste0(sample_id, "_UMIs_per_bc.pdf"), p)
 
