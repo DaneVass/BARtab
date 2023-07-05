@@ -46,9 +46,9 @@ def helpMessage() {
 
 ---------------------- Tabulate Barcode Counts in NGS data ----------------------
 
-  Usage: nextflow run danevas/bartab --indir <input dir> 
-                                     --outdir <output dir> 
-                                     --ref <path/to/reference/fasta> 
+  Usage: nextflow run danevas/bartab --indir <input dir>
+                                     --outdir <output dir>
+                                     --ref <path/to/reference/fasta>
                                      --mode <single-bulk | paired-bulk | single-cell>
 
     Input arguments:
@@ -72,19 +72,21 @@ def helpMessage() {
       --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
-      --min_readlength           Minimum read length [default = 15]
+      --min_readlength           Minimum read length [default = 20]
 
     Mapping arguments:
-      --alnmismatches            Number of allowed mismatches during reference mapping [default = 1]
+      --alnmismatches            Number of allowed mismatches during reference mapping [default = 2]
 
     Sincle-cell arguments:
       --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
+      --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
+      --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell (barcode supported by most UMIs) [default = 0.3]
 
     Resources:
-      --max_cpus                  Maximum number of CPUs [default = 6]
-      --max_memory                Maximum memory [default = "14.GB"]
-      --max_time                  Maximum time [default = "40.h"]
+      --max_cpus                 Maximum number of CPUs [default = 6]
+      --max_memory               Maximum memory [default = "14.GB"]
+      --max_time                 Maximum time [default = "40.h"]
 
     Optional arguments:
       -profile                   Configuration profile to use. Can use multiple (comma separated)
@@ -168,6 +170,8 @@ if (params.ref) {
 }
 if (params.mode == "single-cell") {
   log.info " UMI distance             : ${params.umi_dist}"
+  log.info " UMI count filter         : ${params.umi_count_filter}"
+  log.info " UMI fraction filter      : ${params.umi_fraction_filter}"
 }
 if (params.mode == "single-cell" && params.input_type != "bam") {
   log.info " Cell number              : ${params.cellnumber}"
