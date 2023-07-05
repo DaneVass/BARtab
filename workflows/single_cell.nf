@@ -7,6 +7,7 @@ include { PROCESS_BAM } from '../modules/local/process_bam'
 include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
 include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
+include { FILTER_ALIGNMENTS } from '../modules/local/filter_alignments'
 include { RENAME_READS } from '../modules/local/rename_reads'
 include { SAMTOOLS } from '../modules/local/samtools'
 include { UMITOOLS_COUNT } from '../modules/local/umitools_count'
@@ -56,11 +57,13 @@ workflow SINGLE_CELL {
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
         BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
 
+        FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads)
+
         if (params.input_type == "bam") {
             // add CB and UMI info in header
-            mapped_reads = RENAME_READS(BOWTIE_ALIGN.out.mapped_reads, readsChannel)
+            mapped_reads = RENAME_READS(FILTER_ALIGNMENTS.out, readsChannel)
         } else {
-            mapped_reads = BOWTIE_ALIGN.out.mapped_reads
+            mapped_reads = FILTER_ALIGNMENTS.out
         }
         SAMTOOLS(mapped_reads)
 
