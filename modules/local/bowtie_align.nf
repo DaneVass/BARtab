@@ -21,6 +21,7 @@ process BOWTIE_ALIGN {
     --norc \\
     -t \\
     --no-unal \\
+    -a --best --strata -m1 \\
     -S ${sample_id}.mapped.sam \\
     2> ${sample_id}.bowtie.log
     """
