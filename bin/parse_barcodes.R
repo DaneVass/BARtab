@@ -125,7 +125,7 @@ p <- lineagePerCell.dist.df.filtered %>%
   ylim(c(0, 1)) +
   xlab("Detected barcodes per cell") +
   ylab("Fraction of cells") +
-  ggtitle("Detected barcodes per cell") +
+  ggtitle("Detected barcodes per cell, filtered") +
   theme_classic() +
   scale_x_continuous(breaks = integer_breaks())
 
@@ -167,7 +167,7 @@ p <- max.umi.per.cell.filtered %>%
   geom_bar(stat = "identity") +
   xlab("UMI supporting the most frequent barcode") +
   ylab("Fraction of cells") +
-  ggtitle("UMI supporting the most frequent barcode") +
+  ggtitle("UMI supporting the most frequent barcode, filtered") +
   coord_cartesian(xlim = c(0, NA)) +
   theme_classic() +
   scale_x_continuous(breaks = integer_breaks())
@@ -227,7 +227,7 @@ colnames(counts_agg) <- c("barcode", "count")
 p <- merge(counts_agg, avg_seq_len, by = "barcode") %>%
   ggplot(aes(x = count, y = avg_sequence_length)) +
   geom_point(alpha = 0.2) +
-  ggtitle("Average length of sequences mapped to barcode reference") +
+  ggtitle("Average length of sequences mapped to barcode reference, filtered") +
   ylab("Average mapped sequence length") +
   xlab("cells")
 
