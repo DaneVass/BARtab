@@ -6,10 +6,8 @@ process RENAME_READS {
     publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
 
     input:
-    // sam containing mapped reads
-    tuple val(sample_id), path(sam)
-    // bam from cellranger
-    tuple val(sample_id), path(bam)
+    // sam containing mapped reads, bam from cellranger
+    tuple val(sample_id), path(sam), path(bam)
 
     output:
     tuple val(sample_id), path("${sample_id}.mapped_renamed.bam")

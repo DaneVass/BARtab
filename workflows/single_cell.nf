@@ -54,7 +54,8 @@ workflow SINGLE_CELL {
 
             // extract reads with cell barcode from fastq input
             UMITOOLS_WHITELIST(readsChannel)
-            r2_fastq = UMITOOLS_EXTRACT(readsChannel, UMITOOLS_WHITELIST.out.whitelist).reads
+
+            r2_fastq = UMITOOLS_EXTRACT(readsChannel.combine(UMITOOLS_WHITELIST.out.whitelist, by: 0)).reads
 
         } else if (params.input_type == "bam") {
             // extract reads with cell barcode and UMI and convert to fastq
@@ -73,15 +74,16 @@ workflow SINGLE_CELL {
             mapped_reads = RENAME_READS_SAW(FILTER_ALIGNMENTS.out)
         } else if (params.input_type == "bam") {
             // add CB and UMI info in header
-            mapped_reads = RENAME_READS(FILTER_ALIGNMENTS.out, readsChannel)
+            mapped_reads = RENAME_READS(FILTER_ALIGNMENTS.out.combine(readsChannel, by: 0))
+
         } else {
             mapped_reads = FILTER_ALIGNMENTS.out
         }
         SAMTOOLS(mapped_reads)
 
-        UMITOOLS_COUNT(SAMTOOLS.out.bam, SAMTOOLS.out.bai)
+        UMITOOLS_COUNT(SAMTOOLS.out)
 
-        PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts, BOWTIE_ALIGN.out.mapped_reads)
+        PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts.combine(BOWTIE_ALIGN.out.mapped_reads, by: 0))
 
         // pass counts to multiqc so it waits to run until all samples are processed
         // MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out.counts)
