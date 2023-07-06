@@ -28,6 +28,14 @@ workflow SINGLE_CELL {
                 .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
         }
 
+        if (params.whitelist_indir) {
+            // read in whitelists if provided
+            whitelistChannel = Channel.fromPath( "${params.whitelist_indir}/*_whitelist.tsv" )
+                // creates the sample name
+                .map { file -> tuple( file.baseName.replaceAll(/_whitelist\.tsv/, ''), file ) }
+                .ifEmpty { error "Cannot find any *_whitelist.tsv files in: ${params.whitelist_indir}" }
+        }
+
         reference = file(params.ref)
 
         params.multiqc_config = "$baseDir/assets/multiqc_config.yaml"
@@ -43,9 +51,14 @@ workflow SINGLE_CELL {
 
             // filtering reads for quality
 
-            // extract reads with cell barcode from fastq input
-            UMITOOLS_WHITELIST(readsChannel)
-            r2_fastq = UMITOOLS_EXTRACT(readsChannel, UMITOOLS_WHITELIST.out.whitelist)
+            // use provided whitelist of cell barcodes (e.g. cellranger) or generate a whitelist with provided number of cells
+
+            whitelist = (params.whitelist_indir ? whitelistChannel : UMITOOLS_WHITELIST(readsChannel).whitelist)
+
+            // do I need to combine channels based on samplename here? 
+            // Channel.of(readsChannel, whitelist).groupTuple(size=2).view()
+            // extract reads with whitelisted cell barcode from fastq input
+            r2_fastq = UMITOOLS_EXTRACT(readsChannel, whitelist)
         }
         else {
             // extract reads with cell barcode and UMI and convert to fastq
@@ -61,6 +74,8 @@ workflow SINGLE_CELL {
 
         if (params.input_type == "bam") {
             // add CB and UMI info in header
+            // do I need to combine channels based on samplename here? 
+            // Channel.of(FILTER_ALIGNMENTS.out, readsChannel).groupTuple(size=2).view()
             mapped_reads = RENAME_READS(FILTER_ALIGNMENTS.out, readsChannel)
         } else {
             mapped_reads = FILTER_ALIGNMENTS.out
@@ -69,6 +84,8 @@ workflow SINGLE_CELL {
 
         UMITOOLS_COUNT(SAMTOOLS.out.bam, SAMTOOLS.out.bai)
 
+        // do I need to combine channels based on samplename here? 
+        // Channel.of(FILTER_ALIGNMENTS.out, readsChannel).groupTuple(size=2).view()
         PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts, BOWTIE_ALIGN.out.mapped_reads)
 
         // pass counts to multiqc so it waits to run until all samples are processed

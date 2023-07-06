@@ -149,6 +149,9 @@ log.info " ========================"
   log.info " Mode                     : ${params.mode}"
   log.info " Input directory          : ${params.indir}"
   log.info " Input type               : ${params.input_type}"
+if (params.whitelist_indir) {
+  log.info " Whitelist directory      : ${params.whitelist_indir}"
+}
   log.info " Output directory         : ${params.outdir}"
 if (params.ref) {
   log.info " Reference fasta          : ${params.ref}"
@@ -173,9 +176,11 @@ if (params.mode == "single-cell") {
   log.info " UMI count filter         : ${params.umi_count_filter}"
   log.info " UMI fraction filter      : ${params.umi_fraction_filter}"
 }
-if (params.mode == "single-cell" && params.input_type != "bam") {
+if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir) {
   log.info " Cell number              : ${params.cellnumber}"
 }
+
+
   log.info " Email                    : ${params.email}"
   log.info " ========================"
   log.info ""
