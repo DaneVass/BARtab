@@ -4,8 +4,7 @@ process UMITOOLS_EXTRACT {
   publishDir "${params.outdir}/extract", mode: 'symlink'
 
   input:
-    tuple val(sample_id), path(reads)
-    tuple val(sample_id), path(whitelist)
+    tuple val(sample_id), path(reads), path(whitelist)
 
   output:
     tuple val(sample_id), path("${sample_id}_R2_extracted.fastq"), emit: reads
