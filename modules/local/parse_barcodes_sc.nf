@@ -2,8 +2,7 @@ process PARSE_BARCODES_SC {
     publishDir "${params.outdir}/counts", mode: 'copy'
     label "process_low"
     input:
-        tuple val(sample_id), path(counts)
-        tuple val(sample_id), path(sam)
+        tuple val(sample_id), path(counts), path(sam)
 
     output:
         path "${sample_id}_cell-barcode-anno.tsv", emit: counts

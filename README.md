@@ -267,7 +267,8 @@ Cell barcodes are identified in R1 using [umi-tools whitelist](https://umi-tools
 The expected number of cells should be specified with the parameter `cellnumber`.  
 This should be approximately the number of cells loaded. The command is only utilized to extract cell barcodes and not to perform cell calling. 
 Cell calling should be done with tools such as [Cell Ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger). 
-Barcodes identified in droplets that do not contain cells or doublets will be removed when merging the barcode counts table with e.g. QC'd Seurat object. 
+Barcodes identified in droplets that do not contain cells or doublets will be removed when merging the barcode counts table with e.g. QC'd Seurat object.  
+If the number of cells loaded differs a lot between samples, they must be processed separately with adjusted `cellnumber` values. 
 
 Output files:
 - `extract/<sample_id>_whitelist.tsv`: whitelisted cell barcodes and counts

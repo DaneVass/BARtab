@@ -7,8 +7,7 @@ process SAMTOOLS {
     tuple val(sample_id), path(reads)
 
     output:
-    tuple val(sample_id), path("${sample_id}.mapped.bam"), emit: bam
-    path "${sample_id}.mapped.bam.bai", emit: bai
+    tuple val(sample_id), path("${sample_id}.mapped.bam"), path("${sample_id}.mapped.bam.bai")
     
     script:
     """

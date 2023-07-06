@@ -52,13 +52,11 @@ workflow SINGLE_CELL {
             // filtering reads for quality
 
             // use provided whitelist of cell barcodes (e.g. cellranger) or generate a whitelist with provided number of cells
-
             whitelist = (params.whitelist_indir ? whitelistChannel : UMITOOLS_WHITELIST(readsChannel).whitelist)
 
-            // do I need to combine channels based on samplename here? 
-            // Channel.of(readsChannel, whitelist).groupTuple(size=2).view()
             // extract reads with whitelisted cell barcode from fastq input
-            r2_fastq = UMITOOLS_EXTRACT(readsChannel, whitelist)
+            r2_fastq = UMITOOLS_EXTRACT(readsChannel.combine(whitelist, by: 0))
+
         }
         else {
             // extract reads with cell barcode and UMI and convert to fastq
@@ -74,19 +72,16 @@ workflow SINGLE_CELL {
 
         if (params.input_type == "bam") {
             // add CB and UMI info in header
-            // do I need to combine channels based on samplename here? 
-            // Channel.of(FILTER_ALIGNMENTS.out, readsChannel).groupTuple(size=2).view()
-            mapped_reads = RENAME_READS(FILTER_ALIGNMENTS.out, readsChannel)
+            mapped_reads = RENAME_READS(FILTER_ALIGNMENTS.out.combine(readsChannel, by: 0))
+
         } else {
             mapped_reads = FILTER_ALIGNMENTS.out
         }
         SAMTOOLS(mapped_reads)
 
-        UMITOOLS_COUNT(SAMTOOLS.out.bam, SAMTOOLS.out.bai)
+        UMITOOLS_COUNT(SAMTOOLS.out)
 
-        // do I need to combine channels based on samplename here? 
-        // Channel.of(FILTER_ALIGNMENTS.out, readsChannel).groupTuple(size=2).view()
-        PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts, BOWTIE_ALIGN.out.mapped_reads)
+        PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts.combine(BOWTIE_ALIGN.out.mapped_reads, by: 0))
 
         // pass counts to multiqc so it waits to run until all samples are processed
         // MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out.counts)
