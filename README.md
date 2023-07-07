@@ -34,6 +34,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 2]
 
     Sincle-cell arguments:
+      --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
       --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
       --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
@@ -70,8 +71,9 @@ The bulk workflow is executed with mode `single-bulk` and `paired-bulk` for sing
 - [Paired-end] Merge paired end reads using `FLASh` [MERGE_READS](#merge_reads)
 - Quality filter reads using `fastx-toolkit` [FILTER_READS](#filter_reads)
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
-- [With reference] Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
-- [With reference] Count number of reads aligning per barcode using `samtools` [SAMTOOLS](#samtools), [GET_BARCODE_COUNTS](#get_barcode_counts)
+- [Reference-based] Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
+- [Reference-based optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
+- [Reference-based] Count number of reads aligning per barcode using `samtools` [SAMTOOLS](#samtools), [GET_BARCODE_COUNTS](#get_barcode_counts)
 - [Reference-free] If no reference library, derive consensus barcode repertoire using `starcode` [STARCODE](#starcode)
 - Merge counts files for multiple samples [COMBINE_BARCODE_COUNTS](#combine_barcode_counts)
 - Report metrics for individual samples [MULTIQC](#multiqc)
@@ -92,9 +94,9 @@ All BAM files can then be symlinked to an input directory and the parameter `inp
 - [BAM] Filter reads containing cell barcode and UMI and convert to fastq using `samtools` [PROCESS_BAM](#process_bam)
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
 - Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
+- [Optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
 - Extract barcode counts using `umi-tools` [SAMTOOLS](#samtools), [UMITOOLS_COUNT](#umitools_count)
-- Tabulate barcodes per cell and produce QC plots [PARSE_BARCODES_SC](#parse_barcodes_sc)
-
+- Filter and tabulate barcodes per cell and produce QC plots [PARSE_BARCODES_SC](#parse_barcodes_sc)
 
 
 ## Dependiencies
@@ -199,13 +201,16 @@ Output files:
 - `filtered_reads/<sample_id>.filter.log`: log
 
 ### CUTADAPT_READS
+
 Adapter sequences are trimmed and reads are filtered for length and N bases using [cutadapt](https://cutadapt.readthedocs.io/en/stable/).
 
-Constants can be specified with the parameters `upconstant` and `downconstant`. 
-When running in bulk mode, reads can be filtered for containing either upconstant `up`, downconstant `down` or both `both` with the parameter `constants`.  
-When running in single-cell mode or when `contstants` is set to `all`, reads are filtered in all three ways. Fastq and log files are merged.
+Constants can be specified with the parameters `upconstant` and `downconstant`.  
+In bulk mode, reads can be filtered for containing either upconstant `up`, downconstant `down` or both `both` with the parameter `constants`.  
+In single-cell mode or when `contstants` is set to `all`, reads are filtered in all three ways. Fastq and log files are merged.
 
-The minimum read length can be specified with `min_readlength` (default 15).
+The minimum read length can be specified with `min_readlength` (default 20).  
+If a constant barcode length is set with `barcode_length`, this is set as maximum sequence length. 
+For `both`, only sequences matching exactly `barcode_length` will be retained.  
 The fraction of mismatches in the constant region can be specified with `constantmismatches` (default 0.1).
 
 Output files: 
@@ -213,18 +218,29 @@ Output files:
 - `trimmed_reads/<sample_id>.cutadapt.log`: log
 
 ### BUILD_BOWTIE_INDEX
+
 If a reference is provided, it is indexed using [bowtie1](http://bowtie-bio.sourceforge.net/index.shtml).
 
 ### BOWTIE_ALIGN
 If a reference is provided, trimmed and filtered reads are aligned to the indexed reference using [bowtie1](http://bowtie-bio.sourceforge.net/index.shtml).
 
 `--norc` is specified, bowtie will not attempt to align against the reverse-complement reference strand. 
-Only non-ambiguous alignments are reported with the flags `-a --best --strata -m1`. Sequences that map with the same number of mismatches to multiple barcodes will be discarded. 
+Only non-ambiguous alignments are reported with the flags `-a --best --strata -m1`. 
+Sequences that map with the same number of mismatches to multiple barcodes will be discarded. 
 The number of allowed mismatches can be specified with the parameter `alnmismatches` (default 1).
 
 Output files:
 - `mapped_reads/<sample_id>.mapped.sam`: Aligned reads
 - `mapped_reads/<sample_id>.bowtie.log`: log
+
+### FILTER_ALIGNMENTS
+
+If the barcodes have a consistent length specified with `barcode_length`, alignments to the middle of a barcode sequence are filtered out.
+Alignments that start at the first position or end at the last are retained.  
+This ensures confidence in barcodes detected with short mapping sequences (`min_readlength`).
+
+Output files:
+- `mapped_reads/<sample_id>.mapped_filtered.sam`: Aligned and filtered reads
 
 ### SAMTOOLS
 
