@@ -29,13 +29,18 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
       --min_readlength           Minimum read length [default = 20]
+      --barcode_length           Length of barcode if it is the same for all barcodes. If adapters are trimmed on both ends, reads are filtered for this length. 
+                                    If either adapter is trimmed, this is the maximum sequence length. 
+                                    If barcode_length is set, alignments to the middle of a barcode sequence are filtered out.
 
     Mapping arguments:
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 2]
+      --barcode_length           (see trimming arguments)
 
     Sincle-cell arguments:
       --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
-      --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
+      --cellnumber               Number of cells expected in sample, only required when fastq provided. whitelist_indir and cellnumber are mutually exclusive
+      --whitelist_indir          Directory that contains a cell ID whitelist for each sample <sample_id>_whitelist.tsv
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
       --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
       --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell (barcode supported by most UMIs) [default = 0.3]
@@ -91,7 +96,7 @@ Unmapped reads can be extracted from the BAM file with
 All BAM files can then be symlinked to an input directory and the parameter `input_type` set to `bam`.
 
 - [fastq] Check raw data quality using `fastqc` [FASTQC](#fastqc)
-- [fastq] Extraction of cell barcodes and UMIs using `umi-tools` [UMITOOLS_WHITELIST](#umitools_whitelist), [UMITOOLS_EXTRACT](#umitools_extract)
+- [fastq] Extraction of cell barcodes (optional) and UMIs using `umi-tools` [UMITOOLS_WHITELIST](#umitools_whitelist), [UMITOOLS_EXTRACT](#umitools_extract)
 - [BAM] Filter reads containing cell barcode and UMI and convert to fastq using `samtools` [PROCESS_BAM](#process_bam)
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
 - Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
@@ -279,7 +284,8 @@ MultiQC aggregates
 
 ### UMITOOLS_WHITELIST
 
-Cell barcodes are identified in R1 using [umi-tools whitelist](https://umi-tools.readthedocs.io/en/latest/reference/whitelist.html).
+If no cell ID whitelist is provided, Cell barcodes are identified in R1 using [umi-tools whitelist](https://umi-tools.readthedocs.io/en/latest/reference/whitelist.html).  
+A whitelist of cell IDs can be extracted from a BAM file with `samtools view <sample_id>.bam | grep 'CB:Z:' | sed 's/.*CB:Z:\(\w*\).*/\1/g' | sort | uniq >  <sample_id>_whitelist.tsv`
 
 The expected number of cells should be specified with the parameter `cellnumber`.  
 This should be approximately the number of cells loaded. The command is only utilized to extract cell barcodes and not to perform cell calling. 
