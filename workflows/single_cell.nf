@@ -68,11 +68,12 @@ workflow SINGLE_CELL {
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
         BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
 
-        FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads)
+        // filter alignments if barcode has fixed length
+        mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads) : BOWTIE_ALIGN.out.mapped_reads
 
         if (params.input_type == "bam") {
             // add CB and UMI info in header
-            mapped_reads = RENAME_READS(FILTER_ALIGNMENTS.out.combine(readsChannel, by: 0))
+            mapped_reads = RENAME_READS(mapped_reads.combine(readsChannel, by: 0))
 
         } else {
             mapped_reads = FILTER_ALIGNMENTS.out

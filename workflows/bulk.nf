@@ -64,9 +64,11 @@ workflow BULK {
 
             bowtie_index = BUILD_BOWTIE_INDEX(reference)
             BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
-            FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads)
 
-            SAMTOOLS(FILTER_ALIGNMENTS.out)
+            // filter alignments if barcode has fixed length
+            mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads) : BOWTIE_ALIGN.out.mapped_reads
+
+            SAMTOOLS(mapped_reads)
             GET_BARCODE_COUNTS(SAMTOOLS.out)
 
             combined_reads = COMBINE_BARCODE_COUNTS(GET_BARCODE_COUNTS.out.collect())

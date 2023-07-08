@@ -13,7 +13,7 @@ process UMITOOLS_WHITELIST {
   script:
     """
     umi_tools whitelist --stdin ${reads[0]} \\
-      --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \\
+      --bc-pattern=${params.cb_umi_pattern} \\
       --set-cell-number ${params.cellnumber} \\
       -L ${sample_id}_whitelist.log \\
       -S ${sample_id}_whitelist.tsv
