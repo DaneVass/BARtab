@@ -127,7 +127,10 @@ if (params.mode == "single-cell" && !params.ref) {
   error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
 }
 if (params.constants != "up" && params.constants != "down" && params.constants != "both" && params.constants != "all") {
-  error "Error: unsupported value for parameter constants. Choose either up, down or both (default up)."
+  error "Error: unsupported value for parameter constants. Choose either up, down, both or all (default up)."
+}
+if (params.constants == "both" && params.barcode_length && params.min_readlength) {
+  println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
 }
 
 //--------------------------------------------------------------------------------------
@@ -165,6 +168,9 @@ if (params.mode != "single-cell") {
   log.info " Constants to use         : ${params.constants}"
   log.info " Constant mismatches      : ${params.constantmismatches}"
   log.info " Minimum read length      : ${params.min_readlength}"
+if (params.barcode_length) {
+  log.info " Barcode length           : ${params.barcode_length}"
+}
 if (params.ref) {
   log.info " Alignment mismatches     : ${params.alnmismatches}"
 }
