@@ -83,9 +83,10 @@ The single-cell workflow either expects fastq files or a BAM files as input.
 
 Fastq files must match the regex `*_R{1,2}*.{fastq,fq}.gz`.
 
-Alternatively, if raw data was already processed with Cell Ranger, BAM files can be used as input. 
-This way, cell calling and UMI extraction can be skipped. 
-Unmapped reads can be extracted from the BAM file produced by cellranger with  
+Alternatively, if raw data was already processed with Cell Ranger or STARSolo, BAM files can be used as input. 
+This way, cell calling and UMI extraction can be skipped.  
+Reads containing barcode sequences will be in the unmapped fraction of reads after alignment. To obtain unapped reads annotated with cell ID and UMI, run STAR with the option `--outSAMunmapped Within KeepPairs`.  
+Unmapped reads can be extracted from the BAM file with  
 `samtools view -b -f 4 <sample_id>/outs/possorted_genome_bam.bam > <sample_id>_unmapped_reads.bam`.  
 All BAM files can then be symlinked to an input directory and the parameter `input_type` set to `bam`.
 
