@@ -73,12 +73,17 @@ def helpMessage() {
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
       --min_readlength           Minimum read length [default = 20]
+      --barcode_length           Length of barcode if it is the same for all barcodes. If adapters are trimmed on both ends, reads are filtered for this length. 
+                                    If either adapter is trimmed, this is the maximum sequence length. 
+                                    If barcode_length is set, alignments to the middle of a barcode sequence are filtered out.
 
     Mapping arguments:
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 2]
+      --barcode_length           (see trimming arguments)
 
     Sincle-cell arguments:
-      --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
+      --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
+      --cellnumber               Number of cells expected in sample, only required when fastq provided [default = 5000]
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
       --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
       --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell (barcode supported by most UMIs) [default = 0.3]
@@ -127,7 +132,10 @@ if (params.mode == "single-cell" && !params.ref) {
   error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
 }
 if (params.constants != "up" && params.constants != "down" && params.constants != "both" && params.constants != "all") {
-  error "Error: unsupported value for parameter constants. Choose either up, down or both (default up)."
+  error "Error: unsupported value for parameter constants. Choose either up, down, both or all (default up)."
+}
+if (params.constants == "both" && params.barcode_length && params.min_readlength) {
+  println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
 }
 
 //--------------------------------------------------------------------------------------
@@ -165,6 +173,9 @@ if (params.mode != "single-cell") {
   log.info " Constants to use         : ${params.constants}"
   log.info " Constant mismatches      : ${params.constantmismatches}"
   log.info " Minimum read length      : ${params.min_readlength}"
+if (params.barcode_length) {
+  log.info " Barcode length           : ${params.barcode_length}"
+}
 if (params.ref) {
   log.info " Alignment mismatches     : ${params.alnmismatches}"
 }
