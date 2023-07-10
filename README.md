@@ -102,6 +102,7 @@ All BAM files can then be symlinked to an input directory and the parameter `inp
 - [Optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
 - Extract barcode counts using `umi-tools` [SAMTOOLS](#samtools), [UMITOOLS_COUNT](#umitools_count)
 - Filter and tabulate barcodes per cell and produce QC plots [PARSE_BARCODES_SC](#parse_barcodes_sc)
+- Report metrics for individual samples [MULTIQC](#multiqc)
 
 
 ## Dependiencies
@@ -279,7 +280,10 @@ Output files:
 
 ### MULTIQC
 
-MultiQC aggregates 
+MultiQC creates a report of metrics for fastqc, flash, cutadapt and bowtie for all samples. 
+
+Output files:
+- `multiqc_report.html`: report for all samples
 
 ### UMITOOLS_WHITELIST
 
