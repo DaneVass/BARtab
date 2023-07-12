@@ -288,8 +288,9 @@ Output files:
 
 ### UMITOOLS_WHITELIST
 
-If no cell ID whitelist is provided, Cell barcodes are identified in R1 using [umi-tools whitelist](https://umi-tools.readthedocs.io/en/latest/reference/whitelist.html).  
-A whitelist of cell IDs can be extracted from a BAM file with `samtools view <sample_id>.bam | grep 'CB:Z:' | sed 's/.*CB:Z:\(\w*\).*/\1/g' | sort | uniq >  <sample_id>_whitelist.tsv`
+If no cell ID whitelist is provided (with `--whitelist_indir`), Cell barcodes are identified in R1 using [umi-tools whitelist](https://umi-tools.readthedocs.io/en/latest/reference/whitelist.html).  
+
+A whitelist of cell IDs can be found in Cell Ranger results in `outs/filtered_feature_bc_matrix/<sample_id>-barcodes.tsv` but extensions like '-1' must be removed. 
 
 The expected number of cells should be specified with the parameter `cellnumber`.  
 This should be approximately the number of cells loaded. The command is only utilized to extract cell barcodes and not to perform cell calling. 
