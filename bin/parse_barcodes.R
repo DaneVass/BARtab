@@ -95,7 +95,6 @@ p <- lineagePerCell.dist.df %>%
   geom_bar(stat = "identity",
            fill = "blue",
            width = .5) +
-  ylim(c(0, 1)) +
   xlab("Detected barcodes per cell") +
   ylab("Fraction of cells") +
   ggtitle("Detected barcodes per cell") +
@@ -122,7 +121,6 @@ p <- lineagePerCell.dist.df.filtered %>%
   geom_bar(stat = "identity",
            fill = "blue",
            width = .5) +
-  ylim(c(0, 1)) +
   xlab("Detected barcodes per cell") +
   ylab("Fraction of cells") +
   ggtitle("Detected barcodes per cell, filtered") +
