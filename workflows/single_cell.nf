@@ -21,6 +21,7 @@ workflow SINGLE_CELL {
         if (params.input_type == "bam") {
             readsChannel = Channel.fromPath( "${params.indir}/*.bam" )
                 // creates the sample name
+                // baseName already removes file type extension
                 .map { file -> tuple( file.baseName.replaceAll(/\.bam/, ''), file ) }
                 .ifEmpty { error "Cannot find any *.bam files in: ${params.indir}" }
         } else {
@@ -31,8 +32,8 @@ workflow SINGLE_CELL {
         if (params.whitelist_indir) {
             // read in whitelists if provided
             whitelistChannel = Channel.fromPath( "${params.whitelist_indir}/*_whitelist.tsv" )
-                // creates the sample name
-                .map { file -> tuple( file.baseName.replaceAll(/_whitelist\.tsv/, ''), file ) }
+                // creates the sample name, baseName removes .tsv
+                .map { file -> tuple( file.baseName.replaceAll(/_whitelist$/, ''), file ) }
                 .ifEmpty { error "Cannot find any *_whitelist.tsv files in: ${params.whitelist_indir}" }
         }
 
