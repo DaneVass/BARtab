@@ -46,14 +46,15 @@ def helpMessage() {
 
 ---------------------- Tabulate Barcode Counts in NGS data ----------------------
 
-  Usage: nextflow run BARtab.nf --indir <input dir> 
-                                --outdir <output dir> 
-                                --ref <path/to/reference/fasta> 
-                                --mode <single-bulk | paired-bulk | single-cell>
+  Usage: nextflow run danevas/bartab --indir <input dir>
+                                     --outdir <output dir>
+                                     --ref <path/to/reference/fasta>
+                                     --mode <single-bulk | paired-bulk | single-cell>
 
     Input arguments:
-      --input                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
-                                        For single-cell mode, a BAM file can be provided instead (see --bam)
+      --indir                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
+                                        For single-cell mode, directory can contain BAM files.
+      --input_type               Input file type, either fastq or bam, only relevant for single-cell mode [default = fastq]
       --ref                      Path to a reference fasta file for the barcode / sgRNA library.
                                         If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
       --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell>
@@ -71,20 +72,27 @@ def helpMessage() {
       --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
-      --min_readlength           Minimum read length [default = 15]
+      --min_readlength           Minimum read length [default = 20]
+      --barcode_length           Length of barcode if it is the same for all barcodes. If adapters are trimmed on both ends, reads are filtered for this length. 
+                                    If either adapter is trimmed, this is the maximum sequence length. 
+                                    If barcode_length is set, alignments to the middle of a barcode sequence are filtered out.
 
     Mapping arguments:
-      --alnmismatches            Number of allowed mismatches during reference mapping [default = 1]
+      --alnmismatches            Number of allowed mismatches during reference mapping [default = 2]
+      --barcode_length           (see trimming arguments)
 
     Sincle-cell arguments:
-      --bam                      Path to BAM file output of Cell Ranger, containing reads that do not map to the reference genome. Only permitted in single-cell mode
-      --cellnumber               Number of cells expected in sample, only when no BAM provided [default = 5000]
+      --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
+      --cellnumber               Number of cells expected in sample, only required when fastq provided. whitelist_indir and cellnumber are mutually exclusive
+      --whitelist_indir          Directory that contains a cell ID whitelist for each sample <sample_id>_whitelist.tsv
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
+      --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
+      --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell (barcode supported by most UMIs) [default = 0.3]
 
     Resources:
-      --max_cpus                  Maximum number of CPUs [default = 6]
-      --max_memory                Maximum memory [default = "14.GB"]
-      --max_time                  Maximum time [default = "40.h"]
+      --max_cpus                 Maximum number of CPUs [default = 6]
+      --max_memory               Maximum memory [default = "14.GB"]
+      --max_time                 Maximum time [default = "40.h"]
 
     Optional arguments:
       -profile                   Configuration profile to use. Can use multiple (comma separated)
@@ -112,10 +120,11 @@ if (params.help) {
 if (!params.mode) {
   error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
 }
-if (!params.indir && !params.bam && params.mode != "single-cell") {
-  error "Error: please provide the location of fastq files via the parameter indir."
-} else if (!params.indir && !params.bam && params.mode == "single-cell") {
-  error "Error: please either provide the location of fastq files via the parameter indir or a bam file."
+if (params.input_type != "fastq" && params.input_type != "bam") {
+  error "Error: please choose a valid value for --input_type <fastq,bam>."
+}
+if (!params.indir) {
+  error "Error: please provide the location of input files via the parameter indir."
 }
 if (!params.outdir) {
   error "Error: please specify location of output directory via parameter outdir."
@@ -124,7 +133,13 @@ if (params.mode == "single-cell" && !params.ref) {
   error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
 }
 if (params.constants != "up" && params.constants != "down" && params.constants != "both" && params.constants != "all") {
-  error "Error: unsupported value for parameter constants. Choose either up, down or both (default up)."
+  error "Error: unsupported value for parameter constants. Choose either up, down, both or all (default up)."
+}
+if (params.constants == "both" && params.barcode_length && params.min_readlength) {
+  println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
+}
+if (params.mode == "single-cell" && params.input_format == "fastq" && !params.whitelist_indir && !params.cellnumber) {
+  error "Error: Please provide either a whitelist or the expected number of cells for cell ID and UMI extraction."
 }
 
 //--------------------------------------------------------------------------------------
@@ -144,11 +159,10 @@ log.info ""
 log.info "      Run parameters: "
 log.info " ========================"
   log.info " Mode                     : ${params.mode}"
-if (params.indir) {
   log.info " Input directory          : ${params.indir}"
-}
-if (params.bam) {
-  log.info " BAM file                 : ${params.bam}"
+  log.info " Input type               : ${params.input_type}"
+if (params.whitelist_indir) {
+  log.info " Whitelist directory      : ${params.whitelist_indir}"
 }
   log.info " Output directory         : ${params.outdir}"
 if (params.ref) {
@@ -166,15 +180,22 @@ if (params.mode != "single-cell") {
   log.info " Constants to use         : ${params.constants}"
   log.info " Constant mismatches      : ${params.constantmismatches}"
   log.info " Minimum read length      : ${params.min_readlength}"
+if (params.barcode_length) {
+  log.info " Barcode length           : ${params.barcode_length}"
+}
 if (params.ref) {
   log.info " Alignment mismatches     : ${params.alnmismatches}"
 }
 if (params.mode == "single-cell") {
   log.info " UMI distance             : ${params.umi_dist}"
+  log.info " UMI count filter         : ${params.umi_count_filter}"
+  log.info " UMI fraction filter      : ${params.umi_fraction_filter}"
 }
-if (params.mode == "single-cell" && !params.bam) {
+if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir) {
   log.info " Cell number              : ${params.cellnumber}"
 }
+
+
   log.info " Email                    : ${params.email}"
   log.info " ========================"
   log.info ""

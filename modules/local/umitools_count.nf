@@ -4,9 +4,8 @@ process UMITOOLS_COUNT {
   publishDir "${params.outdir}/counts", mode: 'copy'
 
   input:
-    tuple val(sample_id), path(bam)
     // index file needs to be linked to work directory
-    path bai
+    tuple val(sample_id), path(bam), path(bai)
 
   output:
     tuple val(sample_id), path("${sample_id}.counts.tsv"), emit: counts
@@ -20,6 +19,6 @@ process UMITOOLS_COUNT {
     --random-seed=10101 \\
     -I ${bam} \\
     -S ${sample_id}.counts.tsv \\
-    -L ${sample_id}_count.log
+    -L ${sample_id}_counts.log
     """  
 }

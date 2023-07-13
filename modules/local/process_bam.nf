@@ -19,17 +19,9 @@ process PROCESS_BAM {
 
     # Filter alignments. Use LC_ALL=C to set C locale instead of UTF-8
     # can only filter for one tag in samtools
-    samtools view -d CB $bam | LC_ALL=C grep 'UB:Z:' > filtered_SAM_body.sam
-
     # Combine header and body
-    cat SAM_header.sam filtered_SAM_body.sam > ${sample_id}.filtered.sam
-
-    # Convert filtered.sam to BAM format
-    # samtools view -@ ${task.cpus} -b ${sample_id}.filtered.sam -o ${sample_id}.filtered.bam
-
     # convert BAM to fastq. CR output only contains R2
-    samtools fastq -@ ${task.cpus} ${sample_id}.filtered.sam -0 ${sample_id}_R2.fastq.gz
-
-    rm SAM_header.sam filtered_SAM_body.sam
+    # pipe everything to save time on IO
+    cat SAM_header.sam  <(samtools view -d CB $bam | LC_ALL=C grep 'UB:Z:') | samtools fastq -@ ${task.cpus} -0 ${sample_id}_R2.fastq.gz
     """
 }

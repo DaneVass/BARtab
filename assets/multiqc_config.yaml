@@ -2,23 +2,23 @@ use_filename_as_sample_name:
   - cutadapt
   - bowtie1
 
-sample_names_ignore:
-  - "command"
-  - "command.err"
-
 fn_clean_exts:
   - ".filter.log"
-  - ".cutadapt.log"
+  - ".cutadapt_up.log"
+  - ".cutadapt_down.log"
+  - ".cutadapt_both.log"
   - ".bowtie.log"
   - ".fastq.gz"
-  - "filtered"
-  - "bowtie"
+  - ".hist"
+
+sp:
+  flash/hist:
+    fn: "*.hist"
 
 run_modules:
   - fastqc
   - cutadapt
   - bowtie1
-  - starcode
   - flash
 
 top_modules:
@@ -26,5 +26,20 @@ top_modules:
 
 module_order:
   - "fastqc"
-  - "cutadapt"
+  - "flash"
+  - cutadapt:
+        name: "Cutadapt (upstream)"
+        anchor: "cutadapt_up"
+        path_filters:
+          - "*.cutadapt_up.log"
+  - cutadapt:
+        name: "Cutadapt (downstream)"
+        anchor: "cutadapt_down"
+        path_filters:
+          - "*.cutadapt_down.log"
+  - cutadapt:
+        name: "Cutadapt (both up- and downstream)"
+        anchor: "cutadapt_both"
+        path_filters:
+          - "*.cutadapt_both.log"
   - "bowtie1"
