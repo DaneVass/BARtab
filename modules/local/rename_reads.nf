@@ -10,7 +10,7 @@ process RENAME_READS {
     tuple val(sample_id), path(sam), path(bam)
 
     output:
-    tuple val(sample_id), path("${sample_id}.mapped_renamed.bam")
+    tuple val(sample_id), path("${sample_id}.mapped_renamed.sam")
 
     script:
     """
@@ -30,7 +30,7 @@ process RENAME_READS {
       awk -v OFS="\t" '{\$1=""; print substr(\$0,2)}' > SAM_body_renamed.sam
 
     # Combine header and body, compress
-    cat SAM_header.sam SAM_body_renamed.sam | samtools view -@ ${task.cpus} -b -o ${sample_id}.mapped_renamed.bam
+    cat SAM_header.sam SAM_body_renamed.sam > ${sample_id}.mapped_renamed.sam
 
     rm SAM_header.sam read_names.txt SAM_body_renamed.sam
     """
