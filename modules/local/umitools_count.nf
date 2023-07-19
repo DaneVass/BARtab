@@ -9,7 +9,7 @@ process UMITOOLS_COUNT {
 
   output:
     tuple val(sample_id), path("${sample_id}.counts.tsv"), emit: counts
-    path("${sample_id}_counts.log"), emit: log
+    path("${sample_id}_count.log"), emit: log
     
   script:
     """
@@ -19,6 +19,6 @@ process UMITOOLS_COUNT {
     --random-seed=10101 \\
     -I ${bam} \\
     -S ${sample_id}.counts.tsv \\
-    -L ${sample_id}_counts.log
+    -L ${sample_id}_count.log
     """  
 }
