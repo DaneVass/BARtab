@@ -143,6 +143,24 @@ See [citations](../CITATIONS.md)
     ```
 
 2. Install dependencies
+
+    ### Docker
+    Download the Docker image from docker hub.
+    ```
+    docker pull henriettaholze/bartab:v1.3
+
+    nextflow run danevas/bartab -profile docker [options]
+    ```
+
+    ### Singularity
+    ```
+    export NXF_SINGULARITY_LIBRARYDIR=MY_SINGULARITY_IMAGES    # your singularity storage dir
+    export NXF_SINGULARITY_CACHEDIR=MY_SINGULARITY_CACHE       # your singularity cache dir
+    singularity pull --dir $NXF_SINGULARITY_LIBRARYDIR henriettaholze-bartab-v1.3.img docker://henriettaholze/bartab:v1.3
+
+    nextflow run danevas/bartab -profile singularity [options]
+    ```
+
     ### Conda
     1. Install miniconda using the instructions found here: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html 
     3. It is recommended to use mamba to create the conda environment `conda install -c conda-forge mamba`
@@ -151,9 +169,6 @@ See [citations](../CITATIONS.md)
     
     The location of the conda environment is specified in `conf/conda.config`.
 
-    ### Docker
-    
-    ### Singularity
 
 ## Running the pipeline
 Print the help message with `nextflow run danevas/bartab --help`
