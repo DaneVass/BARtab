@@ -1,22 +1,22 @@
 process RENAME_READS_SAW {
     tag { "Rename reads ${sample_id}" }
     label "process_high"
-    publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
+    publishDir "${params.outdir}/trimmed_reads/", mode: 'symlink'
 
-    // modify read name so umi_tools can handle it
-    // from this DP8400022151TRL1C001R00400077156|||CB:Z:48489_71597|||UR:Z:CGCTTGGCCT|||UY:Z:FFEECFEEEG
-    // to this DP8400022151TRL1C001R00400077156|||48489_71597|||CGCTTGGCCT
+    // modify read name to keep MID in header
+    // @DP8400029380TLL1C001R00701707112|Cx:i:37103|Cy:i:80544 57F58031B1F9 7B77C
+    // to 
+    // @DP8400029380TLL1C001R00701707112|37103_80544|7B77C
 
     input:
-    // sam containing mapped reads
-    tuple val(sample_id), path(sam)
+    // fastq with unmapped reads from SAW pipeline
+    tuple val(sample_id), path(reads)
 
     output:
-    tuple val(sample_id), path("${sample_id}.mapped_renamed.bam")
+    tuple val(sample_id), path("${sample_id}_renamed.fq.gz")
 
     script:
     """
-    parallel -j ${task.cpus} -a ${sam} --pipepart 'sed "s/CB:Z://g;s/UR:Z://g;s/|||UY:Z:\\S*//g"' |\
-      samtools view -@ ${task.cpus} -b -o ${sample_id}.mapped_renamed.bam
+    parallel -j ${task.cpus} -a ${reads} --pipepart 'sed "s/Cx:i://g;s/|Cy:i:/_/g;s/ \w* /|/g"' | gzip > ${sample_id}_renamed.fq.gz
     """
 }

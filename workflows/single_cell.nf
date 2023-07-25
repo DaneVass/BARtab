@@ -53,7 +53,7 @@ workflow SINGLE_CELL {
         SOFTWARE_CHECK()
 
         if (params.input_type == "fastq" & params.pipeline == "saw") {
-            r2_fastq = readsChannel
+            r2_fastq = RENAME_READS_SAW(readsChannel)
 
         } else if (params.input_type == "fastq") {
             FASTQC(readsChannel)
@@ -81,17 +81,19 @@ workflow SINGLE_CELL {
         // filter alignments if barcode has fixed length
         mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads) : BOWTIE_ALIGN.out.mapped_reads
 
-        if (params.pipeline == "saw") {
-            // modify read header for umi_tools
-            mapped_reads = RENAME_READS_SAW(FILTER_ALIGNMENTS.out)
-        } else if (params.input_type == "bam") {
+        if (params.input_type == "bam") {
             // add CB and UMI info in header
             mapped_reads = RENAME_READS(mapped_reads.combine(readsChannel, by: 0))
         }
-        SAMTOOLS(mapped_reads)
 
-        UMITOOLS_COUNT(SAMTOOLS.out)
+        if (params.pipeline == "saw") {
+            // count barcodes from sam file
+        } else {
+            SAMTOOLS(mapped_reads)
 
+            UMITOOLS_COUNT(SAMTOOLS.out)
+        }
+        
         PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts.combine(mapped_reads, by: 0))
 
         // pass counts to multiqc so it waits to run until all samples are processed
