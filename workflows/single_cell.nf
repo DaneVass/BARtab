@@ -22,6 +22,7 @@ workflow SINGLE_CELL {
         if (params.input_type == "bam") {
             readsChannel = Channel.fromPath( "${params.indir}/*.bam" )
                 // creates the sample name
+                // baseName already removes file type extension
                 .map { file -> tuple( file.baseName.replaceAll(/\.bam/, ''), file ) }
                 .ifEmpty { error "Cannot find any *.bam files in: ${params.indir}" }
         } else if (params.input_type == "fastq" & params.pipeline == "saw") {
@@ -31,6 +32,14 @@ workflow SINGLE_CELL {
         } else {
             readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}*.{fastq,fq}.gz" )
                 .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
+        }
+
+        if (params.whitelist_indir) {
+            // read in whitelists if provided
+            whitelistChannel = Channel.fromPath( "${params.whitelist_indir}/*_whitelist.tsv" )
+                // creates the sample name, baseName removes .tsv
+                .map { file -> tuple( file.baseName.replaceAll(/_whitelist$/, ''), file ) }
+                .ifEmpty { error "Cannot find any *_whitelist.tsv files in: ${params.whitelist_indir}" }
         }
 
         reference = file(params.ref)
@@ -52,12 +61,14 @@ workflow SINGLE_CELL {
             // filtering reads for quality
             // TODO
 
-            // extract reads with cell barcode from fastq input
-            UMITOOLS_WHITELIST(readsChannel)
+            // use provided whitelist of cell barcodes (e.g. cellranger) or generate a whitelist with provided number of cells
+            whitelist = (params.whitelist_indir ? whitelistChannel : UMITOOLS_WHITELIST(readsChannel).whitelist)
 
-            r2_fastq = UMITOOLS_EXTRACT(readsChannel.combine(UMITOOLS_WHITELIST.out.whitelist, by: 0)).reads
+            // extract reads with whitelisted cell barcode from fastq input
+            r2_fastq = UMITOOLS_EXTRACT(readsChannel.combine(whitelist, by: 0)).reads
 
         } else if (params.input_type == "bam") {
+
             // extract reads with cell barcode and UMI and convert to fastq
             r2_fastq = PROCESS_BAM(readsChannel).reads
         }
@@ -76,16 +87,13 @@ workflow SINGLE_CELL {
         } else if (params.input_type == "bam") {
             // add CB and UMI info in header
             mapped_reads = RENAME_READS(mapped_reads.combine(readsChannel, by: 0))
-
-        } else {
-            mapped_reads = FILTER_ALIGNMENTS.out
         }
         SAMTOOLS(mapped_reads)
 
         UMITOOLS_COUNT(SAMTOOLS.out)
 
-        PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts.combine(BOWTIE_ALIGN.out.mapped_reads, by: 0))
+        PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts.combine(mapped_reads, by: 0))
 
         // pass counts to multiqc so it waits to run until all samples are processed
-        // MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out.counts)
+        MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out.counts)
 }

@@ -8,13 +8,13 @@ process UMITOOLS_EXTRACT {
 
   output:
     tuple val(sample_id), path("${sample_id}_R2_extracted.fastq"), emit: reads
-    path("${sample_id}_exctract.log"), emit: log
+    path("${sample_id}_extract.log"), emit: log
 
   script:
     """
     umi_tools extract --bc-pattern=${params.cb_umi_pattern} \\
       --stdin ${reads[0]} \\
       --read2-in ${reads[1]} --read2-out=${sample_id}_R2_extracted.fastq \\
-      --whitelist=${whitelist} -L ${sample_id}_exctract.log
+      --whitelist=${whitelist} -L ${sample_id}_extract.log
     """
 }

@@ -39,7 +39,8 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
     Sincle-cell arguments:
       --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
-      --cellnumber               Number of cells expected in sample, only required when fastq provided [default = 5000]
+      --cellnumber               Number of cells expected in sample, only required when fastq provided. whitelist_indir and cellnumber are mutually exclusive
+      --whitelist_indir          Directory that contains a cell ID whitelist for each sample <sample_id>_whitelist.tsv
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
       --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
       --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell (barcode supported by most UMIs) [default = 0.3]
@@ -95,13 +96,14 @@ Unmapped reads can be extracted from the BAM file with
 All BAM files can then be symlinked to an input directory and the parameter `input_type` set to `bam`.
 
 - [fastq] Check raw data quality using `fastqc` [FASTQC](#fastqc)
-- [fastq] Extraction of cell barcodes and UMIs using `umi-tools` [UMITOOLS_WHITELIST](#umitools_whitelist), [UMITOOLS_EXTRACT](#umitools_extract)
+- [fastq] Extraction of cell barcodes (optional) and UMIs using `umi-tools` [UMITOOLS_WHITELIST](#umitools_whitelist), [UMITOOLS_EXTRACT](#umitools_extract)
 - [BAM] Filter reads containing cell barcode and UMI and convert to fastq using `samtools` [PROCESS_BAM](#process_bam)
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
 - Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
 - [Optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
 - Extract barcode counts using `umi-tools` [SAMTOOLS](#samtools), [UMITOOLS_COUNT](#umitools_count)
 - Filter and tabulate barcodes per cell and produce QC plots [PARSE_BARCODES_SC](#parse_barcodes_sc)
+- Report metrics for individual samples [MULTIQC](#multiqc)
 
 
 ## Dependiencies
@@ -141,6 +143,24 @@ See [citations](../CITATIONS.md)
     ```
 
 2. Install dependencies
+
+    ### Docker
+    Download the Docker image from docker hub.
+    ```
+    docker pull henriettaholze/bartab:v1.3
+
+    nextflow run danevas/bartab -profile docker [options]
+    ```
+
+    ### Singularity
+    ```
+    export NXF_SINGULARITY_LIBRARYDIR=MY_SINGULARITY_IMAGES    # your singularity storage dir
+    export NXF_SINGULARITY_CACHEDIR=MY_SINGULARITY_CACHE       # your singularity cache dir
+    singularity pull --dir $NXF_SINGULARITY_LIBRARYDIR henriettaholze-bartab-v1.3.img docker://henriettaholze/bartab:v1.3
+
+    nextflow run danevas/bartab -profile singularity [options]
+    ```
+
     ### Conda
     1. Install miniconda using the instructions found here: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html 
     3. It is recommended to use mamba to create the conda environment `conda install -c conda-forge mamba`
@@ -149,9 +169,6 @@ See [citations](../CITATIONS.md)
     
     The location of the conda environment is specified in `conf/conda.config`.
 
-    ### Docker
-    
-    ### Singularity
 
 ## Running the pipeline
 Print the help message with `nextflow run danevas/bartab --help`
@@ -279,11 +296,16 @@ Output files:
 
 ### MULTIQC
 
-MultiQC aggregates 
+MultiQC creates a report of metrics for fastqc, flash, cutadapt and bowtie for all samples. 
+
+Output files:
+- `multiqc_report.html`: report for all samples
 
 ### UMITOOLS_WHITELIST
 
-Cell barcodes are identified in R1 using [umi-tools whitelist](https://umi-tools.readthedocs.io/en/latest/reference/whitelist.html).
+If no cell ID whitelist is provided (with `--whitelist_indir`), Cell barcodes are identified in R1 using [umi-tools whitelist](https://umi-tools.readthedocs.io/en/latest/reference/whitelist.html).  
+
+A whitelist of cell IDs can be found in Cell Ranger results in `outs/filtered_feature_bc_matrix/<sample_id>-barcodes.tsv` but extensions like '-1' must be removed. 
 
 The expected number of cells should be specified with the parameter `cellnumber`.  
 This should be approximately the number of cells loaded. The command is only utilized to extract cell barcodes and not to perform cell calling. 

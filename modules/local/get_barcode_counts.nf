@@ -4,14 +4,13 @@ process GET_BARCODE_COUNTS {
   publishDir "${params.outdir}/counts/", mode: 'copy'
 
   input:
-    tuple val(sample_id), path(reads)
-    path(bam)
+    tuple val(sample_id), path(bam), path(bai)
 
   output:
     path "${sample_id}_rawcounts.txt"
   
   shell:
   """
-  samtools idxstats ${reads} | cut -f1,3 | awk '\$2!=0' > ${sample_id}_rawcounts.txt
+  samtools idxstats ${bam} | cut -f1,3 | awk '\$2!=0' > ${sample_id}_rawcounts.txt
   """
 }

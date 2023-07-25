@@ -83,7 +83,8 @@ def helpMessage() {
 
     Sincle-cell arguments:
       --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
-      --cellnumber               Number of cells expected in sample, only required when fastq provided [default = 5000]
+      --cellnumber               Number of cells expected in sample, only required when fastq provided. whitelist_indir and cellnumber are mutually exclusive
+      --whitelist_indir          Directory that contains a cell ID whitelist for each sample <sample_id>_whitelist.tsv
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
       --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
       --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell (barcode supported by most UMIs) [default = 0.3]
@@ -137,6 +138,9 @@ if (params.constants != "up" && params.constants != "down" && params.constants !
 if (params.constants == "both" && params.barcode_length && params.min_readlength) {
   println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
 }
+if (params.mode == "single-cell" && params.input_format == "fastq" && !params.whitelist_indir && !params.cellnumber) {
+  error "Error: Please provide either a whitelist or the expected number of cells for cell ID and UMI extraction."
+}
 
 //--------------------------------------------------------------------------------------
 // Pipeline Config
@@ -157,6 +161,9 @@ log.info " ========================"
   log.info " Mode                     : ${params.mode}"
   log.info " Input directory          : ${params.indir}"
   log.info " Input type               : ${params.input_type}"
+if (params.whitelist_indir) {
+  log.info " Whitelist directory      : ${params.whitelist_indir}"
+}
   log.info " Output directory         : ${params.outdir}"
 if (params.ref) {
   log.info " Reference fasta          : ${params.ref}"
@@ -184,9 +191,11 @@ if (params.mode == "single-cell") {
   log.info " UMI count filter         : ${params.umi_count_filter}"
   log.info " UMI fraction filter      : ${params.umi_fraction_filter}"
 }
-if (params.mode == "single-cell" && params.input_type != "bam") {
+if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir) {
   log.info " Cell number              : ${params.cellnumber}"
 }
+
+
   log.info " Email                    : ${params.email}"
   log.info " ========================"
   log.info ""
