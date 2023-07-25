@@ -49,8 +49,6 @@ bc.counts <- as.data.frame(dcast(
   }
 ))
 
-# Add "-1" to cell ID for metadata annotation purposes
-bc.counts$cell <- paste0(bc.counts$cell, "-1")
 rownames(bc.counts) <- bc.counts$cell
 bc.counts$cell <- NULL
 names(bc.counts) <- c("barcode", "bc.umi.count")

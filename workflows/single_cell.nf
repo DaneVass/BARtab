@@ -12,6 +12,7 @@ include { RENAME_READS } from '../modules/local/rename_reads'
 include { RENAME_READS_SAW } from '../modules/local/rename_reads_saw'
 include { SAMTOOLS } from '../modules/local/samtools'
 include { UMITOOLS_COUNT } from '../modules/local/umitools_count'
+include { COUNT_BARCODES_SAW } from '../modules/local/count_barcodes_saw'
 include { PARSE_BARCODES_SC } from '../modules/local/parse_barcodes_sc'
 include { MULTIQC } from '../modules/local/multiqc'
 
@@ -27,7 +28,8 @@ workflow SINGLE_CELL {
                 .ifEmpty { error "Cannot find any *.bam files in: ${params.indir}" }
         } else if (params.input_type == "fastq" & params.pipeline == "saw") {
             readsChannel = Channel.fromPath( "${params.indir}/*.fq.gz" )
-                .map { file -> tuple( file.baseName.replaceAll(/\.fq\.gz/, ''), file ) }
+                // baseName removes .gz
+                .map { file -> tuple( file.baseName.replaceAll(/\.fq/, ''), file ) }
                 .ifEmpty { error "Cannot find any *.fq.gz files in: ${params.indir}" }
         } else {
             readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}*.{fastq,fq}.gz" )
@@ -88,13 +90,14 @@ workflow SINGLE_CELL {
 
         if (params.pipeline == "saw") {
             // count barcodes from sam file
+            counts = COUNT_BARCODES_SAW(mapped_reads)
         } else {
             SAMTOOLS(mapped_reads)
 
-            UMITOOLS_COUNT(SAMTOOLS.out)
+            counts = UMITOOLS_COUNT(SAMTOOLS.out).counts
         }
         
-        PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts.combine(mapped_reads, by: 0))
+        PARSE_BARCODES_SC(counts.combine(mapped_reads, by: 0))
 
         // pass counts to multiqc so it waits to run until all samples are processed
         MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out.counts)

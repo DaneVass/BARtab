@@ -17,6 +17,6 @@ process RENAME_READS_SAW {
 
     script:
     """
-    parallel -j ${task.cpus} -a ${reads} --pipepart 'sed "s/Cx:i://g;s/|Cy:i:/_/g;s/ \w* /|/g"' | gzip > ${sample_id}_renamed.fq.gz
+    gunzip -c ${reads} | parallel -j ${task.cpus} --pipe 'sed "s/Cx:i://g;s/|Cy:i:/_/g;s/ \\w* /|/g"' | gzip > ${sample_id}_renamed.fq.gz
     """
 }
