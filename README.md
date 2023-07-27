@@ -247,7 +247,9 @@ If a reference is provided, it is indexed using [bowtie1](http://bowtie-bio.sour
 If a reference is provided, trimmed and filtered reads are aligned to the indexed reference using [bowtie1](http://bowtie-bio.sourceforge.net/index.shtml).
 
 `--norc` is specified, bowtie will not attempt to align against the reverse-complement reference strand. 
-Only non-ambiguous alignments are reported with the flags `-a --best --strata -m1`. 
+Only non-ambiguous alignments are reported with the flags `-a --best --strata -m1`.  
+Note: This can results in not detection of specific barcodes if only a part of the barcode is sequenced.
+If for example only the first 40 bases of a barcode are sequenced and there are non-unique barcodes in the reference based on the first 40 bases, no read will unambiguously match to these barcodes.  
 Sequences that map with the same number of mismatches to multiple barcodes will be discarded. 
 The number of allowed mismatches can be specified with the parameter `alnmismatches` (default 1).
 
