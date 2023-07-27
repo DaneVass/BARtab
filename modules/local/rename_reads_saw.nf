@@ -13,10 +13,10 @@ process RENAME_READS_SAW {
     tuple val(sample_id), path(reads)
 
     output:
-    tuple val(sample_id), path("${sample_id}_renamed.fq.gz")
+    tuple val(sample_id), path("${sample_id}_renamed.fastq.gz")
 
     script:
     """
-    gunzip -c ${reads} | parallel -j ${task.cpus} --pipe 'sed "s/Cx:i://g;s/|Cy:i:/_/g;s/ \\w* /|/g"' | gzip > ${sample_id}_renamed.fq.gz
+    gunzip -c ${reads} | parallel -j ${task.cpus} --pipe 'sed "s/Cx:i://g;s/|Cy:i:/_/g;s/ \\w* /|/g"' | gzip > ${sample_id}_renamed.fastq.gz
     """
 }
