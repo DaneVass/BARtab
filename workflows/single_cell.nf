@@ -55,7 +55,8 @@ workflow SINGLE_CELL {
         SOFTWARE_CHECK()
 
         if (params.input_type == "fastq" & params.pipeline == "saw") {
-            r2_fastq = RENAME_READS_SAW(readsChannel)
+            // r2_fastq = RENAME_READS_SAW(readsChannel)
+            r2_fastq = readsChannel
 
         } else if (params.input_type == "fastq") {
             FASTQC(readsChannel)
@@ -75,10 +76,14 @@ workflow SINGLE_CELL {
             r2_fastq = PROCESS_BAM(readsChannel).reads
         }
 
-        CUTADAPT_READS(r2_fastq)
+        trimmed_reads = CUTADAPT_READS(r2_fastq).reads
+
+        if (params.input_type == "fastq" & params.pipeline == "saw") {
+            trimmed_reads = RENAME_READS_SAW(CUTADAPT_READS.out.reads)
+        }
 
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
-        BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
+        BOWTIE_ALIGN(bowtie_index, trimmed_reads)
 
         // filter alignments if barcode has fixed length
         mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads) : BOWTIE_ALIGN.out.mapped_reads
