@@ -138,7 +138,7 @@ if (params.constants != "up" && params.constants != "down" && params.constants !
 if (params.constants == "both" && params.barcode_length && params.min_readlength) {
   println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
 }
-if (params.mode == "single-cell" && params.input_format == "fastq" && !params.whitelist_indir && !params.cellnumber) {
+if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir && !params.cellnumber) {
   error "Error: Please provide either a whitelist or the expected number of cells for cell ID and UMI extraction."
 }
 
