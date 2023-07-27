@@ -8,7 +8,7 @@ process CUTADAPT_READS{
     tuple val(sample_id), path(reads)
 
   output:
-    tuple val(sample_id), path("${sample_id}.trimmed.fastq"), emit: reads
+    tuple val(sample_id), path("${sample_id}.trimmed.fastq.gz"), emit: reads
     path "${sample_id}.cutadapt_*.log", emit: log
   
   script:
@@ -26,18 +26,22 @@ process CUTADAPT_READS{
     cutadapt -j \$((${task.cpus} / 3)) -a "${params.downconstant}" --trimmed-only --max-n=0 -m ${params.min_readlength} -e ${params.constantmismatches} ${max_len} ${reads} > ${sample_id}.trimmed_3.fastq 2> ${sample_id}.cutadapt_down.log &
     wait
     cat ${sample_id}.trimmed_*.fastq > ${sample_id}.trimmed.fastq
+    gzip ${sample_id}.trimmed.fastq
     """
   }
   else if( params.constants == "both" )
     """
     cutadapt -j ${task.cpus} -g "${params.upconstant};required...${params.downconstant};required" --trimmed-only --max-n=0 ${min_len_both} -e ${params.constantmismatches} ${max_len} ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt_both.log
+    gzip ${sample_id}.trimmed.fastq
     """
   else if( params.constants == "up" )
     """
     cutadapt -j ${task.cpus} -g "${params.upconstant}" --trimmed-only --max-n=0 -m ${params.min_readlength} -e ${params.constantmismatches} ${max_len} ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt_up.log
+    gzip ${sample_id}.trimmed.fastq
     """
   else if( params.constants == "down" )
     """
     cutadapt -j ${task.cpus} -a "${params.downconstant}" --trimmed-only --max-n=0 -m ${params.min_readlength} -e ${params.constantmismatches} ${max_len} ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt_down.log
+    gzip ${sample_id}.trimmed.fastq
     """
 }
