@@ -88,6 +88,7 @@ def helpMessage() {
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
       --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
       --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell (barcode supported by most UMIs) [default = 0.3]
+      --pipeline                 To specify if input fastq files were created by SAW pipeline
 
     Resources:
       --max_cpus                 Maximum number of CPUs [default = 6]
