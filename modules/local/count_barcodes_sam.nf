@@ -1,4 +1,4 @@
-process COUNT_BARCODES_SAW {
+process COUNT_BARCODES_SAM {
     publishDir "${params.outdir}/counts", mode: 'copy'
     label "process_low"
     input:
@@ -9,6 +9,6 @@ process COUNT_BARCODES_SAW {
         
     script:
     """
-    count_barcodes_from_sam.py ${sam} ${sample_id}.counts.tsv
+    count_barcodes_sam.py ${sam} ${sample_id}.counts.tsv
     """
 }
