@@ -7,7 +7,7 @@ dependencies:
   - python=3.9
   - nextflow=23.04.1
   - r-base=4.2.2
-  - r-dplyr=1.1.2
+  - r-dplyr=1.0.9
   - r-purrr=1.0.1
   - r-ggplot2=3.4.2
   - r-magrittr=2.0.3
