@@ -12,7 +12,7 @@ include { RENAME_READS } from '../modules/local/rename_reads'
 include { RENAME_READS_SAW } from '../modules/local/rename_reads_saw'
 include { SAMTOOLS } from '../modules/local/samtools'
 include { UMITOOLS_COUNT } from '../modules/local/umitools_count'
-include { COUNT_BARCODES_SAW } from '../modules/local/count_barcodes_saw'
+include { COUNT_BARCODES_SAM } from '../modules/local/count_barcodes_sam'
 include { PARSE_BARCODES_SC } from '../modules/local/parse_barcodes_sc'
 include { MULTIQC } from '../modules/local/multiqc'
 
@@ -95,7 +95,7 @@ workflow SINGLE_CELL {
 
         if (params.pipeline == "saw") {
             // count barcodes from sam file
-            counts = COUNT_BARCODES_SAW(mapped_reads)
+            counts = COUNT_BARCODES_SAM(mapped_reads)
         } else {
             SAMTOOLS(mapped_reads)
 
