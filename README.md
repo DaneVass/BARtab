@@ -185,18 +185,35 @@ See [citations](../CITATIONS.md)
 
 
 ## Running the pipeline
-Print the help message with `nextflow run danevas/bartab --help`
+Print the help message with `nextflow run danevas/bartab --help`.  
+To run a specific branch or the pipeline use `-r <branch>`.
 
-Run any of the test datasets using `nextflow run danevas/bartab -profile <test_SE,test_PE, test_SE_ref_free,test_sc,test_sc_bam>,<conda,docker,singularity>`
+Run any of the test datasets using `nextflow run danevas/bartab -profile <test_SE,test_PE,test_SE_ref_free,test_sc,test_sc_bam,test_sc_saw_fastq>,<conda,docker,singularity>,<slurm>`
 
-Run the pipeline with your own data
-- Single-end bulk workflow: `nextflow run danevas/bartab --mode single-bulk --indir <input_dir> --outdir <output_dir> --ref <reference> [options]`
-- Paired-end bulk workflow: `nextflow run danevas/bartab --mode paired-bulk --indir <input_dir> --outdir <output_dir> --ref <reference> [options]`
-- Reference-free single-end bulk workflow: `nextflow run danevas/bartab --mode single-bulk --indir <input_dir> --outdir <output_dir> [options]`
-- Single-cell workflow with fastq input: `nextflow run danevas/bartab --mode single-cell --indir <input_dir> --outdir <output_dir> --ref <reference> [options]`
-- Single-cell workflow with BAM file input: `nextflow run danevas/bartab --mode single-cell --indir <input_dir> --input_type bam --outdir <output_dir> --ref <reference> [options]`
+To run the pipeline with your own data, create a parameter yaml file and specify the location with `-params-file`.
+
+An example to run the single-end bulk workflow: 
+```
+indir:               "test/dat/test_SE"
+ref:                 "test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta"
+mode:                "single-bulk"
+outdir:              "test/test_out/single_end/"
+upconstant:          "TGACCATGTACGATTGACTA"
+downconstant:        "TGCTAATGCGTACTGACTAG"
+constants:           "up"
+barcode_length:      60
+min_readlength:      20
+```
 
 Use `-w` to specify the location of the work directory and `-resume` when only parts of the input have changed or only a subset of process has to be re-run. 
+
+```
+nextflow run danevas/bartab \
+  -profile conda \
+  -params-file path/to/params/file.yaml \
+  -w "/scratch/work/" \
+  -resume
+```
 
 It is recommended to have a look at the log files!
 
