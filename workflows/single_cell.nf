@@ -9,8 +9,10 @@ include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
 include { FILTER_ALIGNMENTS } from '../modules/local/filter_alignments'
 include { RENAME_READS } from '../modules/local/rename_reads'
+include { RENAME_READS_SAW } from '../modules/local/rename_reads_saw'
 include { SAMTOOLS } from '../modules/local/samtools'
 include { UMITOOLS_COUNT } from '../modules/local/umitools_count'
+include { COUNT_BARCODES_SAM } from '../modules/local/count_barcodes_sam'
 include { PARSE_BARCODES_SC } from '../modules/local/parse_barcodes_sc'
 include { MULTIQC } from '../modules/local/multiqc'
 
@@ -24,6 +26,11 @@ workflow SINGLE_CELL {
                 // baseName already removes file type extension
                 .map { file -> tuple( file.baseName.replaceAll(/\.bam/, ''), file ) }
                 .ifEmpty { error "Cannot find any *.bam files in: ${params.indir}" }
+        } else if (params.input_type == "fastq" & params.pipeline == "saw") {
+            readsChannel = Channel.fromPath( "${params.indir}/*.fq.gz" )
+                // baseName removes .gz
+                .map { file -> tuple( file.baseName.replaceAll(/\.fq/, ''), file ) }
+                .ifEmpty { error "Cannot find any *.fq.gz files in: ${params.indir}" }
         } else {
             readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}*.{fastq,fq}.gz" )
                 .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
@@ -47,27 +54,36 @@ workflow SINGLE_CELL {
 
         SOFTWARE_CHECK()
 
-        if (params.input_type == "fastq") {
+        if (params.input_type == "fastq" & params.pipeline == "saw") {
+            // r2_fastq = RENAME_READS_SAW(readsChannel)
+            r2_fastq = readsChannel
+
+        } else if (params.input_type == "fastq") {
             FASTQC(readsChannel)
 
             // filtering reads for quality
+            // TODO
 
             // use provided whitelist of cell barcodes (e.g. cellranger) or generate a whitelist with provided number of cells
             whitelist = (params.whitelist_indir ? whitelistChannel : UMITOOLS_WHITELIST(readsChannel).whitelist)
 
             // extract reads with whitelisted cell barcode from fastq input
-            r2_fastq = UMITOOLS_EXTRACT(readsChannel.combine(whitelist, by: 0))
+            r2_fastq = UMITOOLS_EXTRACT(readsChannel.combine(whitelist, by: 0)).reads
 
-        }
-        else {
+        } else if (params.input_type == "bam") {
+
             // extract reads with cell barcode and UMI and convert to fastq
-            r2_fastq = PROCESS_BAM(readsChannel)
+            r2_fastq = PROCESS_BAM(readsChannel).reads
         }
 
-        CUTADAPT_READS(r2_fastq.reads)
+        trimmed_reads = CUTADAPT_READS(r2_fastq).reads
+
+        if (params.input_type == "fastq" & params.pipeline == "saw") {
+            trimmed_reads = RENAME_READS_SAW(CUTADAPT_READS.out.reads)
+        }
 
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
-        BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
+        BOWTIE_ALIGN(bowtie_index, trimmed_reads)
 
         // filter alignments if barcode has fixed length
         mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads) : BOWTIE_ALIGN.out.mapped_reads
@@ -76,11 +92,17 @@ workflow SINGLE_CELL {
             // add CB and UMI info in header
             mapped_reads = RENAME_READS(mapped_reads.combine(readsChannel, by: 0))
         }
-        SAMTOOLS(mapped_reads)
 
-        UMITOOLS_COUNT(SAMTOOLS.out)
+        if (params.pipeline == "saw") {
+            // count barcodes from sam file
+            counts = COUNT_BARCODES_SAM(mapped_reads)
+        } else {
+            SAMTOOLS(mapped_reads)
 
-        PARSE_BARCODES_SC(UMITOOLS_COUNT.out.counts.combine(mapped_reads, by: 0))
+            counts = UMITOOLS_COUNT(SAMTOOLS.out).counts
+        }
+        
+        PARSE_BARCODES_SC(counts.combine(mapped_reads, by: 0))
 
         // pass counts to multiqc so it waits to run until all samples are processed
         MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out.counts)

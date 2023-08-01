@@ -88,6 +88,7 @@ def helpMessage() {
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
       --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
       --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell (barcode supported by most UMIs) [default = 0.3]
+      --pipeline                 To specify if input fastq files were created by SAW pipeline
 
     Resources:
       --max_cpus                 Maximum number of CPUs [default = 6]
@@ -138,7 +139,7 @@ if (params.constants != "up" && params.constants != "down" && params.constants !
 if (params.constants == "both" && params.barcode_length && params.min_readlength) {
   println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
 }
-if (params.mode == "single-cell" && params.input_format == "fastq" && !params.whitelist_indir && !params.cellnumber) {
+if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir && !params.cellnumber) {
   error "Error: Please provide either a whitelist or the expected number of cells for cell ID and UMI extraction."
 }
 
