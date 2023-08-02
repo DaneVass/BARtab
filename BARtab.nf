@@ -2,21 +2,7 @@
 BARtab: A Nextflow pipeline to tabulate synthetic barcode counts from NGS data.
 
 Author: Dane Vassiliadis, Henrietta Holze
-Affiliation: PeterMac Cancer Epigenetics Laboratory
-
-Processes:
-- fastqc on raw reads
-- [OPTIONAL] merge paired end reads using FLASh
-- Quality filter reads using Fastx-toolkit
-- filter barcode reads and trim 5' and/or 3' constant regions using Cutadapt
-- generate bowtie index using reference fasta
-- align to reference using Bowtie
-- count number of reads aligning per barcode using samtools
-- merge counts files for multiple samples
-
-- [OPTIONAL] if no reference library given, derive consensus barcode repertoire using Starcode
-
-- report metrics for individual samples
+Affiliation: Peter MacCallum Cancer Centre, Melbourne, Australia
 
 **/
 
@@ -155,8 +141,6 @@ log.info ""
 log.info " ---------------------- Tabulate Barcode Counts in NGS ----------------------"
 log.info "                               Version = 1.1.0 "
 log.info ""
-
-
 log.info "      Run parameters: "
 log.info " ========================"
   log.info " Mode                     : ${params.mode}"
