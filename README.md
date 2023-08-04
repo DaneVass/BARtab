@@ -192,7 +192,7 @@ Run any of the test datasets using `nextflow run danevas/bartab -profile <test_S
 
 To run the pipeline with your own data, create a parameter yaml file and specify the location with `-params-file`.
 
-An example to run the single-end bulk workflow: 
+An example to run the single-end bulk workflow can be found in example_params.yaml: 
 ```
 indir:               "test/dat/test_SE"
 ref:                 "test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta"
