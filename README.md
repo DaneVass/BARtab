@@ -2,7 +2,7 @@
 A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
 ```
-  Usage: nextflow run danevas/bartab --indir <input dir>
+  Usage: nextflow run danevass/bartab --indir <input dir>
                                      --outdir <output dir>
                                      --ref <path/to/reference/fasta>
                                      --mode <single-bulk | paired-bulk | single-cell>
@@ -150,11 +150,11 @@ See [citations](../CITATIONS.md)
 2. Try out the pipeline   
     (this will automatically [pull](https://www.nextflow.io/docs/latest/sharing.html#pulling-or-updating-a-project) the pipeline, usually into `~/.nextflow/assets/`)
     ```
-    nextflow run danevas/bartab --help
+    nextflow run danevass/bartab --help
     ```
     Alternatively, [clone](https://www.nextflow.io/docs/latest/sharing.html#cloning-a-project-into-a-folder) the pipeline into a directory of your choice first with
     ```
-    nextflow clone danevas/bartab target_dir/
+    nextflow clone danevass/bartab target_dir/
     ```
 
 2. Install dependencies
@@ -164,7 +164,7 @@ See [citations](../CITATIONS.md)
     ```
     docker pull henriettaholze/bartab:v1.3
 
-    nextflow run danevas/bartab -profile docker [options]
+    nextflow run danevass/bartab -profile docker [options]
     ```
 
     ### Singularity
@@ -173,23 +173,23 @@ See [citations](../CITATIONS.md)
     export NXF_SINGULARITY_CACHEDIR=MY_SINGULARITY_CACHE       # your singularity cache dir
     singularity pull --dir $NXF_SINGULARITY_LIBRARYDIR henriettaholze-bartab-v1.3.img docker://henriettaholze/bartab:v1.3
 
-    nextflow run danevas/bartab -profile singularity [options]
+    nextflow run danevass/bartab -profile singularity [options]
     ```
 
     ### Conda
     1. Install miniconda using the instructions found here: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html 
     3. It is recommended to use mamba to create the conda environment `conda install -c conda-forge mamba`
     4. Install BARtab dependencies by running `mamba env create -f environment.yaml` (or `conda env create -f environment.yaml`)
-    5. Run the pipeline with `nextflow run danevas/bartab -profile conda [options]` 
+    5. Run the pipeline with `nextflow run danevass/bartab -profile conda [options]` 
     
     The location of the conda environment is specified in `conf/conda.config`.
 
 
 ## Running the pipeline
-Print the help message with `nextflow run danevas/bartab --help`.  
+Print the help message with `nextflow run danevass/bartab --help`.  
 To run a specific branch or the pipeline use `-r <branch>`.
 
-Run any of the test datasets using `nextflow run danevas/bartab -profile <test_SE,test_PE,test_SE_ref_free,test_sc,test_sc_bam,test_sc_saw_fastq>,<conda,docker,singularity>,<slurm>`
+Run any of the test datasets using `nextflow run danevass/bartab -profile <test_SE,test_PE,test_SE_ref_free,test_sc,test_sc_bam,test_sc_saw_fastq>,<conda,docker,singularity>,<slurm>`
 
 To run the pipeline with your own data, create a parameter yaml file and specify the location with `-params-file`.
 
@@ -209,7 +209,7 @@ min_readlength:      20
 Use `-w` to specify the location of the work directory and `-resume` when only parts of the input have changed or only a subset of process has to be re-run. 
 
 ```
-nextflow run danevas/bartab \
+nextflow run danevass/bartab \
   -profile conda \
   -params-file path/to/params/file.yaml \
   -w "/scratch/work/" \
