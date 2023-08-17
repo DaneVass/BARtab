@@ -23,7 +23,8 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
 
     Trimming arguments:
-      --constants                Which constant regions flanking barcode to search for in reads: up, down or both. "all" runs all 3 modes and combines the results. 
+      --constants                Which constant regions flanking barcode to search for in reads: up, down or both. 
+                                 "all" runs all 3 modes and combines the results. 
                                  Single-cell mode always runs with "all". <up, down, both, all> [default = 'up']
       --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
@@ -192,7 +193,7 @@ Run any of the test datasets using `nextflow run danevas/bartab -profile <test_S
 
 To run the pipeline with your own data, create a parameter yaml file and specify the location with `-params-file`.
 
-An example to run the single-end bulk workflow can be found in example_params.yaml: 
+An example to run the single-end bulk workflow: 
 ```
 indir:               "test/dat/test_SE"
 ref:                 "test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta"
@@ -258,11 +259,33 @@ Output files:
 Adapter sequences are trimmed and reads are filtered for length and N bases using [cutadapt](https://cutadapt.readthedocs.io/en/stable/).
 
 Constants can be specified with the parameters `upconstant` and `downconstant`.  
-In bulk mode, reads can be filtered for containing either upconstant `up`, downconstant `down` or both `both` with the parameter `constants`.  
-In single-cell mode or when `contstants` is set to `all`, reads are filtered in all three ways. Fastq and log files are merged.
+In bulk mode, reads can be filtered for containing either upconstant (`up`), downconstant (`down`) or both (`both`) with the parameter `constants`.  
+In single-cell mode or when `contstants` is set to `all`, reads are filtered in all three ways. Fastq files of trimmed sequences are concatenated.
+
+Example for trimming options:
+
+upconstant="ATGGAATTG"  
+downconstant="CGGAACCGA"
+
+\>seq1  
+**ATGGAATTG**ACATCACGCTCAAGGATC**CGGAACCGA**  
+\>seq2  
+**GAATTG**ACATCACGCTCAAGGATC**CGGAAC**  
+\>seq3  
+**ATGGAATTG**ACATCACGCTCAAGGATC  
+\>seq4  
+**GAATTG**ACATCACGCTCAAGGATC  
+\>seq5  
+ACATCACGCTCAAGGATC**CGGAACCGA**  
+\>seq6  
+ACATCACGCTCAAGGATC**CGGAAC**  
+\>seq7  
+ACATCACGCTCAAGGATC  
+
+Option `both` will trim sequence 1 and 2, `up` will trim sequence 3 and 4, `down` will trim sequence 5 and 6, `all` will trim sequence 1-6. 
 
 The minimum read length can be specified with `min_readlength` (default 20).  
-If a constant barcode length is set with `barcode_length`, this is set as maximum sequence length. 
+If a constant barcode length is set with `barcode_length`, this is set as maximum sequence length.  
 For `both`, only sequences matching exactly `barcode_length` will be retained.  
 The fraction of mismatches in the constant region can be specified with `constantmismatches` (default 0.1).
 
