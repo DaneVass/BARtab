@@ -32,9 +32,14 @@ class RowChecker:
     def __init__(
         self,
         sample_col="sample",
-        first_col="fastq_1",
-        second_col="fastq_2",
-        single_col="single_end",
+        ref_col="reference",
+        index_col="index",
+        first_col=False,
+        second_col=False,
+        bam_col = False,
+        single_col=False,
+        whitelist_col=False,
+        cellnumber_col=False,
         **kwargs,
     ):
         """
@@ -56,7 +61,12 @@ class RowChecker:
         self._sample_col = sample_col
         self._first_col = first_col
         self._second_col = second_col
+        self._bam_col = bam_col
         self._single_col = single_col
+        self._ref_col = ref_col
+        self._index_col = index_col
+        self._whitelist_col = whitelist_col
+        self._cellnumber_col = cellnumber_col
         self._seen = set()
         self.modified = []
 
@@ -70,10 +80,18 @@ class RowChecker:
 
         """
         self._validate_sample(row)
-        self._validate_first(row)
-        self._validate_second(row)
-        self._validate_pair(row)
-        self._seen.add((row[self._sample_col], row[self._first_col]))
+        if self._first_col != False:
+            self._validate_first(row)
+        if self._second_col != False:
+            self._validate_second(row)
+            self._validate_pair(row)
+        if self._whitelist_col != False:
+            self._validate_whitelist_cellnumber(row)
+        if self._bam_col != False:
+            self._validate_bam(row)
+        # TODO check that reference is fasta or fa file and either reference or index is given
+        # TODO check bam file ending
+        self._seen.add((row[self._sample_col]))
         self.modified.append(row)
 
     def _validate_sample(self, row):
@@ -97,7 +115,7 @@ class RowChecker:
     def _validate_pair(self, row):
         """Assert that read pairs have the same file extension. Report pair status."""
         if row[self._first_col] and row[self._second_col]:
-            row[self._single_col] = False
+            # row[self._single_col] = False
             first_col_suffix = Path(row[self._first_col]).suffixes[-2:]
             second_col_suffix = Path(row[self._second_col]).suffixes[-2:]
             if first_col_suffix != second_col_suffix:
@@ -112,6 +130,13 @@ class RowChecker:
                 f"The FASTQ file has an unrecognized extension: {filename}\n"
                 f"It should be one of: {', '.join(self.VALID_FORMATS)}"
             )
+        
+    def _validate_whitelist_cellnumber(self, row):
+        """Assert that either a whitelist or the expected number of cells are given."""
+        if (len(row[self._whitelist_col]) <= 0 and len(row[self._cellnumber_col]) > 0) or (len(row[self._whitelist_col]) > 0 and len(row[self._cellnumber_col])):
+            raise AssertionError("Either whitelist or cellnumber must be provided")
+        # TODO check that cellnumber is integer
+        # TODO check that whitelist has ending tsv txt or csv
 
     def validate_unique_samples(self):
         """
@@ -122,12 +147,11 @@ class RowChecker:
 
         """
         if len(self._seen) != len(self.modified):
-            raise AssertionError("The pair of sample name and FASTQ must be unique.")
+            raise AssertionError("The sample name must be unique.")
         seen = Counter()
         for row in self.modified:
             sample = row[self._sample_col]
             seen[sample] += 1
-            row[self._sample_col] = f"{sample}_T{seen[sample]}"
 
 
 def read_head(handle, num_lines=10):
@@ -165,7 +189,7 @@ def sniff_format(handle):
     return dialect
 
 
-def check_samplesheet(file_in, file_out):
+def check_samplesheet(mode, file_in, file_out, input_type, pipeline):
     """
     Check that the tabular samplesheet has the structure expected by nf-core pipelines.
 
@@ -191,7 +215,28 @@ def check_samplesheet(file_in, file_out):
         https://raw.githubusercontent.com/nf-core/test-datasets/viralrecon/samplesheet/samplesheet_test_illumina_amplicon.csv
 
     """
-    required_columns = {"sample", "fastq_1", "fastq_2"}
+    if mode == "single-bulk":
+        required_columns = {"sample", "fastq_1", "reference", "index"}
+
+    elif mode == "paired-bulk": 
+        required_columns = {"sample", "fastq_1", "fastq_2", "reference", "index"}
+
+    elif mode == "single-cell": 
+        if input_type == "fastq":
+            if pipeline == "saw":
+                required_columns = {"sample", "fastq_1", "reference", "index"}
+            else:
+                required_columns = {"sample", "fastq_1", "fastq_2", "reference", "index", "whitelist", "cellnumber"}
+
+        elif input_type == "bam":
+            required_columns = {"sample", "bam", "reference", "index"}
+        else:
+            logger.critical(f"Unrecognized parameter combination: {mode}, {input_type}, {pipeline}.")
+            sys.exit(1)
+    else:
+        logger.critical(f"Unrecognized parameter combination: {mode}, {input_type}, {pipeline}.")
+        sys.exit(1)
+
     # See https://docs.python.org/3.9/library/csv.html#id3 to read up on `newline=""`.
     with file_in.open(newline="") as in_handle:
         reader = csv.DictReader(in_handle, dialect=sniff_format(in_handle))
@@ -201,16 +246,32 @@ def check_samplesheet(file_in, file_out):
             logger.critical(f"The sample sheet **must** contain these column headers: {req_cols}.")
             sys.exit(1)
         # Validate each row.
-        checker = RowChecker()
+        # Initialize the RowChecker with the columns depending on which mode the pipeline is run in.
+        if mode == "single-bulk":
+            checker = RowChecker(first_col="fastq_1")
+
+        elif mode == "paired-bulk":
+            checker = RowChecker(first_col="fastq_1", second_col="fastq_2")
+
+        elif mode == "single-cell": 
+            if input_type == "fastq":
+                if pipeline == "saw":
+                    checker = RowChecker(first_col="fastq_1")
+                else:
+                    checker = RowChecker(first_col="fastq_1", second_col="fastq_2", whitelist_col="whitelist", cellnumber_col="cellnumber")
+
+            elif input_type == "bam":
+                checker = RowChecker(bam_col="bam")
+
         for i, row in enumerate(reader):
             try:
                 checker.validate_and_transform(row)
             except AssertionError as error:
                 logger.critical(f"{str(error)} On line {i + 2}.")
                 sys.exit(1)
-        checker.validate_unique_samples()
+    checker.validate_unique_samples()
     header = list(reader.fieldnames)
-    header.insert(1, "single_end")
+    # header.insert(1, "single_end")
     # See https://docs.python.org/3.9/library/csv.html#id3 to read up on `newline=""`.
     with file_out.open(mode="w", newline="") as out_handle:
         writer = csv.DictWriter(out_handle, header, delimiter=",")
@@ -244,6 +305,30 @@ def parse_args(argv=None):
         choices=("CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"),
         default="WARNING",
     )
+    parser.add_argument(
+        "mode",
+        metavar="MODE",
+        type=str,
+        help="Mode pipeline is run in.",
+    )
+    parser.add_argument(
+        "-t",
+        "--input_type",
+        metavar="INPUT_TYPE",
+        required=False,
+        type=str,
+        help="Whether input is in fastq or bam format.",
+        choices=["fastq", "bam"]
+    )
+    parser.add_argument(
+        "-p",
+        "--pipeline",
+        metavar="PIPELINE",
+        required=False,
+        type=str,
+        help="Pipeline with which input was generated (saw, cellranger or starsolo).",
+        choices=["saw", "cellranger", "starsolo"]
+    )
     return parser.parse_args(argv)
 
 
@@ -255,7 +340,7 @@ def main(argv=None):
         logger.error(f"The given input file {args.file_in} was not found!")
         sys.exit(2)
     args.file_out.parent.mkdir(parents=True, exist_ok=True)
-    check_samplesheet(args.file_in, args.file_out)
+    check_samplesheet(mode=args.mode, file_in=args.file_in, file_out=args.file_out, input_type=args.input_type, pipeline=args.pipeline)
 
 
 if __name__ == "__main__":
