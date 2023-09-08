@@ -12,6 +12,7 @@ include { GET_BARCODE_COUNTS } from '../modules/local/get_barcode_counts'
 include { COMBINE_BARCODE_COUNTS } from '../modules/local/combine_barcode_counts'
 include { MULTIQC } from '../modules/local/multiqc'
 
+include { INPUT_CHECK } from './input_check'
 
 workflow BULK {
     
@@ -21,19 +22,19 @@ workflow BULK {
         // reading files //
         ///////////////////
         
-        if (params.mode == "single-bulk") {
-            readsChannel = Channel.fromPath( ["${params.indir}/*.fq.gz", "${params.indir}/*.fastq.gz"] )
-                // creates the sample name
-                .map { file -> tuple( file.baseName.replaceAll(/\.fastq|\.fq/, ''), file ) }
-                .ifEmpty { error "Cannot find any *.{fastq,fq}.gz files in: ${params.indir}" }
-        } else if (params.mode == "paired-bulk") {
-            readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}.{fastq,fq}.gz" )
-                .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
-        }
+        // if (params.mode == "single-bulk") {
+        //     readsChannel = Channel.fromPath( ["${params.indir}/*.fq.gz", "${params.indir}/*.fastq.gz"] )
+        //         // creates the sample name
+        //         .map { file -> tuple( file.baseName.replaceAll(/\.fastq|\.fq/, ''), file ) }
+        //         .ifEmpty { error "Cannot find any *.{fastq,fq}.gz files in: ${params.indir}" }
+        // } else if (params.mode == "paired-bulk") {
+        //     readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}.{fastq,fq}.gz" )
+        //         .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
+        // }
 
-        if (params.ref) {
-            reference = file(params.ref)
-        }
+        // if (params.ref) {
+        //     reference = file(params.ref)
+        // }
 
         params.multiqc_config = "$baseDir/assets/multiqc_config.yaml"
 
@@ -45,25 +46,54 @@ workflow BULK {
         // workflows //
         ///////////////
 
+        //
+        // SUBWORKFLOW: Read in samplesheet, validate and stage input files
+        //
+        ch_input = file(params.input)
+        INPUT_CHECK (
+            ch_input
+        )
+
+        // fastqc only expects read name and samples
+        reads_only = INPUT_CHECK.out
+            .map{it ->
+            [ it[0], it[1] ]}
+
+        reference_only = INPUT_CHECK.out
+            .map{it ->
+            [ it[2] ]}
+
+
         SOFTWARE_CHECK()
 
-        FASTQC(readsChannel)
+        FASTQC(reads_only)
 
         if (params.mode == "single-bulk") {
-            reads = readsChannel
+            reads = reads_only
         } else if (params.mode == "paired-bulk") {
-            MERGE_READS(readsChannel)
+            MERGE_READS(reads_only)
             reads = MERGE_READS.out.merged_reads
         }
         
         FILTER_READS(reads)
 
-        CUTADAPT_READS(FILTER_READS.out.reads)
+        trimmed_reads = CUTADAPT_READS(FILTER_READS.out.reads).reads
 
-        if (params.ref) {
+        if (params.reference) {
 
-            bowtie_index = BUILD_BOWTIE_INDEX(reference)
-            BOWTIE_ALIGN(bowtie_index, CUTADAPT_READS.out.reads)
+            // see sc workflow for more comments
+            // Build bowtie index for all references provided. Reference MUST have UNIQUE FILE NAME. Path is not considered when merging back with samples. 
+            BUILD_BOWTIE_INDEX(reference_only.unique())
+
+            // combine trimmed reads with which ref they need to be aligned to
+            trimmed_reads_with_indexed_ref = trimmed_reads
+                .combine(INPUT_CHECK.out, by: 0)
+                // get reference file name string into position 0 to merge on
+                // reference file name, sample name, trimmed reads
+                .map{it -> [ it[3].fileName.asType(String), it[0], it[1]]}
+                .combine(BUILD_BOWTIE_INDEX.out, by: 0)
+            
+            BOWTIE_ALIGN(trimmed_reads_with_indexed_ref)
 
             // filter alignments if barcode has fixed length
             mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads) : BOWTIE_ALIGN.out.mapped_reads
@@ -75,7 +105,7 @@ workflow BULK {
         } 
         else {
             // if reference-free, use starcode to cluster barcodes
-            STARCODE(CUTADAPT_READS.out.reads)
+            STARCODE(trimmed_reads)
             combined_reads = COMBINE_BARCODE_COUNTS(STARCODE.out.counts.collect())
         }
 

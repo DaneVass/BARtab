@@ -22,15 +22,21 @@ workflow INPUT_CHECK {
 // Function to get list of [ meta, [ fastq_1, fastq_2 ] ]
 def create_input_channel(LinkedHashMap row) {
     
-    if (!file(row.reference).exists()) {
-        exit 1, "ERROR: Please check input samplesheet -> Reference file does not exist!\n${row.reference}"
+    if (params.reference != false) {
+        if (!file(row.reference).exists()) {
+            exit 1, "ERROR: Please check input samplesheet -> Reference file does not exist!\n${row.reference}"
+        }
     }
 
     if (params.mode == "single-bulk") {
         if (!file(row.fastq_1).exists()) {
             exit 1, "ERROR: Please check input samplesheet -> Read 1 FastQ file does not exist!\n${row.fastq_1}"
         }
-        reads_tuple = [ row.sample, file(row.fastq_1), file(row.reference) ]
+        if (params.reference != false) {
+            reads_tuple = [ row.sample, file(row.fastq_1), file(row.reference) ]
+        } else {
+            reads_tuple = [ row.sample, file(row.fastq_1) ]
+        }
     } else if (params.mode == "paired-bulk") {
         if (!file(row.fastq_1).exists()) {
             exit 1, "ERROR: Please check input samplesheet -> Read 1 FastQ file does not exist!\n${row.fastq_1}"
@@ -38,7 +44,11 @@ def create_input_channel(LinkedHashMap row) {
         if (!file(row.fastq_2).exists()) {
             exit 1, "ERROR: Please check input samplesheet -> Read 2 FastQ file does not exist!\n${row.fastq_2}"
         }
-        reads_tuple = [ row.sample, [ file(row.fastq_1), file(row.fastq_2) ], file(row.reference) ]
+        if (params.reference != false) {
+            reads_tuple = [ row.sample, [ file(row.fastq_1), file(row.fastq_2) ], file(row.reference) ]
+        } else {
+            reads_tuple = [ row.sample, file(row.fastq_1), file(row.fastq_2) ]
+        }
     } else if (params.mode == "single-cell") {
         if (params.input_type == "fastq") {
             if (params.pipeline == "saw") {

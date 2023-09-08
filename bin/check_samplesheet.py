@@ -270,13 +270,13 @@ def check_samplesheet(mode, file_in, file_out, input_type, pipeline, reference):
             if reference:
                 checker = RowChecker(first_col="fastq_1")
             else:
-                    RowChecker(first_col="fastq_1", ref_col=False, index_col=False)
+                RowChecker(first_col="fastq_1", ref_col=False, index_col=False)
 
         elif mode == "paired-bulk":
             if reference:
                 checker = RowChecker(first_col="fastq_1", second_col="fastq_2")
             else:
-                    RowChecker(first_col="fastq_1", ref_col=False, index_col=False)
+                RowChecker(first_col="fastq_1", ref_col=False, index_col=False)
             
         elif mode == "single-cell": 
             if input_type == "fastq":
@@ -330,7 +330,7 @@ def parse_args(argv=None):
         help="Mode pipeline is run in.",
     )
     parser.add_argument(
-    "reference",
+        "reference",
         metavar="REFERENCE",
         type=bool,
         help="Whether to align barcodes to a reference.",
