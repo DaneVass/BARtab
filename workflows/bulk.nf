@@ -21,20 +21,6 @@ workflow BULK {
         ///////////////////
         // reading files //
         ///////////////////
-        
-        // if (params.mode == "single-bulk") {
-        //     readsChannel = Channel.fromPath( ["${params.indir}/*.fq.gz", "${params.indir}/*.fastq.gz"] )
-        //         // creates the sample name
-        //         .map { file -> tuple( file.baseName.replaceAll(/\.fastq|\.fq/, ''), file ) }
-        //         .ifEmpty { error "Cannot find any *.{fastq,fq}.gz files in: ${params.indir}" }
-        // } else if (params.mode == "paired-bulk") {
-        //     readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}.{fastq,fq}.gz" )
-        //         .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
-        // }
-
-        // if (params.ref) {
-        //     reference = file(params.ref)
-        // }
 
         params.multiqc_config = "$baseDir/assets/multiqc_config.yaml"
 
@@ -42,32 +28,35 @@ workflow BULK {
 
         output = Channel.fromPath( params.outdir, type: 'dir', relative: true)
 
+        ch_input = file(params.input)
+
         ///////////////
         // workflows //
         ///////////////
 
-        //
         // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-        //
-        ch_input = file(params.input)
         INPUT_CHECK (
             ch_input
         )
 
-        // fastqc only expects read name and samples
+        // split intput into only sample ID and reads
+        // creates [ sample, [ read1, read2 ] ]
         reads_only = INPUT_CHECK.out
             .map{it ->
             [ it[0], it[1] ]}
 
+        // create channel with only reference for indexing
         reference_only = INPUT_CHECK.out
             .map{it ->
             [ it[2] ]}
 
-
+        // Print out all software versions
         SOFTWARE_CHECK()
 
+        // Generate QC report for read quality of each sample
         FASTQC(reads_only)
 
+        // Merge reads if paired-end
         if (params.mode == "single-bulk") {
             reads = reads_only
         } else if (params.mode == "paired-bulk") {
@@ -75,12 +64,14 @@ workflow BULK {
             reads = MERGE_READS.out.merged_reads
         }
         
+        // Filter out poor quality reads
         FILTER_READS(reads)
 
+        // Identify reads with constant region and trim it
         trimmed_reads = CUTADAPT_READS(FILTER_READS.out.reads).reads
 
+        // If reference is provided, build reference, align to reference and reads per barcode
         if (params.reference) {
-
             // see sc workflow for more comments
             // Build bowtie index for all references provided. Reference MUST have UNIQUE FILE NAME. Path is not considered when merging back with samples. 
             BUILD_BOWTIE_INDEX(reference_only.unique())
@@ -93,6 +84,7 @@ workflow BULK {
                 .map{it -> [ it[3].fileName.asType(String), it[0], it[1]]}
                 .combine(BUILD_BOWTIE_INDEX.out, by: 0)
             
+            // Align trimmed reads to reference
             BOWTIE_ALIGN(trimmed_reads_with_indexed_ref)
 
             // filter alignments if barcode has fixed length
@@ -101,14 +93,15 @@ workflow BULK {
             SAMTOOLS(mapped_reads)
             GET_BARCODE_COUNTS(SAMTOOLS.out)
 
+            // Create barcode table with all samples and all detected barcodes
             combined_reads = COMBINE_BARCODE_COUNTS(GET_BARCODE_COUNTS.out.collect())
-        } 
-        else {
-            // if reference-free, use starcode to cluster barcodes
+        } else {
+            // If reference-free, use starcode to cluster barcodes
             STARCODE(trimmed_reads)
             combined_reads = COMBINE_BARCODE_COUNTS(STARCODE.out.counts.collect())
         }
 
+        // Aggregate log files with MultiQC across all samples
         // pass counts to multiqc so it waits to run until all samples are processed
         MULTIQC(multiqcConfig, output, combined_reads) 
 }
