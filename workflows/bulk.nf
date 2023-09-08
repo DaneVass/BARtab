@@ -17,7 +17,6 @@ include { INPUT_CHECK } from './input_check'
 workflow BULK {
     
     main:
-
         ///////////////////
         // reading files //
         ///////////////////
@@ -40,15 +39,10 @@ workflow BULK {
         )
 
         // split intput into only sample ID and reads
-        // creates [ sample, [ read1, read2 ] ]
+        // creates [ sample, [ read1, read2 ] ] or [ sample, read1 ]
         reads_only = INPUT_CHECK.out
             .map{it ->
             [ it[0], it[1] ]}
-
-        // create channel with only reference for indexing
-        reference_only = INPUT_CHECK.out
-            .map{it ->
-            [ it[2] ]}
 
         // Print out all software versions
         SOFTWARE_CHECK()
@@ -72,6 +66,11 @@ workflow BULK {
 
         // If reference is provided, build reference, align to reference and reads per barcode
         if (params.reference) {
+            // create channel with only reference for indexing
+            reference_only = INPUT_CHECK.out
+                .map{it ->
+                [ it[2] ]}
+
             // see sc workflow for more comments
             // Build bowtie index for all references provided. Reference MUST have UNIQUE FILE NAME. Path is not considered when merging back with samples. 
             BUILD_BOWTIE_INDEX(reference_only.unique())
