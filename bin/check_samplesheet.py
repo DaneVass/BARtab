@@ -89,8 +89,11 @@ class RowChecker:
             self._validate_whitelist_cellnumber(row)
         if self._bam_col != False:
             self._validate_bam_format(row)
-        # TODO check that reference is fasta or fa file and either reference or index is given
-        # TODO check bam file ending
+        # TODO check that reference is fasta or fa file and either reference or index is given if mode is not bulk
+        # TODO check that combination of reference and index are consistent
+        if self._ref_col != False:
+            pass
+
         self._seen.add((row[self._sample_col]))
         self.modified.append(row)
 
@@ -199,7 +202,7 @@ def sniff_format(handle):
     return dialect
 
 
-def check_samplesheet(mode, file_in, file_out, input_type, pipeline):
+def check_samplesheet(mode, file_in, file_out, input_type, pipeline, reference):
     """
     Check that the tabular samplesheet has the structure expected by nf-core pipelines.
 
@@ -226,10 +229,16 @@ def check_samplesheet(mode, file_in, file_out, input_type, pipeline):
 
     """
     if mode == "single-bulk":
-        required_columns = {"sample", "fastq_1", "reference", "index"}
+        if reference:
+            required_columns = {"sample", "fastq_1", "reference", "index"}
+        else:
+            required_columns = {"sample", "fastq_1"}
 
     elif mode == "paired-bulk": 
-        required_columns = {"sample", "fastq_1", "fastq_2", "reference", "index"}
+        if reference:
+            required_columns = {"sample", "fastq_1", "fastq_2", "reference", "index"}
+        else:
+            required_columns = {"sample", "fastq_1", "fastq_2"}
 
     elif mode == "single-cell": 
         if input_type == "fastq":
@@ -258,11 +267,17 @@ def check_samplesheet(mode, file_in, file_out, input_type, pipeline):
         # Validate each row.
         # Initialize the RowChecker with the columns depending on which mode the pipeline is run in.
         if mode == "single-bulk":
-            checker = RowChecker(first_col="fastq_1")
+            if reference:
+                checker = RowChecker(first_col="fastq_1")
+            else:
+                    RowChecker(first_col="fastq_1", ref_col=False, index_col=False)
 
         elif mode == "paired-bulk":
-            checker = RowChecker(first_col="fastq_1", second_col="fastq_2")
-
+            if reference:
+                checker = RowChecker(first_col="fastq_1", second_col="fastq_2")
+            else:
+                    RowChecker(first_col="fastq_1", ref_col=False, index_col=False)
+            
         elif mode == "single-cell": 
             if input_type == "fastq":
                 if pipeline == "saw":
@@ -309,17 +324,16 @@ def parse_args(argv=None):
         help="Transformed output samplesheet in CSV format.",
     )
     parser.add_argument(
-        "-l",
-        "--log-level",
-        help="The desired log level (default WARNING).",
-        choices=("CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"),
-        default="WARNING",
-    )
-    parser.add_argument(
         "mode",
         metavar="MODE",
         type=str,
         help="Mode pipeline is run in.",
+    )
+    parser.add_argument(
+    "reference",
+        metavar="REFERENCE",
+        type=bool,
+        help="Whether to align barcodes to a reference.",
     )
     parser.add_argument(
         "-t",
@@ -339,6 +353,13 @@ def parse_args(argv=None):
         help="Pipeline with which input was generated (saw, cellranger or starsolo).",
         choices=["saw", "cellranger", "starsolo"]
     )
+    parser.add_argument(
+        "-l",
+        "--log-level",
+        help="The desired log level (default WARNING).",
+        choices=("CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"),
+        default="WARNING",
+    )
     return parser.parse_args(argv)
 
 
@@ -350,7 +371,7 @@ def main(argv=None):
         logger.error(f"The given input file {args.file_in} was not found!")
         sys.exit(2)
     args.file_out.parent.mkdir(parents=True, exist_ok=True)
-    check_samplesheet(mode=args.mode, file_in=args.file_in, file_out=args.file_out, input_type=args.input_type, pipeline=args.pipeline)
+    check_samplesheet(mode=args.mode, file_in=args.file_in, file_out=args.file_out, input_type=args.input_type, pipeline=args.pipeline, reference=args.reference)
 
 
 if __name__ == "__main__":

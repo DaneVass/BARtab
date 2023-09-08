@@ -119,7 +119,7 @@ workflow SINGLE_CELL {
         // r2_fastq.view()
         trimmed_reads = CUTADAPT_READS(r2_fastq).reads
 
-        trimmed_reads.view()
+        // trimmed_reads.view()
 
         if (params.input_type == "fastq" & params.pipeline == "saw") {
             trimmed_reads = RENAME_READS_SAW(CUTADAPT_READS.out.reads)
@@ -127,6 +127,7 @@ workflow SINGLE_CELL {
 
         // Build bowtie index for all references provided. Reference MUST have UNIQUE FILE NAME. Path is not considered when merging back with samples. 
         // TODO check if index is provided, uniq references without index, build index, merge with samples based on reference
+        // TODO index does not seem to be cached when running with bulk workflow
         // This has some loop holes, like if different indexes have been build for the same reference or if an index is specified only for some of the samples of that reference
         BUILD_BOWTIE_INDEX(reference_only.unique())
 
@@ -138,17 +139,17 @@ workflow SINGLE_CELL {
         // combine trimmed reads with which ref they need to be aligned to
         trimmed_reads_with_indexed_ref = trimmed_reads
             .combine(INPUT_CHECK.out, by: 0)
-            .view()
+            // .view()
             // get reference file name string into position 0 to merge on
             // reference file name, sample name, trimmed reads
             .map{it -> [ it[3].fileName.asType(String), it[0], it[1]]}
             // .view()
             .combine(BUILD_BOWTIE_INDEX.out, by: 0)
-            .view()
+            // .view()
         
         BOWTIE_ALIGN(trimmed_reads_with_indexed_ref)
 
-        BOWTIE_ALIGN.out.mapped_reads.view()
+        // BOWTIE_ALIGN.out.mapped_reads.view()
 
         // filter alignments if barcode has fixed length
         mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads) : BOWTIE_ALIGN.out.mapped_reads

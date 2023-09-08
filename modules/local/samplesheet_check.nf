@@ -26,8 +26,8 @@ process SAMPLESHEET_CHECK {
         $samplesheet \\
         samplesheet.valid.csv \\
         ${params.mode} \\
-        $pipeline \\
-        $input_type
-
+        ${params.reference} \\
+        $input_type \\
+        $pipeline
     """
 }
