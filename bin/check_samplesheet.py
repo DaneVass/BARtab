@@ -229,13 +229,13 @@ def check_samplesheet(mode, file_in, file_out, input_type, pipeline, reference):
 
     """
     if mode == "single-bulk":
-        if reference:
+        if reference != "false":
             required_columns = {"sample", "fastq_1", "reference", "index"}
         else:
             required_columns = {"sample", "fastq_1"}
 
     elif mode == "paired-bulk": 
-        if reference:
+        if reference != "false":
             required_columns = {"sample", "fastq_1", "fastq_2", "reference", "index"}
         else:
             required_columns = {"sample", "fastq_1", "fastq_2"}
@@ -267,16 +267,16 @@ def check_samplesheet(mode, file_in, file_out, input_type, pipeline, reference):
         # Validate each row.
         # Initialize the RowChecker with the columns depending on which mode the pipeline is run in.
         if mode == "single-bulk":
-            if reference:
+            if reference != "false":
                 checker = RowChecker(first_col="fastq_1")
             else:
-                RowChecker(first_col="fastq_1", ref_col=False, index_col=False)
+                checker = RowChecker(first_col="fastq_1", ref_col=False, index_col=False)
 
         elif mode == "paired-bulk":
-            if reference:
+            if reference != "false":
                 checker = RowChecker(first_col="fastq_1", second_col="fastq_2")
             else:
-                RowChecker(first_col="fastq_1", ref_col=False, index_col=False)
+                checker = RowChecker(first_col="fastq_1", ref_col=False, index_col=False)
             
         elif mode == "single-cell": 
             if input_type == "fastq":
@@ -332,8 +332,9 @@ def parse_args(argv=None):
     parser.add_argument(
         "reference",
         metavar="REFERENCE",
-        type=bool,
+        type=str,
         help="Whether to align barcodes to a reference.",
+        choices=["true", "false"]
     )
     parser.add_argument(
         "-t",

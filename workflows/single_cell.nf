@@ -43,7 +43,7 @@ workflow SINGLE_CELL {
         )
 
         // split intput into only sample ID and reads
-        // creates [ sample, [ read1, read2 ] ]
+        // creates [ sample, [ read1, read2 ] ] or [ sample, read1 ] or [ sample, bam ]
         reads_only = INPUT_CHECK.out
             .map{it ->
             [ it[0], it[1] ]}
@@ -141,6 +141,7 @@ workflow SINGLE_CELL {
         }
         
         // Filter barcodes and aggregate barcodes per cell
+        // pass sam file with aligned reads to calcualte average read length per barcode
         PARSE_BARCODES_SC(counts.combine(mapped_reads, by: 0))
 
         // Aggregate log files with MultiQC across all samples
