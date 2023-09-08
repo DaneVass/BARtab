@@ -4,8 +4,7 @@ process BOWTIE_ALIGN {
     publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
 
     input:
-    tuple val(refname), path(ref_files)
-    tuple val(sample_id), path(reads)
+    tuple val(refname), val(sample_id), path(reads), path(ref_files)
 
     output:
     tuple val(sample_id), path("${sample_id}.mapped.sam"), emit: mapped_reads

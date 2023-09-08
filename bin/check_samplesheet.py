@@ -88,7 +88,7 @@ class RowChecker:
         if self._whitelist_col != False:
             self._validate_whitelist_cellnumber(row)
         if self._bam_col != False:
-            self._validate_bam(row)
+            self._validate_bam_format(row)
         # TODO check that reference is fasta or fa file and either reference or index is given
         # TODO check bam file ending
         self._seen.add((row[self._sample_col]))
@@ -130,13 +130,23 @@ class RowChecker:
                 f"The FASTQ file has an unrecognized extension: {filename}\n"
                 f"It should be one of: {', '.join(self.VALID_FORMATS)}"
             )
+    def _validate_bam_format(self, row):
+        filename = row[self._bam_col]
+        if not filename.endswith(".bam"):
+            raise AssertionError(
+                f"The BAM file has an unrecognized extension: {filename}\n"
+                f"It should be .bam"
+            )
         
     def _validate_whitelist_cellnumber(self, row):
         """Assert that either a whitelist or the expected number of cells are given."""
-        if (len(row[self._whitelist_col]) <= 0 and len(row[self._cellnumber_col]) > 0) or (len(row[self._whitelist_col]) > 0 and len(row[self._cellnumber_col])):
+        if (len(row[self._whitelist_col]) <= 0 and len(row[self._cellnumber_col]) <= 0) or (len(row[self._whitelist_col]) > 0 and len(row[self._cellnumber_col]) > 0):
             raise AssertionError("Either whitelist or cellnumber must be provided")
         # TODO check that cellnumber is integer
         # TODO check that whitelist has ending tsv txt or csv
+
+    def _validate_ref_index(self, row):
+        pass
 
     def validate_unique_samples(self):
         """

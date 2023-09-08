@@ -5,7 +5,7 @@ process BUILD_BOWTIE_INDEX {
     label "process_medium"
 
     input:
-    path ref
+    tuple path(ref)
 
     output:
     tuple val("${ref}"), path("${ref}*.ebwt")

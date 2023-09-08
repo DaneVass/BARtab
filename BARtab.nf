@@ -105,33 +105,33 @@ if (params.help) {
   exit 0
 }
 
-if (!params.mode) {
-  error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
-}
-if (!["single-bulk", "paired-bulk", "single-cell"].contains(params.mode)) {
-  error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
-}
-if (params.input_type != "fastq" && params.input_type != "bam") {
-  error "Error: please choose a valid value for --input_type <fastq,bam>."
-}
-if (!params.indir) {
-  error "Error: please provide the location of input files via the parameter indir."
-}
-if (!params.outdir) {
-  error "Error: please specify location of output directory via parameter outdir."
-}
-if (params.mode == "single-cell" && !params.ref) {
-  error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
-}
-if (params.constants != "up" && params.constants != "down" && params.constants != "both" && params.constants != "all") {
-  error "Error: unsupported value for parameter constants. Choose either up, down, both or all (default up)."
-}
-if (params.constants == "both" && params.barcode_length && params.min_readlength) {
-  println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
-}
-if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir && !params.cellnumber) {
-  error "Error: Please provide either a whitelist or the expected number of cells for cell ID and UMI extraction."
-}
+// if (!params.mode) {
+//   error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
+// }
+// if (!["single-bulk", "paired-bulk", "single-cell"].contains(params.mode)) {
+//   error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
+// }
+// if (params.input_type != "fastq" && params.input_type != "bam") {
+//   error "Error: please choose a valid value for --input_type <fastq,bam>."
+// }
+// if (!params.input) {
+//   error "Error: please provide the location of input files via the parameter indir."
+// }
+// if (!params.outdir) {
+//   error "Error: please specify location of output directory via parameter outdir."
+// }
+// if (params.mode == "single-cell" && !params.ref) {
+//   error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
+// }
+// if (params.constants != "up" && params.constants != "down" && params.constants != "both" && params.constants != "all") {
+//   error "Error: unsupported value for parameter constants. Choose either up, down, both or all (default up)."
+// }
+// if (params.constants == "both" && params.barcode_length && params.min_readlength) {
+//   println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
+// }
+// if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir && !params.cellnumber) {
+//   error "Error: Please provide either a whitelist or the expected number of cells for cell ID and UMI extraction."
+// }
 
 //--------------------------------------------------------------------------------------
 // Pipeline Config

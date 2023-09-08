@@ -4,17 +4,20 @@ process UMITOOLS_WHITELIST {
   publishDir "${params.outdir}/extract", mode: 'symlink'
 
   input:
-    tuple val(sample_id), path(reads)
+    tuple val(sample_id), path(reads), val(cellnumber)
 
   output:
     tuple val(sample_id), path("${sample_id}_whitelist.tsv"), emit: whitelist
     path("${sample_id}_whitelist.log"), emit: log
 
+  when:
+   cellnumber
+
   script:
     """
     umi_tools whitelist --stdin ${reads[0]} \\
       --bc-pattern=${params.cb_umi_pattern} \\
-      --set-cell-number ${params.cellnumber} \\
+      --set-cell-number ${cellnumber} \\
       -L ${sample_id}_whitelist.log \\
       -S ${sample_id}_whitelist.tsv
     """
