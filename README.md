@@ -2,18 +2,17 @@
 A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
 ```
-  Usage: nextflow run danevass/bartab --indir <input dir>
-                                     --outdir <output dir>
-                                     --ref <path/to/reference/fasta>
+  Usage: nextflow run danevas/bartab --input <samplesheet>
+                                     --outdir <output directory>
                                      --mode <single-bulk | paired-bulk | single-cell>
 
     Input arguments:
-      --indir                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
-                                        For single-cell mode, directory can contain BAM files.
+      --input                    Path to sample sheet.
       --input_type               Input file type, either fastq or bam, only relevant for single-cell mode [default = fastq]
-      --ref                      Path to a reference fasta file for the barcode / sgRNA library.
-                                        If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
+      --reference                Whether to align barcodes to a reference fasta file. 
+                                        Reference-free clustering of barcode is only available for bulk workflows. [default = true].
       --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell>
+      --outdir                   Output directory to place output
 
     Read merging arguments:
       --mergeoverlap             Length of overlap required to merge paired-end reads [default = 10]
@@ -40,8 +39,6 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
     Sincle-cell arguments:
       --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
-      --cellnumber               Number of cells expected in sample, only required when fastq provided. whitelist_indir and cellnumber are mutually exclusive
-      --whitelist_indir          Directory that contains a cell ID whitelist for each sample <sample_id>_whitelist.tsv
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
       --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
       --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell (barcode supported by most UMIs) [default = 0.3]
@@ -55,8 +52,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
     Optional arguments:
       -profile                   Configuration profile to use. Can use multiple (comma separated)
                                         Available: conda, singularity, docker, slurm
-      --outdir                   Output directory to place output [default = './']
-      --email                    Direct output messages to this address [default = '']
+      --email                    Direct output messages to this address
       --help                     Print this help statement.
 
     Author:
@@ -68,7 +64,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
 The pipeline can extract barcode counts from bulk or single-cell RNA-seq data. 
 For bulk RNA-seq data, paired-end or single-end fastq files can be provided. BARtab can perform reference-free barcode extraction or perform alignment to a reference. 
-Single-cell data can be provided as either BAM files containing reads that do not map to the reference or fastq files.
+Single-cell data can be provided as either BAM or fastq files.
 
 ### Bulk workflow
 
@@ -178,7 +174,7 @@ See [citations](../CITATIONS.md)
 
     ### Conda
     1. Install miniconda using the instructions found here: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html 
-    3. It is recommended to use mamba to create the conda environment `conda install -c conda-forge mamba`
+    3. It is recommended to use mamba to create the conda environment. To install mamba: `conda install -c conda-forge mamba`
     4. Install BARtab dependencies by running `mamba env create -f environment.yaml` (or `conda env create -f environment.yaml`)
     5. Run the pipeline with `nextflow run danevass/bartab -profile conda [options]` 
     
@@ -187,16 +183,47 @@ See [citations](../CITATIONS.md)
 
 ## Running the pipeline
 Print the help message with `nextflow run danevass/bartab --help`.  
-To run a specific branch or the pipeline use `-r <branch>`.
+To run the development version of the pipeline use `-r dev`.
 
 Run any of the test datasets using `nextflow run danevass/bartab -profile <test_SE,test_PE,test_SE_ref_free,test_sc,test_sc_bam,test_sc_saw_fastq>,<conda,docker,singularity>,<slurm>`
 
-To run the pipeline with your own data, create a parameter yaml file and specify the location with `-params-file`.
+To run the pipeline with your own data, create a sample sheet and a parameter yaml file.
 
-An example to run the single-end bulk workflow: 
+| column     | description |
+|------------|-------------|
+| sample     | Sample name, must be unique            |
+| fastq_1    | Path to fastq file (with cell barcode and UMI for singl-cell data)            |
+| fastq_2    | Path to fastq file (with lineage barcode for single-cell data)            |
+| bam        | Path to BAM file (Cell Ranger or STARsolo output)           |
+| reference  | Path to reference fasta file            |
+| index      | Path to bowtie1 index           |
+| whitelist  | Path to a cell barode whitelist file            |
+| cellnumber | Number of cells expected in sample            |
+
+Required samplesheet columns for different parameter combinations:
+
+| parameter combination               | required samplesheet columns                                                                                                                 |
+|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| `-mode single-bulk` `-reference true`   | sample, fastq_1, reference, index                                                                                                            |
+| `-mode single-bulk` `-reference false`  | sample, fastq_1                                                                                                                              |
+| `-mode paired-bulk` `-reference true`   | sample, fastq_1, fastq_2, reference, index                                                                                                   |
+| `-mode single-cell` `-input_type bam`   | sample, bam, reference, index                                                                                                                |
+| `-mode single-cell` `-input_type fastq` | sample, fastq_1, fastq_2, whitelist, cellnumber  (For each sample, either whitelist or cellnumber must be provided, the other column empty.) |
+
+If column `index` is empty, the index will be generated by BARtab. 
+
+#### Example single-end bulk workflow
+
+`test/samplesheets/single-bulk.csv`:
 ```
-indir:               "test/dat/test_SE"
-ref:                 "test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta"
+sample,fastq_1,reference,index
+sample1,test/dat/test_SE/test1.fastq.gz,test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta,
+sample2,test/dat/test_SE/test2.fastq.gz,test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta,
+```
+
+Parameters yaml file:
+```
+indir:               "test/samplesheets/single-bulk.csv"
 mode:                "single-bulk"
 outdir:              "test/test_out/single_end/"
 upconstant:          "TGACCATGTACGATTGACTA"
@@ -205,6 +232,7 @@ constants:           "up"
 barcode_length:      60
 min_readlength:      20
 ```
+Specify the location in the Nextflow command with `-params-file`.
 
 Use `-w` to specify the location of the work directory and `-resume` when only parts of the input have changed or only a subset of process has to be re-run. 
 

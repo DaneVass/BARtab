@@ -32,18 +32,17 @@ def helpMessage() {
 
 ---------------------- Tabulate Barcode Counts in NGS data ----------------------
 
-  Usage: nextflow run danevas/bartab --indir <input dir>
-                                     --outdir <output dir>
-                                     --ref <path/to/reference/fasta>
+  Usage: nextflow run danevas/bartab --input <samplesheet>
+                                     --outdir <output directory>
                                      --mode <single-bulk | paired-bulk | single-cell>
 
     Input arguments:
-      --indir                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
-                                        For single-cell mode, directory can contain BAM files.
+      --input                    Path to sample sheet.
       --input_type               Input file type, either fastq or bam, only relevant for single-cell mode [default = fastq]
-      --ref                      Path to a reference fasta file for the barcode / sgRNA library.
-                                        If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
+      --reference                Whether to align barcodes to a reference fasta file. 
+                                        Reference-free clustering of barcode is only available for bulk workflows. [default = true].
       --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell>
+      --outdir                   Output directory to place output
 
     Read merging arguments:
       --mergeoverlap             Length of overlap required to merge paired-end reads [default = 10]
@@ -70,8 +69,6 @@ def helpMessage() {
 
     Sincle-cell arguments:
       --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
-      --cellnumber               Number of cells expected in sample, only required when fastq provided. whitelist_indir and cellnumber are mutually exclusive
-      --whitelist_indir          Directory that contains a cell ID whitelist for each sample <sample_id>_whitelist.tsv
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
       --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
       --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell (barcode supported by most UMIs) [default = 0.3]
@@ -85,8 +82,7 @@ def helpMessage() {
     Optional arguments:
       -profile                   Configuration profile to use. Can use multiple (comma separated)
                                         Available: conda, singularity, docker, slurm
-      --outdir                   Output directory to place output [default = './']
-      --email                    Direct output messages to this address [default = '']
+      --email                    Direct output messages to this address
       --help                     Print this help statement.
 
     Author:
@@ -105,33 +101,30 @@ if (params.help) {
   exit 0
 }
 
-// if (!params.mode) {
-//   error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
-// }
-// if (!["single-bulk", "paired-bulk", "single-cell"].contains(params.mode)) {
-//   error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
-// }
-// if (params.input_type != "fastq" && params.input_type != "bam") {
-//   error "Error: please choose a valid value for --input_type <fastq,bam>."
-// }
-// if (!params.input) {
-//   error "Error: please provide the location of input files via the parameter indir."
-// }
-// if (!params.outdir) {
-//   error "Error: please specify location of output directory via parameter outdir."
-// }
-// if (params.mode == "single-cell" && !params.ref) {
-//   error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
-// }
-// if (params.constants != "up" && params.constants != "down" && params.constants != "both" && params.constants != "all") {
-//   error "Error: unsupported value for parameter constants. Choose either up, down, both or all (default up)."
-// }
-// if (params.constants == "both" && params.barcode_length && params.min_readlength) {
-//   println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
-// }
-// if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir && !params.cellnumber) {
-//   error "Error: Please provide either a whitelist or the expected number of cells for cell ID and UMI extraction."
-// }
+if (!params.mode) {
+  error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
+}
+if (!["single-bulk", "paired-bulk", "single-cell"].contains(params.mode)) {
+  error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
+}
+if (params.input_type != "fastq" && params.input_type != "bam") {
+  error "Error: please choose a valid value for --input_type <fastq,bam>."
+}
+if (!params.input) {
+  error "Error: please provide the location of a samplesheet with --input."
+}
+if (!params.outdir) {
+  error "Error: please specify location of output directory via parameter outdir."
+}
+if (params.mode == "single-cell" && !params.ref) {
+  error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
+}
+if (!["up", "down", "both", "all"].contains(params.constants)) {
+  error "Error: unsupported value for parameter constants. Choose either up, down, both or all (default up)."
+}
+if (params.constants == "both" && params.barcode_length && params.min_readlength) {
+  println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
+}
 
 //--------------------------------------------------------------------------------------
 // Pipeline Config
@@ -148,14 +141,11 @@ log.info ""
 log.info "      Run parameters: "
 log.info " ========================"
   log.info " Mode                     : ${params.mode}"
-  log.info " Input directory          : ${params.indir}"
+  log.info " Input samplesheet          : ${params.input}"
   log.info " Input type               : ${params.input_type}"
-if (params.whitelist_indir) {
-  log.info " Whitelist directory      : ${params.whitelist_indir}"
-}
   log.info " Output directory         : ${params.outdir}"
-if (params.ref) {
-  log.info " Reference fasta          : ${params.ref}"
+if (params.reference) {
+  log.info " Align to reference       : ${params.reference}"
 }
 if (params.mode == "paired-bulk") {
   log.info " Merge overlap            : ${params.mergeoverlap}"
@@ -180,12 +170,13 @@ if (params.mode == "single-cell") {
   log.info " UMI count filter         : ${params.umi_count_filter}"
   log.info " UMI fraction filter      : ${params.umi_fraction_filter}"
 }
-if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir) {
-  log.info " Cell number              : ${params.cellnumber}"
+if (params.mode == "single-cell" && params.input_type == "fastq" && params.pipeline != "saw") {
+  log.info " Cell barcode/UMI pattern : ${params.cb_umi_pattern}"
 }
 
-
+if (params.email) {
   log.info " Email                    : ${params.email}"
+}
   log.info " ========================"
   log.info ""
 
