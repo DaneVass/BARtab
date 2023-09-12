@@ -26,6 +26,11 @@ def create_input_channel(LinkedHashMap row) {
         if (!file(row.reference).exists()) {
             exit 1, "ERROR: Please check input samplesheet -> Reference file does not exist!\n${row.reference}"
         }
+        if (row.index) {
+            index = "${row.index}**ebwt"
+        } else {
+            index = false
+        }
     }
 
     if (params.mode == "single-bulk") {
