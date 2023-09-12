@@ -1,0 +1,5 @@
+sample,bam,reference,index
+sample1,test/dat/test_sc_bam/JK05_T0_unmapped_unmapped_reads_sample1.bam,test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta,
+sample2,test/dat/test_sc_bam/JK05_T0_unmapped_unmapped_reads_sample2.bam,test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta,
+sample3,test/dat/test_sc_bam/JK05_T0_unmapped_unmapped_reads_sample3.bam,test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta,
+sample4,test/dat/test_sc_bam/JK05_T0_unmapped_unmapped_reads_sample4.bam,test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta,

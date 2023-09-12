@@ -1,0 +1,3 @@
+sample,fastq_1,reference,index
+sample1,test/dat/test_SE/test1.fastq.gz,test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta,test/test_out/sc_bam/reference_index/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta
+sample2,test/dat/test_SE/test2.fastq.gz,test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta,test/test_out/sc_bam/reference_index/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta

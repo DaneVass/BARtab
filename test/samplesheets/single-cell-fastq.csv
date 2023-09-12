@@ -1,0 +1,3 @@
+sample,fastq_1,fastq_2,reference,index,whitelist,cellnumber
+sc_test_sample,test/dat/test_sc/test_sc_R1.fastq.gz,test/dat/test_sc/test_sc_R2.fastq.gz,test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta,,,5000
+sc_test_sample_whitelist,test/dat/test_sc/test_sc_R1.fastq.gz,test/dat/test_sc/test_sc_R2.fastq.gz,test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta,,test/dat/test_sc/sc_test_sample_whitelist.tsv,
