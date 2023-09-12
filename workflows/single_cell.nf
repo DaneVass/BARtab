@@ -8,7 +8,7 @@ include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
 include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
 include { FILTER_ALIGNMENTS } from '../modules/local/filter_alignments'
-include { RENAME_READS } from '../modules/local/rename_reads'
+include { RENAME_READS_BAM } from '../modules/local/rename_reads_bam'
 include { RENAME_READS_SAW } from '../modules/local/rename_reads_saw'
 include { SAMTOOLS } from '../modules/local/samtools'
 include { UMITOOLS_COUNT } from '../modules/local/umitools_count'
@@ -55,7 +55,6 @@ workflow SINGLE_CELL {
         SOFTWARE_CHECK()
 
         if (params.input_type == "fastq" & params.pipeline == "saw") {
-            // r2_fastq = RENAME_READS_SAW(readsChannel)
             r2_fastq = readsChannel
 
         } else if (params.input_type == "fastq") {
@@ -90,7 +89,7 @@ workflow SINGLE_CELL {
 
         if (params.input_type == "bam") {
             // add CB and UMI info in header
-            mapped_reads = RENAME_READS(mapped_reads.combine(readsChannel, by: 0))
+            mapped_reads = RENAME_READS_BAM(mapped_reads.combine(readsChannel, by: 0))
         }
 
         if (params.pipeline == "saw") {

@@ -384,7 +384,7 @@ Output files:
 ### PROCESS_BAM
 
 Reads are filtered for flags CB and UB to obtain reads that contain a cell barcode and UMI.
-At a later step (for efficiency), cell ID and UMI are added to the read headers with the module RENAME_READS.
+At a later step (for efficiency), cell ID and UMI are added to the read headers with the module RENAME_READS_BAM.
 
 Output files:
 - `process_bam/<sample_id>_R2.fastq.gz`: reads containing cell barcode and UMI

@@ -1,7 +1,7 @@
 // add cell barcode and UMI to read name
+// necessary for BAM from cellranger or STARsolo as input
 // performed at this point only on aligned sequences because the process is very slow on large files
-process RENAME_READS {
-    tag "Rename reads ${sample_id}"
+process RENAME_READS_BAM {
     label "process_high"
     tag "$sample_id"
 
