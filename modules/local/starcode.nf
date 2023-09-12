@@ -1,17 +1,17 @@
 process STARCODE {
-    tag { "starcode on ${sample_id}" }
+    tag "$sample_id"
     label "process_medium"
     publishDir "${params.outdir}/starcode/", mode: 'copy'
 
     input:
-    tuple val(sample_id), path(reads)
+        tuple val(sample_id), path(reads)
 
     output:
-    path "${sample_id}_starcode.tsv", emit: counts
-    path "${sample_id}_starcode.log", emit: log
+        path "${sample_id}_starcode.tsv", emit: counts
+        path "${sample_id}_starcode.log", emit: log
     
     script:
-    """
-    starcode -t ${task.cpus} $reads -o ${sample_id}_starcode.tsv &> ${sample_id}_starcode.log
-    """
+        """
+        starcode -t ${task.cpus} $reads -o ${sample_id}_starcode.tsv &> ${sample_id}_starcode.log
+        """
 }

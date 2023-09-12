@@ -1,6 +1,7 @@
 process PARSE_BARCODES_SC {
     publishDir "${params.outdir}/counts", mode: 'copy'
     label "process_low"
+    tag "$sample_id"
     input:
         tuple val(sample_id), path(counts), path(sam)
 
@@ -15,7 +16,7 @@ process PARSE_BARCODES_SC {
         path "${sample_id}_avg_sequence_length.tsv"
         
     script:
-    """
-    parse_barcodes.R ${counts} ${sample_id} ${sam} ${params.umi_fraction_filter} ${params.umi_count_filter}
-    """
+        """
+        parse_barcodes.R ${counts} ${sample_id} ${sam} ${params.umi_fraction_filter} ${params.umi_count_filter}
+        """
 }

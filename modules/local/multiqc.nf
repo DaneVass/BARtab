@@ -1,20 +1,19 @@
 process MULTIQC {
-  label "process_low"
+    label "process_low"
 
-  publishDir "${params.outdir}", mode: 'copy', overwrite: 'true'
+    publishDir "${params.outdir}", mode: 'copy', overwrite: 'true'
 
-  input:
-    path multiqcConfig
-    path output
-    path counts
+    input:
+        path multiqcConfig
+        path output
+        path counts
 
-  output:
-    path "multiqc_report.html"
-    path "multiqc_data"
+    output:
+        path "multiqc_report.html"
+        path "multiqc_data"
 
-  script:
-  """
-  multiqc $output -f
-  """
-
+    script:
+        """
+        multiqc $output -f
+        """
 }
