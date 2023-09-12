@@ -221,9 +221,9 @@ sample1,test/dat/test_SE/test1.fastq.gz,test/ref/SPLINTR_mCHERRY_V2_barcode_refe
 sample2,test/dat/test_SE/test2.fastq.gz,test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta,
 ```
 
-Parameters yaml file:
+`example_params.yaml`:
 ```
-indir:               "test/samplesheets/single-bulk.csv"
+input:               "test/samplesheets/single-bulk.csv"
 mode:                "single-bulk"
 outdir:              "test/test_out/single_end/"
 upconstant:          "TGACCATGTACGATTGACTA"
@@ -239,7 +239,7 @@ Use `-w` to specify the location of the work directory and `-resume` when only p
 ```
 nextflow run danevass/bartab \
   -profile conda \
-  -params-file path/to/params/file.yaml \
+  -params-file example_params.yaml \
   -w "/scratch/work/" \
   -resume
 ```

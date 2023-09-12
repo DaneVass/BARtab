@@ -1,5 +1,4 @@
-indir:               "test/dat/test_SE"
-ref:                 "test/ref/SPLINTR_mCHERRY_V2_barcode_reference_library.fasta"
+input:               "test/samplesheets/single-bulk.csv"
 mode:                "single-bulk"
 outdir:              "test/test_out/single_end/"
 upconstant:          "TGACCATGTACGATTGACTA"
