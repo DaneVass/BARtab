@@ -1,7 +1,6 @@
 process FILTER_READS{
     tag "$sample_id"
     label "process_medium"
-    publishDir "${params.outdir}/filtered_reads/", mode: 'symlink'
 
     input:
         tuple val(sample_id), path(reads)

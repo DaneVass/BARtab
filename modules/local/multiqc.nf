@@ -1,8 +1,6 @@
 process MULTIQC {
     label "process_low"
 
-    publishDir "${params.outdir}", mode: 'copy', overwrite: 'true'
-
     input:
         path multiqcConfig
         path output

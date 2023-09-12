@@ -1,7 +1,7 @@
 process COUNT_BARCODES_SAM {
-    publishDir "${params.outdir}/counts", mode: 'copy'
     tag "$sample_id"
     label "process_low"
+    
     input:
         tuple val(sample_id), path(sam)
 

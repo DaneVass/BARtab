@@ -2,8 +2,6 @@
 process SOFTWARE_CHECK {
     label 'process_single'
 
-    publishDir "${params.outdir}/pipeline_info/", mode: 'copy', overwrite: 'true'
-
     output:
         path("software_check.txt")
 

@@ -1,7 +1,6 @@
 process SAMTOOLS {
     tag "$sample_id"
     label "process_medium"
-    publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
 
     input:
         tuple val(sample_id), path(reads)

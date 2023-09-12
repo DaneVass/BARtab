@@ -1,7 +1,6 @@
 process UMITOOLS_COUNT {
     tag "$sample_id"
     label "process_medium"
-    publishDir "${params.outdir}/counts", mode: 'copy'
 
     input:
         // index file needs to be linked to work directory

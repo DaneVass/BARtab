@@ -1,7 +1,6 @@
 process BOWTIE_ALIGN {
     tag "$sample_id"
     label "process_medium"
-    publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
 
     input:
         tuple val(refname), path(ref_files)

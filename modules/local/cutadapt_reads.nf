@@ -2,7 +2,6 @@
 process CUTADAPT_READS{
     tag "$sample_id"
     label "process_high"
-    publishDir "${params.outdir}/trimmed_reads/", mode: 'symlink'
 
     input:
         tuple val(sample_id), path(reads)

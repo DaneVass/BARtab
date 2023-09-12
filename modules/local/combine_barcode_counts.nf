@@ -1,6 +1,5 @@
 process COMBINE_BARCODE_COUNTS {
     label "process_high"
-    publishDir "${params.outdir}/counts/", mode: 'copy'
 
     input:
       path counts

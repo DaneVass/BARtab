@@ -1,7 +1,6 @@
 process MERGE_READS {
     tag "$sample_id"
     label "process_high"
-    publishDir "${params.outdir}/merged_reads/$sample_id", mode: 'symlink'
 
     input:
         tuple val(sample_id), path(reads)

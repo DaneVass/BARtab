@@ -1,7 +1,6 @@
 process UMITOOLS_EXTRACT {
     tag "$sample_id"
     label "process_medium"
-    publishDir "${params.outdir}/extract", mode: 'symlink'
 
     input:
         tuple val(sample_id), path(reads), path(whitelist)

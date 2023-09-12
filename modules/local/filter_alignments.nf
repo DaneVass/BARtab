@@ -3,7 +3,6 @@
 process FILTER_ALIGNMENTS {
     tag "$sample_id"
     label "process_low"
-    publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
 
     input:
         tuple val(sample_id), path(reads)

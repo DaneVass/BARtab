@@ -4,7 +4,6 @@ process RENAME_READS {
     tag "Rename reads ${sample_id}"
     label "process_high"
     tag "$sample_id"
-    publishDir "${params.outdir}/mapped_reads/", mode: 'symlink'
 
     input:
         // sam containing mapped reads, bam from cellranger
