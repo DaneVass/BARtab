@@ -99,7 +99,7 @@ All BAM files can then be symlinked to an input directory and the parameter `inp
 
 - [fastq] Check raw data quality using `fastqc` [FASTQC](#fastqc)
 - [fastq] Extraction of cell barcodes (optional) and UMIs using `umi-tools` [UMITOOLS_WHITELIST](#umitools_whitelist), [UMITOOLS_EXTRACT](#umitools_extract)
-- [BAM] Filter reads containing cell barcode and UMI and convert to fastq using `samtools` [PROCESS_BAM](#process_bam)
+- [BAM] Filter reads containing cell barcode and UMI and convert to fastq using `samtools` [BAM_TO_FASTQ](#bam_to_fastq)
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
 - Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
 - [Optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
@@ -381,14 +381,13 @@ Output files:
 - `extract/<sample_id>_R2_extracted.fastq`: reads that contain cell barcode and UMI, both added to the read name
 - `extract/<sample_id>_exctract.log`: log
 
-### PROCESS_BAM
+### BAM_TO_FASTQ
 
 Reads are filtered for flags CB and UB to obtain reads that contain a cell barcode and UMI.
 At a later step (for efficiency), cell ID and UMI are added to the read headers with the module RENAME_READS_BAM.
 
 Output files:
-- `process_bam/<sample_id>_R2.fastq.gz`: reads containing cell barcode and UMI
-- `process_bam/<sample_id>.filtered.bam`: reads containing cell barcode and UMI
+- `fastq/<sample_id>_R2.fastq.gz`: reads containing cell barcode and UMI
 
 ### UMITOOLS_COUNT
 
