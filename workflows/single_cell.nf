@@ -10,6 +10,7 @@ include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
 include { FILTER_ALIGNMENTS } from '../modules/local/filter_alignments'
 include { RENAME_READS_BAM } from '../modules/local/rename_reads_bam'
 include { RENAME_READS_SAW } from '../modules/local/rename_reads_saw'
+include { RENAME_READS_FLEXIPLEX } from '../modules/local/rename_reads_flexiplex'
 include { SAMTOOLS } from '../modules/local/samtools'
 include { UMITOOLS_COUNT } from '../modules/local/umitools_count'
 include { COUNT_BARCODES_SAM } from '../modules/local/count_barcodes_sam'
@@ -54,7 +55,7 @@ workflow SINGLE_CELL {
 
         SOFTWARE_CHECK()
 
-        if (params.input_type == "fastq" & params.pipeline == "saw") {
+        if (params.input_type == "fastq" & (params.pipeline == "saw" | params.pipeline == "flexiplex")) {
             r2_fastq = readsChannel
 
         } else if (params.input_type == "fastq") {
@@ -79,6 +80,8 @@ workflow SINGLE_CELL {
 
         if (params.input_type == "fastq" & params.pipeline == "saw") {
             trimmed_reads = RENAME_READS_SAW(CUTADAPT_READS.out.reads)
+        } else if (params.input_type == "fastq" & params.pipeline == "flexiplex") {
+            trimmed_reads = RENAME_READS_FLEXIPLEX(CUTADAPT_READS.out.reads)
         }
 
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
