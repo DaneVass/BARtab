@@ -38,6 +38,9 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 2]
       --barcode_length           (see trimming arguments)
 
+    Reference-free arguments:
+      --cluster_distance         Defines the maximum Levenshtein distance for clustering lineage barcodes [default = min(8, 2 + [median seq length]/30)]
+
     Sincle-cell arguments:
       --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
       --cellnumber               Number of cells expected in sample, only required when fastq provided. whitelist_indir and cellnumber are mutually exclusive
@@ -338,7 +341,7 @@ Output files:
 ### STARCODE
 
 If no reference is provided, the consensus barcode repertoire is derived using [starcode](https://github.com/gui11aume/starcode).  
-Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance. The maximum distance by default is `min(8, 2 + [median seq length]/30)`. 
+Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance. The maximum distance by default is `min(8, 2 + [median seq length]/30)` but can be set with the parameter `cluster_distance`. 
 
 Output files:
 - `starcode/<sample_id>_starcode.tsv`: barcode counts with sequence of centroid of each barcode cluster and read count

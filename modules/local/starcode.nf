@@ -10,9 +10,10 @@ process STARCODE {
         path "${sample_id}_starcode.log", emit: log
     
     script:
+        def cluster_distance = params.cluster_distance ? "-d ${params.cluster_distance}" : ""
         """
         gunzip -c $reads > reads.fastq
-        starcode -t ${task.cpus} reads.fastq -o ${sample_id}_starcode.tsv &> ${sample_id}_starcode.log
+        starcode -t ${task.cpus} ${cluster_distance} reads.fastq -o ${sample_id}_starcode.tsv &> ${sample_id}_starcode.log
         rm reads.fastq
         """
 }
