@@ -17,6 +17,6 @@ process RENAME_READS_FLEXIPLEX {
 
     script:
         """
-        gunzip -c ${reads} | parallel -j ${task.cpus} --pipe 'sed "'s/@\\([ACTG_]*\\)#\\(.*\\)/@\\2_\\1/g'"' | gzip > ${sample_id}_renamed.fastq.gz
+        gunzip -c ${reads} | parallel -j ${task.cpus} --pipe 'sed "s/@\\([ACTG_]*\\)#\\(.*\\)/@\\2_\\1/g"' | gzip > ${sample_id}_renamed.fastq.gz
         """
 }
