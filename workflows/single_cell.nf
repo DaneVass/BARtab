@@ -27,10 +27,10 @@ workflow SINGLE_CELL {
                 // baseName already removes file type extension
                 .map { file -> tuple( file.baseName.replaceAll(/\.bam/, ''), file ) }
                 .ifEmpty { error "Cannot find any *.bam files in: ${params.indir}" }
-        } else if (params.input_type == "fastq" & params.pipeline == "saw") {
-            readsChannel = Channel.fromPath( "${params.indir}/*.fq.gz" )
+        } else if (params.input_type == "fastq" & (params.pipeline == "saw" | params.pipeline == "flexiplex")) {
+            readsChannel = Channel.fromPath( "${params.indir}/*.{fastq,fq}.gz" )
                 // baseName removes .gz
-                .map { file -> tuple( file.baseName.replaceAll(/\.fq/, ''), file ) }
+                .map { file -> tuple( file.baseName.replaceAll(/\.(fq|fastq)/, ''), file ) }
                 .ifEmpty { error "Cannot find any *.fq.gz files in: ${params.indir}" }
         } else {
             readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}*.{fastq,fq}.gz" )
