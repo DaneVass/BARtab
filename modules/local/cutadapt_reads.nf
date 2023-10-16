@@ -18,7 +18,7 @@ process CUTADAPT_READS{
         // bowtie performs ungapped alignment
         def min_len_both = params.barcode_length ? "-m ${params.barcode_length}" : "-m ${params.min_readlength}"
 
-        if(params.mode == "single-cell" || params.constants == "all") {
+        if(params.constants == "all") {
             """
             cutadapt -j \$((${task.cpus} / 3)) -g "${params.upconstant};required...${params.downconstant};required" --trimmed-only --max-n=0  ${min_len_both} -e ${params.constantmismatches} ${max_len} ${reads} > ${sample_id}.trimmed_1.fastq 2> ${sample_id}.cutadapt_both.log &
             cutadapt -j \$((${task.cpus} / 3)) -g "${params.upconstant}" --trimmed-only --max-n=0 -m ${params.min_readlength} -e ${params.constantmismatches} ${max_len} ${reads} > ${sample_id}.trimmed_2.fastq 2> ${sample_id}.cutadapt_up.log &
