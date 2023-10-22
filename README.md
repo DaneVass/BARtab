@@ -28,10 +28,12 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
                                  Single-cell mode always runs with "all". <up, down, both, all> [default = 'up']
       --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
+      --up_coverage              Number of bases of the upstream constant that must be covered by the sequence [default = 3]
+      --down_coverage            Number of bases of the downstream constant that must be covered by the sequence [default = 3]
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
       --min_readlength           Minimum read length [default = 20]
-      --barcode_length           Length of barcode if it is the same for all barcodes. If adapters are trimmed on both ends, reads are filtered for this length. 
-                                    If either adapter is trimmed, this is the maximum sequence length. 
+      --barcode_length           Length of barcode if it is the same for all barcodes. If constant regions are trimmed on both ends, reads are filtered for this length. 
+                                    If either constant region is trimmed, this is the maximum sequence length. 
                                     If barcode_length is set, alignments to the middle of a barcode sequence are filtered out.
 
     Mapping arguments:
@@ -259,16 +261,21 @@ Output files:
 
 ### CUTADAPT_READS
 
-Adapter sequences are trimmed and reads are filtered for length and N bases using [cutadapt](https://cutadapt.readthedocs.io/en/stable/).
+Constant regions are trimmed and reads are filtered for length and N bases using [cutadapt](https://cutadapt.readthedocs.io/en/stable/).
 
 Constants can be specified with the parameters `upconstant` and `downconstant`.  
+For each, minimum coverage can be specified with `up_coverage` and `down_coverage` (default 3). 
+If this is smaller than the length of the constant region, partial matches at the _beginning_ or _end_ of the sequence are accepted. 
+This is particularly useful in case of random fragmentation.  
 In bulk mode, reads can be filtered for containing either upconstant (`up`), downconstant (`down`) or both (`both`) with the parameter `constants`.  
 In single-cell mode or when `contstants` is set to `all`, reads are filtered in all three ways. Fastq files of trimmed sequences are concatenated.
 
 Example for trimming options:
 
 upconstant="ATGGAATTG"  
-downconstant="CGGAACCGA"
+downconstant="CGGAACCGA"  
+up_coverage=6  
+down_coverage=6
 
 \>seq1  
 **ATGGAATTG**ACATCACGCTCAAGGATC**CGGAACCGA**  
@@ -283,6 +290,10 @@ ACATCACGCTCAAGGATC**CGGAACCGA**
 \>seq6  
 ACATCACGCTCAAGGATC**CGGAAC**  
 \>seq7  
+ACATCACGCTCAAGGATC**CGGA**  
+\>seq8  
+ACATCACGCTC**CGGAAC**AAGGATC  
+\>seq9  
 ACATCACGCTCAAGGATC  
 
 Option `both` will trim sequence 1 and 2, `up` will trim sequence 3 and 4, `down` will trim sequence 5 and 6, `all` will trim sequence 1-6. 
