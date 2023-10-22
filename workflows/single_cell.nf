@@ -3,12 +3,12 @@ include { FASTQC } from '../modules/local/fastqc'
 // include { FILTER_READS } from '../modules/local/filter_reads'
 include { UMITOOLS_WHITELIST } from '../modules/local/umitools_whitelist'
 include { UMITOOLS_EXTRACT } from '../modules/local/umitools_extract'
-include { PROCESS_BAM } from '../modules/local/process_bam'
+include { BAM_TO_FASTQ } from '../modules/local/bam_to_fastq'
 include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
 include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
 include { FILTER_ALIGNMENTS } from '../modules/local/filter_alignments'
-include { RENAME_READS } from '../modules/local/rename_reads'
+include { RENAME_READS_BAM } from '../modules/local/rename_reads_bam'
 include { RENAME_READS_SAW } from '../modules/local/rename_reads_saw'
 include { SAMTOOLS } from '../modules/local/samtools'
 include { UMITOOLS_COUNT } from '../modules/local/umitools_count'
@@ -55,7 +55,6 @@ workflow SINGLE_CELL {
         SOFTWARE_CHECK()
 
         if (params.input_type == "fastq" & params.pipeline == "saw") {
-            // r2_fastq = RENAME_READS_SAW(readsChannel)
             r2_fastq = readsChannel
 
         } else if (params.input_type == "fastq") {
@@ -73,7 +72,7 @@ workflow SINGLE_CELL {
         } else if (params.input_type == "bam") {
 
             // extract reads with cell barcode and UMI and convert to fastq
-            r2_fastq = PROCESS_BAM(readsChannel).reads
+            r2_fastq = BAM_TO_FASTQ(readsChannel).reads
         }
 
         trimmed_reads = CUTADAPT_READS(r2_fastq).reads
@@ -90,7 +89,7 @@ workflow SINGLE_CELL {
 
         if (params.input_type == "bam") {
             // add CB and UMI info in header
-            mapped_reads = RENAME_READS(mapped_reads.combine(readsChannel, by: 0))
+            mapped_reads = RENAME_READS_BAM(mapped_reads.combine(readsChannel, by: 0))
         }
 
         if (params.pipeline == "saw") {

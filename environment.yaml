@@ -1,17 +1,17 @@
 name: bartab-1.3
 channels:
+  - defaults
   - bioconda
   - conda-forge
-  - defaults
 dependencies:
-  - python=3.9
+  - python=3.10.11
   - nextflow=23.04.1
-  - r-base=4.2.2
+  - r-base=4.2.0
   - r-dplyr=1.0.9
-  - r-purrr=1.0.1
-  - r-ggplot2=3.4.2
+  - r-purrr=0.3.4
+  - r-ggplot2=3.3.6
   - r-magrittr=2.0.3
-  - r-data.table=1.14.8
+  - r-data.table=1.14.2
   - fastqc=0.12.1
   - cutadapt=4.4
   - starcode=1.4
@@ -19,9 +19,9 @@ dependencies:
   - fastx_toolkit=0.0.14
   - bowtie=1.3.1
   - samtools=1.17
-  - multiqc=1.14
+  - multiqc=1.15
   - umi_tools=1.1.4
-  - parallel=20230322
-  - conda-forge::ncurses=6.3
+  - parallel=20170422
+  - conda-forge::ncurses=6.4
 variables:
   PERL5LIB: $CONDA_PREFIX/lib/perl5/site_perl/5.22.0/

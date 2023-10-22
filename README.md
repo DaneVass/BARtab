@@ -40,6 +40,9 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 2]
       --barcode_length           (see trimming arguments)
 
+    Reference-free arguments:
+      --cluster_distance         Defines the maximum Levenshtein distance for clustering lineage barcodes [default = min(8, 2 + [median seq length]/30)]
+
     Sincle-cell arguments:
       --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
       --cellnumber               Number of cells expected in sample, only required when fastq provided. whitelist_indir and cellnumber are mutually exclusive
@@ -101,7 +104,7 @@ All BAM files can then be symlinked to an input directory and the parameter `inp
 
 - [fastq] Check raw data quality using `fastqc` [FASTQC](#fastqc)
 - [fastq] Extraction of cell barcodes (optional) and UMIs using `umi-tools` [UMITOOLS_WHITELIST](#umitools_whitelist), [UMITOOLS_EXTRACT](#umitools_extract)
-- [BAM] Filter reads containing cell barcode and UMI and convert to fastq using `samtools` [PROCESS_BAM](#process_bam)
+- [BAM] Filter reads containing cell barcode and UMI and convert to fastq using `samtools` [BAM_TO_FASTQ](#bam_to_fastq)
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
 - Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
 - [Optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
@@ -349,7 +352,7 @@ Output files:
 ### STARCODE
 
 If no reference is provided, the consensus barcode repertoire is derived using [starcode](https://github.com/gui11aume/starcode).  
-Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance. The maximum distance by default is `min(8, 2 + [median seq length]/30)`. 
+Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance. The maximum distance by default is `min(8, 2 + [median seq length]/30)` but can be set with the parameter `cluster_distance`. 
 
 Output files:
 - `starcode/<sample_id>_starcode.tsv`: barcode counts with sequence of centroid of each barcode cluster and read count
@@ -392,14 +395,13 @@ Output files:
 - `extract/<sample_id>_R2_extracted.fastq`: reads that contain cell barcode and UMI, both added to the read name
 - `extract/<sample_id>_exctract.log`: log
 
-### PROCESS_BAM
+### BAM_TO_FASTQ
 
 Reads are filtered for flags CB and UB to obtain reads that contain a cell barcode and UMI.
-At a later step (for efficiency), cell ID and UMI are added to the read headers with the module RENAME_READS.
+At a later step (for efficiency), cell ID and UMI are added to the read headers with the module RENAME_READS_BAM.
 
 Output files:
-- `process_bam/<sample_id>_R2.fastq.gz`: reads containing cell barcode and UMI
-- `process_bam/<sample_id>.filtered.bam`: reads containing cell barcode and UMI
+- `fastq/<sample_id>_R2.fastq.gz`: reads containing cell barcode and UMI
 
 ### UMITOOLS_COUNT
 
@@ -431,7 +433,7 @@ E.g. if barcode a has 5 supporting UMIs in a cell and a second barcode with 2 su
 Barcodes and UMIs are semicolon-separated if multiple barcodes were detected per cell.
 
 Output files:
-- `counts/<sample_id>_cell-barcode-anno.tsv`: aggregated barcode counts per cell with cell barcode as row index and barcode and UMI count as columns
+- `counts/<sample_id>_cell_barcode_annotation.tsv`: aggregated barcode counts per cell with cell barcode as row index and barcode and UMI count as columns
 - `counts/<sample_id>_barcodes_per_cell.pdf`: QC plot, number of detected barcode per cell
 - `counts/<sample_id>_UMIs_per_bc.pdf`: QC plot, UMIs supporting the most frequent barcode per cell
 - `counts/<sample_id>_avg_sequence_length.pdf`: QC plot, average mapped sequence length per barcode

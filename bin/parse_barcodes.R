@@ -56,7 +56,7 @@ names(bc.counts) <- c("barcode", "bc.umi.count")
 # write final output
 write.table(
   bc.counts,
-  paste0(sample_id, "_cell-barcode-anno.tsv"),
+  paste0(sample_id, "_cell_barcode_annotation.tsv"),
   quote = FALSE,
   row.names = TRUE,
   sep = "\t"
