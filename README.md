@@ -39,6 +39,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
     Mapping arguments:
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 2]
       --barcode_length           (see trimming arguments)
+      --cluster_unmapped         Cluster unmapped reads with starcode
 
     Reference-free arguments:
       --cluster_distance         Defines the maximum Levenshtein distance for clustering lineage barcodes [default = min(8, 2 + [median seq length]/30)]
@@ -352,10 +353,20 @@ Output files:
 ### STARCODE
 
 If no reference is provided, the consensus barcode repertoire is derived using [starcode](https://github.com/gui11aume/starcode).  
-Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance. The maximum distance by default is `min(8, 2 + [median seq length]/30)` but can be set with the parameter `cluster_distance`. 
+Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance. 
+The default distance is `min(8, 2 + [median seq length]/30)` but can be set with the parameter `cluster_distance`. 
+
+From the starcode manual:
+
+> The clustering method is Message Passing. This means that clusters are built bottom-up by merging small clusters into bigger ones. The process is recursive, so sequences in a cluster may not be neighbors, i.e., they may not be within the specified Levenshtein distance. If this must be the case, use sphere clustering instead.
+
+> The clustering ratio is 5. This means that a cluster can absorb a smaller one only if it is at least five times bigger. A practical implication is that clusters of similar size are not merged. You can choose another threshold for merging clusters.
+
+When barcodes are aligned to a reference, `--cluster_unmapped` can be set to `true` to cluster unmapped barcode reads. 
+
 
 Output files:
-- `starcode/<sample_id>_starcode.tsv`: barcode counts with sequence of centroid of each barcode cluster and read count
+- `starcode/<sample_id>[_unmapped]_starcode.tsv`: barcode counts with sequence of centroid of each barcode cluster and read count
 
 ### COMBINE_BARCODE_COUNTS
 
