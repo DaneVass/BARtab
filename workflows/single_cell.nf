@@ -5,6 +5,7 @@ include { UMITOOLS_WHITELIST } from '../modules/local/umitools_whitelist'
 include { UMITOOLS_EXTRACT } from '../modules/local/umitools_extract'
 include { BAM_TO_FASTQ } from '../modules/local/bam_to_fastq'
 include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
+include { STARCODE } from '../modules/local/starcode'
 include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
 include { FILTER_ALIGNMENTS } from '../modules/local/filter_alignments'
@@ -83,6 +84,11 @@ workflow SINGLE_CELL {
 
         bowtie_index = BUILD_BOWTIE_INDEX(reference)
         BOWTIE_ALIGN(bowtie_index, trimmed_reads)
+
+        // cluster unmapped reads
+        if (params.cluster_unmapped) {
+            STARCODE(BOWTIE_ALIGN.out.unmapped_reads, true)
+        }
 
         // filter alignments if barcode has fixed length
         mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads) : BOWTIE_ALIGN.out.mapped_reads

@@ -68,7 +68,7 @@ def helpMessage() {
     Mapping arguments:
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 2]
       --barcode_length           (see trimming arguments)
-      --cluster_unmapped         Cluster unmapped reads with starcode
+      --cluster_unmapped         Cluster unmapped reads with starcode [default = false]
 
     Reference-free arguments:
       --cluster_distance         Defines the maximum Levenshtein distance for clustering lineage barcodes [default = min(8, 2 + [median seq length]/30)]
