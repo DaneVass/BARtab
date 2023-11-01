@@ -31,6 +31,7 @@ def helpMessage() {
   log.info logo + """
 
 ---------------------- Tabulate Barcode Counts in NGS data ----------------------
+                               Version = 1.3.0
 
   Usage: nextflow run danevas/bartab --indir <input dir>
                                      --outdir <output dir>
@@ -139,7 +140,7 @@ log.info logo
 // https://www.coolgenerator.com/ascii-text-generator Delta Corps Priest 1
 log.info ""
 log.info " ---------------------- Tabulate Barcode Counts in NGS ----------------------"
-log.info "                               Version = 1.1.0 "
+log.info "                               Version = 1.3.0 "
 log.info ""
 log.info "      Run parameters: "
 log.info " ========================"
