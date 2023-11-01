@@ -72,7 +72,7 @@ workflow SINGLE_CELL {
 
         } else if (params.input_type == "bam") {
 
-            // extract reads with cell barcode and UMI and convert to fastq
+            // extract unmapped reads with cell barcode and UMI and convert to fastq
             r2_fastq = BAM_TO_FASTQ(readsChannel).reads
         }
 
