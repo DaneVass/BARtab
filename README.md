@@ -24,21 +24,21 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
     Trimming arguments:
       --constants                Which constant regions flanking barcode to search for in reads: up, down or both. 
-                                 "all" runs all 3 modes and combines the results. 
-                                 Single-cell mode always runs with "all". <up, down, both, all> [default = 'up']
+                                 "all" runs all 3 modes and combines the results. <up, down, both, all> [default = 'up']
       --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
       --up_coverage              Number of bases of the upstream constant that must be covered by the sequence [default = 3]
       --down_coverage            Number of bases of the downstream constant that must be covered by the sequence [default = 3]
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
       --min_readlength           Minimum read length [default = 20]
-      --barcode_length           Length of barcode if it is the same for all barcodes. If constant regions are trimmed on both ends, reads are filtered for this length. 
+      --barcode_length           Optional. Length of barcode if it is the same for all barcodes. If constant regions are trimmed on both ends, reads are filtered for this length. 
                                     If either constant region is trimmed, this is the maximum sequence length. 
                                     If barcode_length is set, alignments to the middle of a barcode sequence are filtered out.
 
     Mapping arguments:
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 2]
       --barcode_length           (see trimming arguments)
+      --cluster_unmapped         Cluster unmapped reads with starcode [default = false]
 
     Reference-free arguments:
       --cluster_distance         Defines the maximum Levenshtein distance for clustering lineage barcodes [default = min(8, 2 + [median seq length]/30)]
@@ -85,6 +85,7 @@ The bulk workflow is executed with mode `single-bulk` and `paired-bulk` for sing
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
 - [Reference-based] Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
 - [Reference-based optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
+- [Reference-based optional] Cluster unmapped barcodes using `starcode` [STARCODE](#starcode)
 - [Reference-based] Count number of reads aligning per barcode using `samtools` [SAMTOOLS](#samtools), [GET_BARCODE_COUNTS](#get_barcode_counts)
 - [Reference-free] If no reference library, derive consensus barcode repertoire using `starcode` [STARCODE](#starcode)
 - Merge counts files for multiple samples [COMBINE_BARCODE_COUNTS](#combine_barcode_counts)
@@ -108,6 +109,7 @@ All BAM files can then be symlinked to an input directory and the parameter `inp
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
 - Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
 - [Optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
+- [Optional] Cluster unmapped barcodes using `starcode` [STARCODE](#starcode)
 - Extract barcode counts using `umi-tools` [SAMTOOLS](#samtools), [UMITOOLS_COUNT](#umitools_count)
 - Filter and tabulate barcodes per cell and produce QC plots [PARSE_BARCODES_SC](#parse_barcodes_sc)
 - Report metrics for individual samples [MULTIQC](#multiqc)
@@ -268,7 +270,8 @@ For each, minimum coverage can be specified with `up_coverage` and `down_coverag
 If this is smaller than the length of the constant region, partial matches at the _beginning_ or _end_ of the sequence are accepted. 
 This is particularly useful in case of random fragmentation.  
 In bulk mode, reads can be filtered for containing either upconstant (`up`), downconstant (`down`) or both (`both`) with the parameter `constants`.  
-In single-cell mode or when `contstants` is set to `all`, reads are filtered in all three ways. Fastq files of trimmed sequences are concatenated.
+When `contstants` is set to `all`, reads are filtered in all three ways. 
+Fastq files of trimmed sequences are concatenated.
 
 Example for trimming options:
 
@@ -352,10 +355,20 @@ Output files:
 ### STARCODE
 
 If no reference is provided, the consensus barcode repertoire is derived using [starcode](https://github.com/gui11aume/starcode).  
-Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance. The maximum distance by default is `min(8, 2 + [median seq length]/30)` but can be set with the parameter `cluster_distance`. 
+Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance. 
+The default distance is `min(8, 2 + [median seq length]/30)` but can be set with the parameter `cluster_distance`. 
+
+From the starcode manual:
+
+> The clustering method is Message Passing. This means that clusters are built bottom-up by merging small clusters into bigger ones. The process is recursive, so sequences in a cluster may not be neighbors, i.e., they may not be within the specified Levenshtein distance. If this must be the case, use sphere clustering instead.
+
+> The clustering ratio is 5. This means that a cluster can absorb a smaller one only if it is at least five times bigger. A practical implication is that clusters of similar size are not merged. You can choose another threshold for merging clusters.
+
+When barcodes are aligned to a reference, `--cluster_unmapped` can be set to `true` to cluster unmapped barcode reads. 
+
 
 Output files:
-- `starcode/<sample_id>_starcode.tsv`: barcode counts with sequence of centroid of each barcode cluster and read count
+- `starcode/<sample_id>[_unmapped]_starcode.tsv`: barcode counts with sequence of centroid of each barcode cluster and read count
 
 ### COMBINE_BARCODE_COUNTS
 

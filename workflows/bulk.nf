@@ -68,6 +68,11 @@ workflow BULK {
             // filter alignments if barcode has fixed length
             mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads) : BOWTIE_ALIGN.out.mapped_reads
 
+            // cluster unmapped reads
+            if (params.cluster_unmapped) {
+                STARCODE(BOWTIE_ALIGN.out.unmapped_reads, true)
+            }
+
             SAMTOOLS(mapped_reads)
             GET_BARCODE_COUNTS(SAMTOOLS.out)
 
@@ -75,7 +80,7 @@ workflow BULK {
         } 
         else {
             // if reference-free, use starcode to cluster barcodes
-            STARCODE(CUTADAPT_READS.out.reads)
+            STARCODE(CUTADAPT_READS.out.reads, false)
             combined_reads = COMBINE_BARCODE_COUNTS(STARCODE.out.counts.collect())
         }
 
