@@ -91,20 +91,20 @@ The bulk workflow is executed with mode `single-bulk` and `paired-bulk` for sing
 - Report metrics for individual samples [MULTIQC](#multiqc)
 
 ### Single-cell workflow
-The single-cell workflow either expects fastq files or a BAM files as input. 
+
+The single-cell workflow either expects fastq files or BAM files as input. 
 
 Fastq files must match the regex `*_R{1,2}*.{fastq,fq}.gz`.
 
 Alternatively, if raw data was already processed with Cell Ranger or STARSolo, BAM files can be used as input. 
 This way, cell calling and UMI extraction can be skipped.  
-Reads containing barcode sequences will be in the unmapped fraction of reads after alignment. To obtain unapped reads annotated with cell ID and UMI, run STAR with the option `--outSAMunmapped Within KeepPairs`.  
-Unmapped reads can be extracted from the BAM file with  
-`samtools view -b -f 4 <sample_id>/outs/possorted_genome_bam.bam > <sample_id>_unmapped_reads.bam`.  
+Reads containing barcode sequences will be in the unmapped fraction of reads after alignment. 
+To retain unmapped reads annotated with cell ID and UMI in the output, run STAR with the option `--outSAMunmapped Within KeepPairs`.  
 All BAM files can then be symlinked to an input directory and the parameter `input_type` set to `bam`.
 
 - [fastq] Check raw data quality using `fastqc` [FASTQC](#fastqc)
 - [fastq] Extraction of cell barcodes (optional) and UMIs using `umi-tools` [UMITOOLS_WHITELIST](#umitools_whitelist), [UMITOOLS_EXTRACT](#umitools_extract)
-- [BAM] Filter reads containing cell barcode and UMI and convert to fastq using `samtools` [BAM_TO_FASTQ](#bam_to_fastq)
+- [BAM] Filter unmapped reads containing cell barcode and UMI and convert to fastq using `samtools` [BAM_TO_FASTQ](#bam_to_fastq)
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
 - Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
 - [Optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
