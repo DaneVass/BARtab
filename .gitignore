@@ -3,3 +3,4 @@ test/test_out
 work/
 .DS_Store
 */.DS_Store
+pipeline_info/
