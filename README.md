@@ -356,7 +356,12 @@ Output files:
 
 If no reference is provided, the consensus barcode repertoire is derived using [starcode](https://github.com/gui11aume/starcode).  
 Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance. 
-The default distance is `min(8, 2 + [median seq length]/30)` but can be set with the parameter `cluster_distance`. 
+The default distance is `min(8, 2 + [median seq length]/30)` but can be set with the parameter `cluster_distance`.  
+When using BARtab for barcode systems with variable barcode length, it is recommended to set this parameter to avoid inconsistency between samples. 
+
+When barcodes are aligned to a reference, `--cluster_unmapped` can be set to `true` to cluster unmapped barcode reads.  
+When using this option for barcodes from direct scRNA-seq data, barcode reads have different lengths due to random fragmentation. 
+Clustering unmapped reads may therefore not be as informative. 
 
 From the starcode manual:
 
@@ -364,7 +369,6 @@ From the starcode manual:
 
 > The clustering ratio is 5. This means that a cluster can absorb a smaller one only if it is at least five times bigger. A practical implication is that clusters of similar size are not merged. You can choose another threshold for merging clusters.
 
-When barcodes are aligned to a reference, `--cluster_unmapped` can be set to `true` to cluster unmapped barcode reads. 
 
 
 Output files:
