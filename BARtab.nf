@@ -71,7 +71,8 @@ def helpMessage() {
       --cluster_unmapped         Cluster unmapped reads with starcode [default = false]
 
     Reference-free arguments:
-      --cluster_distance         Defines the maximum Levenshtein distance for clustering lineage barcodes [default = min(8, 2 + [median seq length]/30)]
+      --cluster_distance         Defines the Levenshtein distance for clustering lineage barcodes [default = 2].
+      --cluster_ratio            Cluster ratio for message passing clustering. A cluster of barcode sequences can absorb a smaller one only if it is at least x times bigger [default = 3].
 
     Sincle-cell arguments:
       --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]

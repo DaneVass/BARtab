@@ -41,7 +41,8 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --cluster_unmapped         Cluster unmapped reads with starcode [default = false]
 
     Reference-free arguments:
-      --cluster_distance         Defines the maximum Levenshtein distance for clustering lineage barcodes [default = min(8, 2 + [median seq length]/30)]
+      --cluster_distance         Defines the Levenshtein distance for clustering lineage barcodes [default = 2].
+      --cluster_ratio            Cluster ratio for message passing clustering. A cluster of barcode sequences can absorb a smaller one only if it is at least x times bigger [default = 3].
 
     Sincle-cell arguments:
       --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
@@ -355,21 +356,22 @@ Output files:
 ### STARCODE
 
 If no reference is provided, the consensus barcode repertoire is derived using [starcode](https://github.com/gui11aume/starcode).  
-Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance. 
-The default distance is `min(8, 2 + [median seq length]/30)` but can be set with the parameter `cluster_distance`.  
-When using BARtab for barcode systems with variable barcode length, it is recommended to set this parameter to avoid inconsistency between samples. 
+Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance (substitutions, insertions, deletions). 
 
-When barcodes are aligned to a reference, `--cluster_unmapped` can be set to `true` to cluster unmapped barcode reads.  
+The default Levenshtein distance for clustering is 2 which is conservative to avoid collapsing truly distingt barcodes.  
+The parameter `cluster_distance` can be adjusted for the expected number of sequencing errors given the length of the barcode construct.  
+Examplary recommended cluster distances: [ClonMapper (Gutierrez et al. 2021)](https://www.nature.com/articles/s43018-021-00222-8) (20bp barcode): 1 and [FateMap (Goyal et al. 2023)](https://www.nature.com/articles/s41586-023-06342-8) (100bp barcode): 8. 
+
+The default `cluster_ratio` to use for message passing clustering is 3.  
+This means that a cluster can absorb a smaller one only if it is at least 3 times bigger.  
+
+When barcodes are aligned to a reference, `cluster_unmapped` can be set to `true` to cluster unmapped barcode reads.  
 When using this option for barcodes from direct scRNA-seq data, barcode reads have different lengths due to random fragmentation. 
 Clustering unmapped reads may therefore not be as informative. 
 
-From the starcode manual:
+From the [starcode manual](https://github.com/gui11aume/starcode/blob/master/README.md#starcode-defaults-please-read-this):
 
-> The clustering method is Message Passing. This means that clusters are built bottom-up by merging small clusters into bigger ones. The process is recursive, so sequences in a cluster may not be neighbors, i.e., they may not be within the specified Levenshtein distance. If this must be the case, use sphere clustering instead.
-
-> The clustering ratio is 5. This means that a cluster can absorb a smaller one only if it is at least five times bigger. A practical implication is that clusters of similar size are not merged. You can choose another threshold for merging clusters.
-
-
+> The clustering method is Message Passing. This means that clusters are built bottom-up by merging small clusters into bigger ones. The process is recursive, so sequences in a cluster may not be neighbors, i.e., they may not be within the specified Levenshtein distance. 
 
 Output files:
 - `starcode/<sample_id>[_unmapped]_starcode.tsv`: barcode counts with sequence of centroid of each barcode cluster and read count
