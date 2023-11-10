@@ -373,6 +373,12 @@ From the [starcode manual](https://github.com/gui11aume/starcode/blob/master/REA
 
 > The clustering method is Message Passing. This means that clusters are built bottom-up by merging small clusters into bigger ones. The process is recursive, so sequences in a cluster may not be neighbors, i.e., they may not be within the specified Levenshtein distance. 
 
+**Trimming barcode length before clustering**
+If the reads do not cover the whole barcode and a stagger is used, barcode reads will have different length.  
+Since starcode only collapses sequence clusters of unequal sizes, this would results in one cluster per stagger length for each barcode.  
+Therefore, if `constant` is set to `up` or `down`, we trim all sequences to the `min_readlength` before running starcode.  
+Trimming is either done on 3' or 5' end, depending on which constant was trimmed. 
+
 Output files:
 - `starcode/<sample_id>[_unmapped]_starcode.tsv`: barcode counts with sequence of centroid of each barcode cluster and read count
 
