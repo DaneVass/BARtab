@@ -45,7 +45,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --cluster_ratio            Cluster ratio for message passing clustering. A cluster of barcode sequences can absorb a smaller one only if it is at least x times bigger [default = 3].
 
     Sincle-cell arguments:
-      --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
+      --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [default = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
       --cellnumber               Number of cells expected in sample, only required when fastq provided. whitelist_indir and cellnumber are mutually exclusive
       --whitelist_indir          Directory that contains a cell ID whitelist for each sample <sample_id>_whitelist.tsv
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
