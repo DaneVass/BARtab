@@ -15,7 +15,7 @@ process STARCODE {
         def unmapped = cluster_unmapped ? "_unmapped" : ""
         """
         gunzip -c $reads > reads.fastq
-        starcode -t ${task.cpus} --distance ${params.cluster_distance} --cluster-ratio ${params.cluster_ratio} reads.fastq -o ${sample_id}${unmapped}_starcode.tsv &> ${sample_id}${unmapped}_starcode.log
+        starcode -t ${task.cpus} -d ${params.cluster_distance} -r ${params.cluster_ratio} reads.fastq -o ${sample_id}${unmapped}_starcode.tsv &> ${sample_id}${unmapped}_starcode.log
         rm reads.fastq
         """
 }
