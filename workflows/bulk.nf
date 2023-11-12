@@ -84,9 +84,9 @@ workflow BULK {
         else {
             // if reference-free, use starcode to cluster barcodes
 
-            if (params.constant == "both") {
+            if (params.constants == "both") {
                 trimmed_reads = CUTADAPT_READS.out.reads
-            } else if (params.constant == "up" | params.constant == "down") {
+            } else if (params.constants == "up" | params.constants == "down") {
                 // trim reads to same length (min_readlength) befor running starcode
                 // this is only necessary if only one adapter was trimmed and the difference in barcode length is due to a stagger
                 // and not sequencing errors (indels)
