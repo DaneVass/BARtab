@@ -2,6 +2,13 @@
 import sys
 import gzip
 
+# SYNOPSIS
+# This script takes a fastq file with cell barcode and UMI annotated in the read header and prepends it to the sequence. 
+# INPUT
+# fastq file with read name matching ^[^\s]_CB_UMI\s
+# OUTPUT
+# fastafile with cell barcorcode and UMI prepended to barcode sequence
+
 in_file = sys.argv[1]
 out_file = sys.argv[2]
 
