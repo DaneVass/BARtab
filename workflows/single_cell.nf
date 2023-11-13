@@ -6,6 +6,8 @@ include { UMITOOLS_EXTRACT } from '../modules/local/umitools_extract'
 include { BAM_TO_FASTQ } from '../modules/local/bam_to_fastq'
 include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
 include { STARCODE } from '../modules/local/starcode'
+include { STARCODE_SC } from '../modules/local/starcode_sc'
+include { TRIM_BARCODE_LENGTH } from '../modules/local/trim_barcode_length'
 include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
 include { FILTER_ALIGNMENTS } from '../modules/local/filter_alignments'
@@ -45,7 +47,9 @@ workflow SINGLE_CELL {
                 .ifEmpty { error "Cannot find any *_whitelist.tsv files in: ${params.whitelist_indir}" }
         }
 
-        reference = file(params.ref)
+        if (params.ref) {
+            reference = file(params.ref)
+        }
 
         params.multiqc_config = "$baseDir/assets/multiqc_config.yaml"
 
@@ -82,32 +86,55 @@ workflow SINGLE_CELL {
             trimmed_reads = RENAME_READS_SAW(CUTADAPT_READS.out.reads)
         }
 
-        bowtie_index = BUILD_BOWTIE_INDEX(reference)
-        BOWTIE_ALIGN(bowtie_index, trimmed_reads)
+        if (params.ref) {
 
-        // cluster unmapped reads
-        if (params.cluster_unmapped) {
-            STARCODE(BOWTIE_ALIGN.out.unmapped_reads, true)
-        }
+            bowtie_index = BUILD_BOWTIE_INDEX(reference)
+            BOWTIE_ALIGN(bowtie_index, trimmed_reads)
 
-        // filter alignments if barcode has fixed length
-        mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads) : BOWTIE_ALIGN.out.mapped_reads
+            // cluster unmapped reads
+            if (params.cluster_unmapped) {
+                STARCODE(BOWTIE_ALIGN.out.unmapped_reads, true)
+            }
 
-        if (params.input_type == "bam") {
-            // add CB and UMI info in header
-            mapped_reads = RENAME_READS_BAM(mapped_reads.combine(readsChannel, by: 0))
-        }
+            // filter alignments if barcode has fixed length
+            mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads) : BOWTIE_ALIGN.out.mapped_reads
 
-        if (params.pipeline == "saw") {
-            // count barcodes from sam file
-            counts = COUNT_BARCODES_SAM(mapped_reads)
+            if (params.input_type == "bam") {
+                // add CB and UMI info in header
+                mapped_reads = RENAME_READS_BAM(mapped_reads.combine(readsChannel, by: 0))
+            }
+
+            if (params.pipeline == "saw") {
+                // count barcodes from sam file
+                counts = COUNT_BARCODES_SAM(mapped_reads)
+            } else {
+                SAMTOOLS(mapped_reads)
+
+                counts = UMITOOLS_COUNT(SAMTOOLS.out).counts
+            }
+
+            // pass SAM file from mapping for mapped read length QC figures
+            PARSE_BARCODES_SC(counts.combine(mapped_reads, by: 0))
         } else {
-            SAMTOOLS(mapped_reads)
+            if (params.constants == "both") {
+                trimmed_reads = trimmed_reads
+            } else if (params.constants == "up" | params.constants == "down") {
+                // trim reads to same length (min_readlength) befor running starcode
+                // this is only necessary if only one adapter was trimmed and the difference in barcode length is due to a stagger
+                // and not sequencing errors (indels)
+                TRIM_BARCODE_LENGTH(trimmed_reads)
 
-            counts = UMITOOLS_COUNT(SAMTOOLS.out).counts
+                trimmed_reads = TRIM_BARCODE_LENGTH.out.reads
+            } else {
+                // not implemented
+                error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
+            }
+
+            counts = STARCODE_SC(trimmed_reads).counts
+
+            // place holder empty file instead of SAM file from bowtie mapping
+            PARSE_BARCODES_SC(counts.combine(Channel.of("$projectDir/assets/NO_FILE")))
         }
-        
-        PARSE_BARCODES_SC(counts.combine(mapped_reads, by: 0))
 
         // pass counts to multiqc so it waits to run until all samples are processed
         MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out.counts)

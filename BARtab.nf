@@ -126,9 +126,6 @@ if (!params.indir) {
 if (!params.outdir) {
   error "Error: please specify location of output directory via parameter outdir."
 }
-if (params.mode == "single-cell" && !params.ref) {
-  error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
-}
 if (params.constants != "up" && params.constants != "down" && params.constants != "both" && params.constants != "all") {
   error "Error: unsupported value for parameter constants. Choose either up, down, both or all (default up)."
 }

@@ -104,14 +104,19 @@ Reads containing barcode sequences will be in the unmapped fraction of reads aft
 To retain unmapped reads annotated with cell ID and UMI in the output, run STAR with the option `--outSAMunmapped Within KeepPairs`.  
 All BAM files can then be symlinked to an input directory and the parameter `input_type` set to `bam`.
 
+The reference-free workflow for single-cell data is only applicable to targeted sequencing data.  
+Barcode reads extracted directly from scRNA-seq data cover different regions of the barcode due to random fragmentation and can therefore not be clustered. 
+
+
 - [fastq] Check raw data quality using `fastqc` [FASTQC](#fastqc)
 - [fastq] Extraction of cell barcodes (optional) and UMIs using `umi-tools` [UMITOOLS_WHITELIST](#umitools_whitelist), [UMITOOLS_EXTRACT](#umitools_extract)
 - [BAM] Filter unmapped reads containing cell barcode and UMI and convert to fastq using `samtools` [BAM_TO_FASTQ](#bam_to_fastq)
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
-- Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
-- [Optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
-- [Optional] Cluster unmapped barcodes using `starcode` [STARCODE](#starcode)
-- Extract barcode counts using `umi-tools` [SAMTOOLS](#samtools), [UMITOOLS_COUNT](#umitools_count)
+- [Reference-based] Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
+- [Reference-based optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
+- [Reference-based optional] Cluster unmapped barcodes using `starcode` [STARCODE](#starcode)
+- [Reference-based] Extract barcode counts using `umi-tools` [SAMTOOLS](#samtools), [UMITOOLS_COUNT](#umitools_count)
+- [Reference-free] Cluster barcodes and error-correct UMIs with `starcode-umi` [STARCODE_SC](#starcode_sc)
 - Filter and tabulate barcodes per cell and produce QC plots [PARSE_BARCODES_SC](#parse_barcodes_sc)
 - Report metrics for individual samples [MULTIQC](#multiqc)
 
@@ -373,14 +378,14 @@ From the [starcode manual](https://github.com/gui11aume/starcode/blob/master/REA
 
 > The clustering method is Message Passing. This means that clusters are built bottom-up by merging small clusters into bigger ones. The process is recursive, so sequences in a cluster may not be neighbors, i.e., they may not be within the specified Levenshtein distance. 
 
-**Trimming barcode length before clustering**
+Output files:
+- `starcode/<sample_id>[_unmapped]_starcode.tsv`: barcode counts with sequence of centroid of each barcode cluster and read count
+
+#### Trimming barcode length before clustering
 If the reads do not cover the whole barcode and a stagger is used, barcode reads will have different length.  
 Since starcode only collapses sequence clusters of unequal sizes, this would results in one cluster per stagger length for each barcode.  
 Therefore, if `constant` is set to `up` or `down`, we trim all sequences to the `min_readlength` before running starcode.  
 Trimming is either done on 3' or 5' end, depending on which constant was trimmed. 
-
-Output files:
-- `starcode/<sample_id>[_unmapped]_starcode.tsv`: barcode counts with sequence of centroid of each barcode cluster and read count
 
 ### COMBINE_BARCODE_COUNTS
 
@@ -432,20 +437,36 @@ Output files:
 
 Trimmed, filetered and aligned barcodes are counted using [umi-tools count](https://umi-tools.readthedocs.io/en/latest/reference/count.html#).
 
-The Hamming distance between UMIs to be collapsed within cells during counting can be specified with parameter `umi_dist` (default 1). Collapsing barcodes can lower the number of UMIs supporting each barcode. 
+The Hamming distance between UMIs to be collapsed within cells during counting can be specified with parameter `umi_dist` (default and recommended 1).  
+NB: Collapsing UMIs will lower the number of UMIs supporting each barcode. 
 
 Output files:
-- `counts/<sample_id>.counts.tsv`: barcode counts with columns barcode, cell barcode and deduplicated UMI count
+- `counts/<sample_id>.counts.tsv`: barcode UMI counts with columns barcode, cell barcode and deduplicated UMI count
 - `counts/<sample_id>_counts.log`: log
 
 ### COUNT_BARCODES_SAM
 
-Trimmed, filetered and aligned barcodes are counted from the SAM file. 
+Trimmed, filtered and aligned barcodes are counted from the SAM file. 
 This is done when running BARtab on stereo-seq data and the input data is the output of the SAW pipeline. 
 
 Output files:
-- `counts/<sample_id>.counts.tsv`: barcode counts with columns barcode, cell barcode and deduplicated UMI count
+- `counts/<sample_id>.counts.tsv`: barcode UMI counts with columns barcode, cell barcode and deduplicated UMI count
 
+### STARCODE_SC
+
+If no reference is available, `starcode-umi` is used to cluster barcodes from scRNA-seq data and error-correct UMIs.  
+We utilized the python script `starcode-umi`, from [starcode/starcode-umi](https://github.com/gui11aume/starcode/blob/master/starcode-umi), written to cluster UMI-tagged sequences.  
+Starcode-umi performs a double round of clustering and merging to find the best possible clusters of UMI and sequence pairs.
+
+Cell barcode-UMI combinations are error corrected within a distance of `umi_dist` (default and recommended 1) by using a cluster-ratio of 1.  
+Parameters `cluster_distance` and `cluster_ratio` can be adjusted for error correction of barcode sequences (see [STARCODE](#starcode)).  
+
+See also section [Trimming barcode length before clustering](#trimming-barcode-length-before-clustering)
+
+Output files:
+- `starcode/<sample_id>_starcode.tsv`: the output of starcode with clustered and corrected cellbarcode-umi-barcode sequence and sequence count.
+- `starcode/logs/<sample_id>_starcode.log`: starcode log.
+- `counts/<sample_id>_starcode_counts.tsv`: barcode UMI counts with columns barcode, cell barcode and deduplicated UMI count.
 
 ### PARSE_BARCODES_SC
 
@@ -461,8 +482,8 @@ Output files:
 - `counts/<sample_id>_cell_barcode_annotation.tsv`: aggregated barcode counts per cell with cell barcode as row index and barcode and UMI count as columns
 - `counts/<sample_id>_barcodes_per_cell.pdf`: QC plot, number of detected barcode per cell
 - `counts/<sample_id>_UMIs_per_bc.pdf`: QC plot, UMIs supporting the most frequent barcode per cell
-- `counts/<sample_id>_avg_sequence_length.pdf`: QC plot, average mapped sequence length per barcode
+- `counts/<sample_id>_avg_sequence_length.pdf`: QC plot, average mapped sequence length per barcode (only with reference)
 - `counts/<sample_id>_barcodes_per_cell_filtered.pdf`: QC plot, number of detected barcode per cell
 - `counts/<sample_id>_UMIs_per_bc_filtered.pdf`: QC plot, UMIs supporting the most frequent barcode per cell
-- `counts/<sample_id>_avg_sequence_length_filtered.pdf`: QC plot, average mapped sequence length per barcode
-- `counts/<sample_id>_avg_sequence_length.tsv`: average mapped sequence length per barcode as table
+- `counts/<sample_id>_avg_sequence_length_filtered.pdf`: QC plot, average mapped sequence length per barcode (only with reference)
+- `counts/<sample_id>_avg_sequence_length.tsv`: average mapped sequence length per barcode as table (only with reference)
