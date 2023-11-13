@@ -112,6 +112,9 @@ workflow SINGLE_CELL {
 
                 counts = UMITOOLS_COUNT(SAMTOOLS.out).counts
             }
+
+            // pass SAM file from mapping for mapped read length QC figures
+            PARSE_BARCODES_SC(counts.combine(mapped_reads, by: 0))
         } else {
             if (params.constants == "both") {
                 trimmed_reads = trimmed_reads
@@ -128,9 +131,10 @@ workflow SINGLE_CELL {
             }
 
             counts = STARCODE_SC(trimmed_reads).counts
+
+            // place holder empty file instead of SAM file from bowtie mapping
+            PARSE_BARCODES_SC(counts.combine(Channel.of("$projectDir/assets/NO_FILE")))
         }
-        
-        PARSE_BARCODES_SC(counts)
 
         // pass counts to multiqc so it waits to run until all samples are processed
         MULTIQC(multiqcConfig, output, PARSE_BARCODES_SC.out.counts)

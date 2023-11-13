@@ -7,6 +7,7 @@ process STARCODE_SC {
 
     output:
         tuple val(sample_id), path("${sample_id}_starcode_counts.tsv"), emit: counts
+        // path "${sample_id}_starcode.tsv"     // the output of starcode is only interesting when looking at how many reads support a CB-UMI-barcode combination. 
         path "${sample_id}_starcode.log", emit: log
     
     script:
@@ -24,7 +25,6 @@ process STARCODE_SC {
             --umi-len \$cb_umi_length \\
             --umi-d ${params.umi_dist} \\
             --umi-cluster-ratio 1 \\
-            --umi-cluster "s" \\
             --seq-d ${params.cluster_distance} \\
             --seq-cluster-ratio ${params.cluster_ratio} \\
             --seq-trim 0 \\
