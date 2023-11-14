@@ -1,5 +1,5 @@
 process COMBINE_BARCODE_COUNTS {
-    label "process_high"
+    label "process_medium_bulk"
 
     input:
       path counts

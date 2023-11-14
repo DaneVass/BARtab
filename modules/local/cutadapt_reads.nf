@@ -1,7 +1,7 @@
 // use cutadapt to filter for length
 process CUTADAPT_READS{
     tag "$sample_id"
-    label "process_high"
+    label "$params.mode" == "single-cell" ? "process_high_sc" : "process_high_bulk"
 
     input:
         tuple val(sample_id), path(reads)

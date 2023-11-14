@@ -1,6 +1,6 @@
 process BOWTIE_ALIGN {
     tag "$sample_id"
-    label "process_medium"
+    label "$params.mode" == "single-cell" ? "process_medium_sc" : "process_medium_bulk"
 
     input:
         tuple val(refname), path(ref_files)

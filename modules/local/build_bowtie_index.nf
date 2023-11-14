@@ -2,7 +2,7 @@
 // https://biocorecrg.github.io/SIB_course_nextflow_Nov_2021/docs/fourth.html
 process BUILD_BOWTIE_INDEX {
     tag "$ref"
-    label "process_medium"
+    label "process_medium_bulk"
 
     input:
         path ref

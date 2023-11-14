@@ -1,6 +1,6 @@
 process UMITOOLS_COUNT {
     tag "$sample_id"
-    label "process_medium"
+    label "process_low_sc"
 
     input:
         // index file needs to be linked to work directory

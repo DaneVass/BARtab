@@ -1,6 +1,6 @@
 process STARCODE {
     tag "$sample_id"
-    label "process_medium"
+    label "process_high_bulk"
 
     input:
         tuple val(sample_id), path(reads)

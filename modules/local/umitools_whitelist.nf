@@ -1,6 +1,6 @@
 process UMITOOLS_WHITELIST {
     tag "$sample_id"
-    label "process_medium"
+    label "process_medium_sc"
 
     input:
         tuple val(sample_id), path(reads)

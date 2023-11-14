@@ -1,5 +1,5 @@
 process PARSE_BARCODES_SC {
-    label "process_low"
+    label "process_low_sc"
     tag "$sample_id"
     
     input:

@@ -1,6 +1,6 @@
 process RENAME_READS_SAW {
     tag "Rename reads ${sample_id}"
-    label "process_high"
+    label "process_high_sc"
     tag "$sample_id"
 
     // modify read name to keep MID in header

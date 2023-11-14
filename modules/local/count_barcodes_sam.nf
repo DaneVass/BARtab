@@ -1,6 +1,6 @@
 process COUNT_BARCODES_SAM {
     tag "$sample_id"
-    label "process_low"
+    label "process_low_sc"
     
     input:
         tuple val(sample_id), path(sam)

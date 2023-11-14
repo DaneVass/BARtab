@@ -3,7 +3,7 @@
 // https://kb.10xgenomics.com/hc/en-us/articles/360022448251-How-to-filter-the-BAM-file-produced-by-10x-pipelines-with-a-list-of-barcodes-
 process BAM_TO_FASTQ {
     tag "${sample_id}"
-    label "process_high"
+    label "process_high_sc"
     tag "$sample_id"
 
     input:
