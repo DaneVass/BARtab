@@ -12,6 +12,7 @@ process FILTER_READS{
     
     script:
         // Must write decompressed file, otherwise EOFError if piping gunzip output directly into fastq_quality_filter
+        // fastx-toolkit is slow and should be replaced with fastp in the future. 
         """
         gunzip -c ${reads} > ${sample_id}.tmp.fastq
         fastq_quality_filter -i ${sample_id}.tmp.fastq \\
@@ -21,5 +22,11 @@ process FILTER_READS{
             2> ${sample_id}.filter.log
 
         rm ${sample_id}.tmp.fastq
+
+        # check if any reads passed filtering, else throw error to exclude sample
+        if LC_ALL=C gzip -l ${sample_id}.filtered.fastq.gz | awk 'NR==2 {exit(\$2!=0)}'; then
+            printf '%s\n' "No reads passed quality filtering. Consider excluding sample ${sample_id}." >&2  # write error message to stderr
+            exit 1
+        fi
         """
 }
