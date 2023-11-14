@@ -41,7 +41,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --cluster_unmapped         Cluster unmapped reads with starcode [default = false]
 
     Reference-free arguments:
-      --cluster_distance         Defines the Levenshtein distance for clustering lineage barcodes [default = 2].
+      --cluster_distance         Defines the Levenshtein distance for clustering lineage barcodes [default = 3].
       --cluster_ratio            Cluster ratio for message passing clustering. A cluster of barcode sequences can absorb a smaller one only if it is at least x times bigger [default = 3].
 
     Sincle-cell arguments:
@@ -363,7 +363,7 @@ Output files:
 If no reference is provided, the consensus barcode repertoire is derived using [starcode](https://github.com/gui11aume/starcode).  
 Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance (substitutions, insertions, deletions). 
 
-The default Levenshtein distance for clustering is 2 which is conservative to avoid collapsing truly distingt barcodes.  
+The default Levenshtein distance for clustering is 3 which is conservative to avoid collapsing truly distingt barcodes.  
 The parameter `cluster_distance` can be adjusted for the expected number of sequencing errors given the length of the barcode construct.  
 Examplary recommended cluster distances: [ClonMapper (Gutierrez et al. 2021)](https://www.nature.com/articles/s43018-021-00222-8) (20bp barcode): 1 and [FateMap (Goyal et al. 2023)](https://www.nature.com/articles/s41586-023-06342-8) (100bp barcode): 8. 
 
