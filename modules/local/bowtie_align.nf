@@ -26,7 +26,7 @@ process BOWTIE_ALIGN {
         2> ${sample_id}.bowtie.log
 
         if [ ${params.cluster_unmapped} ]; then
-          gzip ${sample_id}.unmapped.fastq
+          pigz -p ${task.cpus} ${sample_id}.unmapped.fastq
         fi
         """
 }
