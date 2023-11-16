@@ -9,12 +9,8 @@ echo "fastQC version:" >> $out
 fastqc --version >> $out
 
 echo "------------------------------------" >> $out
-echo "FLASh version:" >> $out
-flash -v >> $out
-
-echo "------------------------------------" >> $out
-echo "fastx-toolkit - fastq_quality_filter version:" >> $out
-fastq_quality_filter -h >> $out
+echo "fastp version:" >> $out
+fastp -v >> $out
 
 echo "------------------------------------" >> $out
 echo "bowtie -version" >> $out
