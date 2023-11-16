@@ -9,7 +9,7 @@ COPY environment.yaml /
 RUN mamba env create --quiet -f /environment.yaml && mamba clean -a
 
 # Add conda installation dir to PATH (instead of doing 'conda activate')
-ENV PATH /opt/conda/envs/bartab-1.3/bin:$PATH
+ENV PATH /opt/conda/envs/bartab-1.4/bin:$PATH
 
 # Dump the details of the installed packages to a file for posterity
-RUN conda env export --name bartab-1.3 > bartab-1.3.yaml
+RUN conda env export --name bartab-1.4 > bartab-1.4.yaml
