@@ -12,21 +12,36 @@ process BOWTIE_ALIGN {
         path "${sample_id}.bowtie.log", emit: log
 
     script:
-        def unmapped = params.cluster_unmapped ? "--un ${sample_id}.unmapped.fastq" : "--no-unal"
-        """
-        bowtie \\
-        -x ${refname} \\
-        -q ${reads} \\
-        -p ${task.cpus} \\
-        -v ${params.alnmismatches} \\
-        --norc \\
-        -t ${unmapped} \\
-        -a --best --strata -m1 \\
-        -S ${sample_id}.mapped.sam \\
-        2> ${sample_id}.bowtie.log
+        // the only difference is output file for unmapped reads and zipping unmapper reads
+        if (params.cluster_unmapped) {
+            """
+            bowtie \\
+            -x ${refname} \\
+            -q ${reads} \\
+            -p ${task.cpus} \\
+            -v ${params.alnmismatches} \\
+            --norc \\
+            -t \\
+            --un ${sample_id}.unmapped.fastq \\
+            -a --best --strata -m1 \\
+            -S ${sample_id}.mapped.sam \\
+            2> ${sample_id}.bowtie.log
 
-        if [ ${params.cluster_unmapped} ]; then
-          pigz -p ${task.cpus} ${sample_id}.unmapped.fastq
-        fi
-        """
+            pigz -p ${task.cpus} ${sample_id}.unmapped.fastq
+            """
+        } else {
+            """
+            bowtie \\
+            -x ${refname} \\
+            -q ${reads} \\
+            -p ${task.cpus} \\
+            -v ${params.alnmismatches} \\
+            --norc \\
+            -t \\
+            -a --best --strata -m1 \\
+            -S ${sample_id}.mapped.sam \\
+            2> ${sample_id}.bowtie.log
+            """
+        }
+
 }
