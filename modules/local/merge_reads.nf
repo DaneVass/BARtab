@@ -10,6 +10,8 @@ process MERGE_READS {
         path "${sample_id}.notCombined_1.fastq.gz"
         path "${sample_id}.notCombined_2.fastq.gz"
         path "${sample_id}.merge.log", emit: log
+        path "${sample_id}.merge.fastp.html"
+        path "${sample_id}.merge.fastp.json"
 
     script:
         """
@@ -21,5 +23,8 @@ process MERGE_READS {
             --overlap_len_require ${params.mergeoverlap} \\
             --thread ${task.cpus} \\
             2> ${sample_id}.merge.log
+
+            mv fastp.json ${sample_id}.merge.fastp.json
+            mv fastp.html ${sample_id}.merge.fastp.html
         """
 }

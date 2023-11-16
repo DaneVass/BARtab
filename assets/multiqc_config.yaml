@@ -9,24 +9,29 @@ fn_clean_exts:
   - ".cutadapt_both.log"
   - ".bowtie.log"
   - ".fastq.gz"
-  - ".hist"
-
-sp:
-  flash/hist:
-    fn: "*.hist"
+  - ".fastp.json"
 
 run_modules:
   - fastqc
   - cutadapt
   - bowtie1
-  - flash
+  - fastp
 
 top_modules:
   - "fastqc"
 
 module_order:
   - "fastqc"
-  - "flash"
+  - fastp:
+        name: "fastp merge"
+        anchor: "fastp_merge"
+        path_filters:
+          - "*merge.fastp.json"
+  - fastp:
+        name: "fastp filter"
+        anchor: "fastp_filter"
+        path_filters:
+          - "*filter.fastp.json"
   - cutadapt:
         name: "Cutadapt (upstream)"
         anchor: "cutadapt_up"
