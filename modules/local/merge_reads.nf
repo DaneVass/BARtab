@@ -1,6 +1,6 @@
 process MERGE_READS {
     tag "$sample_id"
-    label "process_medium_bulk"
+    label "process_low_bulk"
 
     input:
         tuple val(sample_id), path(reads)
