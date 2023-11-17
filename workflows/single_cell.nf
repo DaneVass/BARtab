@@ -36,7 +36,7 @@ workflow SINGLE_CELL {
                 .ifEmpty { error "Cannot find any *.fq.gz files in: ${params.indir}" }
         } else {
             readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}*.{fastq,fq}.gz" )
-                .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
+                .ifEmpty { error "Cannot find any *_R{1,2}*.{fastq,fq}.gz files in: ${params.indir}" }
         }
 
         if (params.whitelist_indir) {
