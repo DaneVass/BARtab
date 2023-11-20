@@ -160,6 +160,7 @@ if (params.whitelist_indir) {
   log.info " Output directory         : ${params.outdir}"
 if (params.ref) {
   log.info " Reference fasta          : ${params.ref}"
+  log.info " Cluster unmapped         : ${params.cluster_unmapped}"
 }
 if (params.mode == "paired-bulk") {
   log.info " Merge overlap            : ${params.mergeoverlap}"
@@ -170,19 +171,27 @@ if (params.mode != "single-cell") {
 }
   log.info " Upstream constant        : ${params.upconstant}"
   log.info " Downstream constant      : ${params.downconstant}"
+  log.info " Upstream coverage        : ${params.up_coverage}"
+  log.info " Downstream coverage      : ${params.down_coverage}"
   log.info " Constants to use         : ${params.constants}"
   log.info " Constant mismatches      : ${params.constantmismatches}"
-  log.info " Minimum read length      : ${params.min_readlength}"
+  log.info " Min. barcode read length : ${params.min_readlength}"
 if (params.barcode_length) {
   log.info " Barcode length           : ${params.barcode_length}"
 }
 if (params.ref) {
   log.info " Alignment mismatches     : ${params.alnmismatches}"
+} else {
+  log.info " Cluster distance         : ${params.cluster_distance}"
+  log.info " Cluster ratio            : ${params.cluster_ratio}"
 }
 if (params.mode == "single-cell") {
   log.info " UMI distance             : ${params.umi_dist}"
   log.info " UMI count filter         : ${params.umi_count_filter}"
   log.info " UMI fraction filter      : ${params.umi_fraction_filter}"
+}
+if (params.mode == "single-cell" && params.input_type == "fastq") {
+  log.info " Cell barcode UMI pattern : ${params.cb_umi_pattern}"
 }
 if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir) {
   log.info " Cell number              : ${params.cellnumber}"
