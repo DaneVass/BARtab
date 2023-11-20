@@ -28,8 +28,8 @@ workflow BULK {
                 .map { file -> tuple( file.baseName.replaceAll(/\.fastq|\.fq/, ''), file ) }
                 .ifEmpty { error "Cannot find any *.{fastq,fq}.gz files in: ${params.indir}" }
         } else if (params.mode == "paired-bulk") {
-            readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}.{fastq,fq}.gz" )
-                .ifEmpty { error "Cannot find any *_R{1,2}.{fastq,fq}.gz files in: ${params.indir}" }
+            readsChannel = Channel.fromFilePairs( "${params.indir}/*_R{1,2}*.{fastq,fq}.gz" )
+                .ifEmpty { error "Cannot find any *_R{1,2}*.{fastq,fq}.gz files in: ${params.indir}" }
         }
 
         if (params.ref) {
