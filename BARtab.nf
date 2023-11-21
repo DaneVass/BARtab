@@ -185,15 +185,15 @@ if (params.ref) {
   log.info " Cluster distance         : ${params.cluster_distance}"
   log.info " Cluster ratio            : ${params.cluster_ratio}"
 }
-if (params.mode == "single-cell") {
+if (params.mode == "single-cell" && params.pipeline != "saw") {
   log.info " UMI distance             : ${params.umi_dist}"
   log.info " UMI count filter         : ${params.umi_count_filter}"
   log.info " UMI fraction filter      : ${params.umi_fraction_filter}"
 }
-if (params.mode == "single-cell" && params.input_type == "fastq") {
+if (params.mode == "single-cell" && params.input_type == "fastq" && params.pipeline != "saw") {
   log.info " Cell barcode UMI pattern : ${params.cb_umi_pattern}"
 }
-if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir) {
+if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir && params.pipeline != "saw") {
   log.info " Cell number              : ${params.cellnumber}"
 }
 
