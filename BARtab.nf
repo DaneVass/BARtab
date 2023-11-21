@@ -54,22 +54,29 @@ def helpMessage() {
       --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
 
     Trimming arguments:
-      --constants                Which constant regions flanking barcode to search for in reads: up, down or both. "all" runs all 3 modes and combines the results. 
-                                 Single-cell mode always runs with "all". <up, down, both, all> [default = 'up']
+      --constants                Which constant regions flanking barcode to search for in reads: up, down or both. 
+                                 "all" runs all 3 modes and combines the results. <up, down, both, all> [default = 'up']
       --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
+      --up_coverage              Number of bases of the upstream constant that must be covered by the sequence [default = 3]
+      --down_coverage            Number of bases of the downstream constant that must be covered by the sequence [default = 3]
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
-      --min_readlength           Minimum read length [default = 20]
-      --barcode_length           Length of barcode if it is the same for all barcodes. If adapters are trimmed on both ends, reads are filtered for this length. 
-                                    If either adapter is trimmed, this is the maximum sequence length. 
+      --min_readlength           Minimum length of barcode sequence [default = 20]
+      --barcode_length           Optional. Length of barcode if it is the same for all barcodes. If constant regions are trimmed on both ends, reads are filtered for this length. 
+                                    If either constant region is trimmed, this is the maximum sequence length. 
                                     If barcode_length is set, alignments to the middle of a barcode sequence are filtered out.
 
     Mapping arguments:
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 2]
       --barcode_length           (see trimming arguments)
+      --cluster_unmapped         Cluster unmapped reads with starcode [default = false]
+
+    Reference-free arguments:
+      --cluster_distance         Defines the Levenshtein distance for clustering lineage barcodes [default = 3].
+      --cluster_ratio            Cluster ratio for message passing clustering. A cluster of barcode sequences can absorb a smaller one only if it is at least x times bigger [default = 3].
 
     Sincle-cell arguments:
-      --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
+      --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [default = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
       --cellnumber               Number of cells expected in sample, only required when fastq provided. whitelist_indir and cellnumber are mutually exclusive
       --whitelist_indir          Directory that contains a cell ID whitelist for each sample <sample_id>_whitelist.tsv
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
@@ -108,6 +115,9 @@ if (params.help) {
 if (!params.mode) {
   error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
 }
+if (!["single-bulk", "paired-bulk", "single-cell"].contains(params.mode)) {
+  error "Error: please set parameter --mode <single-bulk,paired-bulk,single-cell>."
+}
 if (params.input_type != "fastq" && params.input_type != "bam") {
   error "Error: please choose a valid value for --input_type <fastq,bam>."
 }
@@ -117,16 +127,13 @@ if (!params.indir) {
 if (!params.outdir) {
   error "Error: please specify location of output directory via parameter outdir."
 }
-if (params.mode == "single-cell" && !params.ref) {
-  error "Error: reference-free analysis is only available for bulk data. You are running in single-cell mode."
-}
 if (params.constants != "up" && params.constants != "down" && params.constants != "both" && params.constants != "all") {
   error "Error: unsupported value for parameter constants. Choose either up, down, both or all (default up)."
 }
 if (params.constants == "both" && params.barcode_length && params.min_readlength) {
   println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
 }
-if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir && !params.cellnumber) {
+if (params.mode == "single-cell" && params.input_type == "fastq" && params.pipeline != "saw" && !params.whitelist_indir && !params.cellnumber) {
   error "Error: Please provide either a whitelist or the expected number of cells for cell ID and UMI extraction."
 }
 
@@ -153,6 +160,7 @@ if (params.whitelist_indir) {
   log.info " Output directory         : ${params.outdir}"
 if (params.ref) {
   log.info " Reference fasta          : ${params.ref}"
+  log.info " Cluster unmapped         : ${params.cluster_unmapped}"
 }
 if (params.mode == "paired-bulk") {
   log.info " Merge overlap            : ${params.mergeoverlap}"
@@ -163,19 +171,27 @@ if (params.mode != "single-cell") {
 }
   log.info " Upstream constant        : ${params.upconstant}"
   log.info " Downstream constant      : ${params.downconstant}"
+  log.info " Upstream coverage        : ${params.up_coverage}"
+  log.info " Downstream coverage      : ${params.down_coverage}"
   log.info " Constants to use         : ${params.constants}"
   log.info " Constant mismatches      : ${params.constantmismatches}"
-  log.info " Minimum read length      : ${params.min_readlength}"
+  log.info " Min. barcode read length : ${params.min_readlength}"
 if (params.barcode_length) {
   log.info " Barcode length           : ${params.barcode_length}"
 }
 if (params.ref) {
   log.info " Alignment mismatches     : ${params.alnmismatches}"
+} else {
+  log.info " Cluster distance         : ${params.cluster_distance}"
+  log.info " Cluster ratio            : ${params.cluster_ratio}"
 }
 if (params.mode == "single-cell") {
   log.info " UMI distance             : ${params.umi_dist}"
   log.info " UMI count filter         : ${params.umi_count_filter}"
   log.info " UMI fraction filter      : ${params.umi_fraction_filter}"
+}
+if (params.mode == "single-cell" && params.input_type == "fastq") {
+  log.info " Cell barcode UMI pattern : ${params.cb_umi_pattern}"
 }
 if (params.mode == "single-cell" && params.input_type == "fastq" && !params.whitelist_indir) {
   log.info " Cell number              : ${params.cellnumber}"

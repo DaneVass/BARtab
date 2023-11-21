@@ -56,7 +56,7 @@ names(bc.counts) <- c("barcode", "bc.umi.count")
 # write final output
 write.table(
   bc.counts,
-  paste0(sample_id, "_cell-barcode-anno.tsv"),
+  paste0(sample_id, "_cell_barcode_annotation.tsv"),
   quote = FALSE,
   row.names = TRUE,
   sep = "\t"
@@ -170,62 +170,63 @@ p <- max.umi.per.cell.filtered %>%
 
 ggsave(paste0(sample_id, "_UMIs_per_bc_filtered.pdf"), p)
 
+if (file.size(sam_file) != 0L) {
+  # read SAM file of aligned sequences
+  sam <-
+    read.delim(sam_file,
+              sep = "\t",
+              comment.char = "@",
+              header = F)
+  # select columns of read name, barcode and sequence
+  sam <- unique(sam[, c(1, 3, 10)])
+  sam <- sam[, c(2, 3)]
+  colnames(sam) <- c("barcode", "sequence")
+  # calculate average sequence length per barcode
+  avg_seq_len <- sam %>%
+    mutate(sequence_length = nchar(as.character(sequence))) %>%
+    select(-sequence) %>%
+    group_by(barcode) %>%
+    summarize(avg_sequence_length = mean(sequence_length)) %>%
+    arrange(desc(avg_sequence_length))
 
-# read SAM file of aligned sequences
-sam <-
-  read.delim(sam_file,
-             sep = "\t",
-             comment.char = "@",
-             header = F)
-# select columns of read name, barcode and sequence
-sam <- unique(sam[, c(1, 3, 10)])
-sam <- sam[, c(2, 3)]
-colnames(sam) <- c("barcode", "sequence")
-# calculate average sequence length per barcode
-avg_seq_len <- sam %>%
-  mutate(sequence_length = nchar(as.character(sequence))) %>%
-  select(-sequence) %>%
-  group_by(barcode) %>%
-  summarize(avg_sequence_length = mean(sequence_length)) %>%
-  arrange(desc(avg_sequence_length))
+  # save data to be able to filter barcodes on their avg seq length later on
 
-# save data to be able to filter barcodes on their avg seq length later on
+  write.table(
+    avg_seq_len,
+    paste0(sample_id, "_avg_sequence_length.tsv"),
+    quote = FALSE,
+    row.names = TRUE,
+    sep = "\t"
+  )
 
-write.table(
-  avg_seq_len,
-  paste0(sample_id, "_avg_sequence_length.tsv"),
-  quote = FALSE,
-  row.names = TRUE,
-  sep = "\t"
-)
+  # count in how many cells each barcode is detected, allows for detection of multiple barcodes in a cell
+  counts_agg <-
+    data.frame(table(counts_data$gene))
+  colnames(counts_agg) <- c("barcode", "count")
 
-# count in how many cells each barcode is detected, allows for detection of multiple barcodes in a cell
-counts_agg <-
-  data.frame(table(counts_data$gene))
-colnames(counts_agg) <- c("barcode", "count")
+  # merge count and sequence length data and plot
+  p <- merge(counts_agg, avg_seq_len, by = "barcode") %>%
+    ggplot(aes(x = count, y = avg_sequence_length)) +
+    geom_point(alpha = 0.2) +
+    ggtitle("Average length of sequences mapped to barcode reference") +
+    ylab("Average mapped sequence length") +
+    xlab("cells")
 
-# merge count and sequence length data and plot
-p <- merge(counts_agg, avg_seq_len, by = "barcode") %>%
-  ggplot(aes(x = count, y = avg_sequence_length)) +
-  geom_point(alpha = 0.2) +
-  ggtitle("Average length of sequences mapped to barcode reference") +
-  ylab("Average mapped sequence length") +
-  xlab("cells")
+  # save plot
+  ggsave(paste0(sample_id, "_avg_sequence_length.pdf"), p)
 
-# save plot
-ggsave(paste0(sample_id, "_avg_sequence_length.pdf"), p)
+  counts_agg <-
+    data.frame(table(counts_data_filtered$gene))
+  colnames(counts_agg) <- c("barcode", "count")
 
-counts_agg <-
-  data.frame(table(counts_data_filtered$gene))
-colnames(counts_agg) <- c("barcode", "count")
+  # merge count and sequence length data and plot
+  p <- merge(counts_agg, avg_seq_len, by = "barcode") %>%
+    ggplot(aes(x = count, y = avg_sequence_length)) +
+    geom_point(alpha = 0.2) +
+    ggtitle("Average length of sequences mapped to barcode reference, filtered") +
+    ylab("Average mapped sequence length") +
+    xlab("cells")
 
-# merge count and sequence length data and plot
-p <- merge(counts_agg, avg_seq_len, by = "barcode") %>%
-  ggplot(aes(x = count, y = avg_sequence_length)) +
-  geom_point(alpha = 0.2) +
-  ggtitle("Average length of sequences mapped to barcode reference, filtered") +
-  ylab("Average mapped sequence length") +
-  xlab("cells")
-
-# save plot
-ggsave(paste0(sample_id, "_avg_sequence_length_filtered.pdf"), p)
+  # save plot
+  ggsave(paste0(sample_id, "_avg_sequence_length_filtered.pdf"), p)
+}

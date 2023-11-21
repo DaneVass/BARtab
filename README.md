@@ -23,22 +23,29 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
 
     Trimming arguments:
-      --constants                Which constant regions flanking barcode to search for in reads: up, down or both. "all" runs all 3 modes and combines the results. 
-                                 Single-cell mode always runs with "all". <up, down, both, all> [default = 'up']
+      --constants                Which constant regions flanking barcode to search for in reads: up, down or both. 
+                                 "all" runs all 3 modes and combines the results. <up, down, both, all> [default = 'up']
       --upconstant               Sequence of upstream constant region [default = 'CGATTGACTA'] // SPLINTR 1st gen upstream constant region
       --downconstant             Sequence of downstream constant region [default = 'TGCTAATGCG'] // SPLINTR 1st gen downstream constant region
+      --up_coverage              Number of bases of the upstream constant that must be covered by the sequence [default = 3]
+      --down_coverage            Number of bases of the downstream constant that must be covered by the sequence [default = 3]
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
-      --min_readlength           Minimum read length [default = 20]
-      --barcode_length           Length of barcode if it is the same for all barcodes. If adapters are trimmed on both ends, reads are filtered for this length. 
-                                    If either adapter is trimmed, this is the maximum sequence length. 
+      --min_readlength           Minimum length of barcode sequence [default = 20]
+      --barcode_length           Optional. Length of barcode if it is the same for all barcodes. If constant regions are trimmed on both ends, reads are filtered for this length. 
+                                    If either constant region is trimmed, this is the maximum sequence length. 
                                     If barcode_length is set, alignments to the middle of a barcode sequence are filtered out.
 
     Mapping arguments:
       --alnmismatches            Number of allowed mismatches during reference mapping [default = 2]
       --barcode_length           (see trimming arguments)
+      --cluster_unmapped         Cluster unmapped reads with starcode [default = false]
+
+    Reference-free arguments:
+      --cluster_distance         Defines the Levenshtein distance for clustering lineage barcodes [default = 3].
+      --cluster_ratio            Cluster ratio for message passing clustering. A cluster of barcode sequences can absorb a smaller one only if it is at least x times bigger [default = 3].
 
     Sincle-cell arguments:
-      --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [defauls = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
+      --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [default = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
       --cellnumber               Number of cells expected in sample, only required when fastq provided. whitelist_indir and cellnumber are mutually exclusive
       --whitelist_indir          Directory that contains a cell ID whitelist for each sample <sample_id>_whitelist.tsv
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
@@ -53,7 +60,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
     Optional arguments:
       -profile                   Configuration profile to use. Can use multiple (comma separated)
-                                        Available: conda, singularity, docker, slurm
+                                        Available: conda, singularity, docker, slurm, lsf
       --outdir                   Output directory to place output [default = './']
       --email                    Direct output messages to this address [default = '']
       --help                     Print this help statement.
@@ -79,30 +86,37 @@ The bulk workflow is executed with mode `single-bulk` and `paired-bulk` for sing
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
 - [Reference-based] Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
 - [Reference-based optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
+- [Reference-based optional] Cluster unmapped barcodes using `starcode` [STARCODE](#starcode)
 - [Reference-based] Count number of reads aligning per barcode using `samtools` [SAMTOOLS](#samtools), [GET_BARCODE_COUNTS](#get_barcode_counts)
 - [Reference-free] If no reference library, derive consensus barcode repertoire using `starcode` [STARCODE](#starcode)
 - Merge counts files for multiple samples [COMBINE_BARCODE_COUNTS](#combine_barcode_counts)
 - Report metrics for individual samples [MULTIQC](#multiqc)
 
 ### Single-cell workflow
-The single-cell workflow either expects fastq files or a BAM files as input. 
+
+The single-cell workflow either expects fastq files or BAM files as input. 
 
 Fastq files must match the regex `*_R{1,2}*.{fastq,fq}.gz`.
 
 Alternatively, if raw data was already processed with Cell Ranger or STARSolo, BAM files can be used as input. 
 This way, cell calling and UMI extraction can be skipped.  
-Reads containing barcode sequences will be in the unmapped fraction of reads after alignment. To obtain unapped reads annotated with cell ID and UMI, run STAR with the option `--outSAMunmapped Within KeepPairs`.  
-Unmapped reads can be extracted from the BAM file with  
-`samtools view -b -f 4 <sample_id>/outs/possorted_genome_bam.bam > <sample_id>_unmapped_reads.bam`.  
+Reads containing barcode sequences will be in the unmapped fraction of reads after alignment. 
+To retain unmapped reads annotated with cell ID and UMI in the output, run STAR with the option `--outSAMunmapped Within KeepPairs`.  
 All BAM files can then be symlinked to an input directory and the parameter `input_type` set to `bam`.
+
+The reference-free workflow for single-cell data is only applicable to targeted sequencing data.  
+Barcode reads extracted directly from scRNA-seq data cover different regions of the barcode due to random fragmentation and can therefore not be clustered. 
+
 
 - [fastq] Check raw data quality using `fastqc` [FASTQC](#fastqc)
 - [fastq] Extraction of cell barcodes (optional) and UMIs using `umi-tools` [UMITOOLS_WHITELIST](#umitools_whitelist), [UMITOOLS_EXTRACT](#umitools_extract)
-- [BAM] Filter reads containing cell barcode and UMI and convert to fastq using `samtools` [PROCESS_BAM](#process_bam)
+- [BAM] Filter unmapped reads containing cell barcode and UMI and convert to fastq using `samtools` [BAM_TO_FASTQ](#bam_to_fastq)
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
-- Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
-- [Optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
-- Extract barcode counts using `umi-tools` [SAMTOOLS](#samtools), [UMITOOLS_COUNT](#umitools_count)
+- [Reference-based] Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
+- [Reference-based optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
+- [Reference-based optional] Cluster unmapped barcodes using `starcode` [STARCODE](#starcode)
+- [Reference-based] Extract barcode counts using `umi-tools` [SAMTOOLS](#samtools), [UMITOOLS_COUNT](#umitools_count)
+- [Reference-free] Cluster barcodes and error-correct UMIs with `starcode-umi` [STARCODE_SC](#starcode_sc)
 - Filter and tabulate barcodes per cell and produce QC plots [PARSE_BARCODES_SC](#parse_barcodes_sc)
 - Report metrics for individual samples [MULTIQC](#multiqc)
 
@@ -188,7 +202,7 @@ See [citations](../CITATIONS.md)
 Print the help message with `nextflow run danevass/bartab --help`.  
 To run a specific branch or the pipeline use `-r <branch>`.
 
-Run any of the test datasets using `nextflow run danevass/bartab -profile <test_SE,test_PE,test_SE_ref_free,test_sc,test_sc_bam,test_sc_saw_fastq>,<conda,docker,singularity>,<slurm>`
+Run any of the test datasets using `nextflow run danevass/bartab -profile <test_SE,test_PE,test_SE_ref_free,test_sc,test_sc_bam,test_sc_saw_fastq>,<conda,docker,singularity>,<slurm,lsf>`
 
 To run the pipeline with your own data, create a parameter yaml file and specify the location with `-params-file`.
 
@@ -255,14 +269,46 @@ Output files:
 
 ### CUTADAPT_READS
 
-Adapter sequences are trimmed and reads are filtered for length and N bases using [cutadapt](https://cutadapt.readthedocs.io/en/stable/).
+Constant regions are trimmed and reads are filtered for length and N bases using [cutadapt](https://cutadapt.readthedocs.io/en/stable/).
 
 Constants can be specified with the parameters `upconstant` and `downconstant`.  
-In bulk mode, reads can be filtered for containing either upconstant `up`, downconstant `down` or both `both` with the parameter `constants`.  
-In single-cell mode or when `contstants` is set to `all`, reads are filtered in all three ways. Fastq and log files are merged.
+For each, minimum coverage can be specified with `up_coverage` and `down_coverage` (default 3). 
+If this is smaller than the length of the constant region, partial matches at the _beginning_ or _end_ of the sequence are accepted. 
+This is particularly useful in case of random fragmentation.  
+In bulk mode, reads can be filtered for containing either upconstant (`up`), downconstant (`down`) or both (`both`) with the parameter `constants`.  
+When `contstants` is set to `all`, reads are filtered in all three ways. 
+Fastq files of trimmed sequences are concatenated.
+
+Example for trimming options:
+
+upconstant="ATGGAATTG"  
+downconstant="CGGAACCGA"  
+up_coverage=6  
+down_coverage=6
+
+\>seq1  
+**ATGGAATTG**ACATCACGCTCAAGGATC**CGGAACCGA**  
+\>seq2  
+**GAATTG**ACATCACGCTCAAGGATC**CGGAAC**  
+\>seq3  
+**ATGGAATTG**ACATCACGCTCAAGGATC  
+\>seq4  
+**GAATTG**ACATCACGCTCAAGGATC  
+\>seq5  
+ACATCACGCTCAAGGATC**CGGAACCGA**  
+\>seq6  
+ACATCACGCTCAAGGATC**CGGAAC**  
+\>seq7  
+ACATCACGCTCAAGGATC**CGGA**  
+\>seq8  
+ACATCACGCTC**CGGAAC**AAGGATC  
+\>seq9  
+ACATCACGCTCAAGGATC  
+
+Option `both` will trim sequence 1 and 2, `up` will trim sequence 3 and 4, `down` will trim sequence 5 and 6, `all` will trim sequence 1-6. 
 
 The minimum read length can be specified with `min_readlength` (default 20).  
-If a constant barcode length is set with `barcode_length`, this is set as maximum sequence length. 
+If a constant barcode length is set with `barcode_length`, this is set as maximum sequence length.  
 For `both`, only sequences matching exactly `barcode_length` will be retained.  
 The fraction of mismatches in the constant region can be specified with `constantmismatches` (default 0.1).
 
@@ -315,10 +361,31 @@ Output files:
 ### STARCODE
 
 If no reference is provided, the consensus barcode repertoire is derived using [starcode](https://github.com/gui11aume/starcode).  
-Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance. The maximum distance by default is `min(8, 2 + [median seq length]/30)`. 
+Starcode clusters the filtered and trimmed barcode sequences based on their Levenshtein distance (substitutions, insertions, deletions). 
+
+The default Levenshtein distance for clustering is 3 which is conservative to avoid collapsing truly distingt barcodes.  
+The parameter `cluster_distance` can be adjusted for the expected number of sequencing errors given the length of the barcode construct.  
+Examplary recommended cluster distances: [ClonMapper (Gutierrez et al. 2021)](https://www.nature.com/articles/s43018-021-00222-8) (20bp barcode): 1 and [FateMap (Goyal et al. 2023)](https://www.nature.com/articles/s41586-023-06342-8) (100bp barcode): 8. 
+
+The default `cluster_ratio` to use for message passing clustering is 3.  
+This means that a cluster can absorb a smaller one only if it is at least 3 times bigger.  
+
+When barcodes are aligned to a reference, `cluster_unmapped` can be set to `true` to cluster unmapped barcode reads.  
+When using this option for barcodes from direct scRNA-seq data, barcode reads have different lengths due to random fragmentation. 
+Clustering unmapped reads may therefore not be as informative. 
+
+From the [starcode manual](https://github.com/gui11aume/starcode/blob/master/README.md#starcode-defaults-please-read-this):
+
+> The clustering method is Message Passing. This means that clusters are built bottom-up by merging small clusters into bigger ones. The process is recursive, so sequences in a cluster may not be neighbors, i.e., they may not be within the specified Levenshtein distance. 
 
 Output files:
-- `starcode/<sample_id>_starcode.tsv`: barcode counts with sequence of centroid of each barcode cluster and read count
+- `starcode/<sample_id>[_unmapped]_starcode.tsv`: barcode counts with sequence of centroid of each barcode cluster and read count
+
+#### Trimming barcode length before clustering
+If the reads do not cover the whole barcode and a stagger is used, barcode reads will have different length.  
+Since starcode only collapses sequence clusters of unequal sizes, this would results in one cluster per stagger length for each barcode.  
+Therefore, if `constant` is set to `up` or `down`, we trim all sequences to the `min_readlength` before running starcode.  
+Trimming is either done on 3' or 5' end, depending on which constant was trimmed. 
 
 ### COMBINE_BARCODE_COUNTS
 
@@ -358,33 +425,48 @@ Output files:
 - `extract/<sample_id>_R2_extracted.fastq`: reads that contain cell barcode and UMI, both added to the read name
 - `extract/<sample_id>_exctract.log`: log
 
-### PROCESS_BAM
+### BAM_TO_FASTQ
 
 Reads are filtered for flags CB and UB to obtain reads that contain a cell barcode and UMI.
-At a later step (for efficiency), cell ID and UMI are added to the read headers with the module RENAME_READS.
+At a later step (for efficiency), cell ID and UMI are added to the read headers with the module RENAME_READS_BAM.
 
 Output files:
-- `process_bam/<sample_id>_R2.fastq.gz`: reads containing cell barcode and UMI
-- `process_bam/<sample_id>.filtered.bam`: reads containing cell barcode and UMI
+- `fastq/<sample_id>_R2.fastq.gz`: reads containing cell barcode and UMI
 
 ### UMITOOLS_COUNT
 
 Trimmed, filetered and aligned barcodes are counted using [umi-tools count](https://umi-tools.readthedocs.io/en/latest/reference/count.html#).
 
-The Hamming distance between UMIs to be collapsed within cells during counting can be specified with parameter `umi_dist` (default 1). Collapsing barcodes can lower the number of UMIs supporting each barcode. 
+The Hamming distance between UMIs to be collapsed within cells during counting can be specified with parameter `umi_dist` (default and recommended 1).  
+NB: Collapsing UMIs will lower the number of UMIs supporting each barcode. 
 
 Output files:
-- `counts/<sample_id>.counts.tsv`: barcode counts with columns barcode, cell barcode and deduplicated UMI count
+- `counts/<sample_id>.counts.tsv`: barcode UMI counts with columns barcode, cell barcode and deduplicated UMI count
 - `counts/<sample_id>_counts.log`: log
 
 ### COUNT_BARCODES_SAM
 
-Trimmed, filetered and aligned barcodes are counted from the SAM file. 
+Trimmed, filtered and aligned barcodes are counted from the SAM file. 
 This is done when running BARtab on stereo-seq data and the input data is the output of the SAW pipeline. 
 
 Output files:
-- `counts/<sample_id>.counts.tsv`: barcode counts with columns barcode, cell barcode and deduplicated UMI count
+- `counts/<sample_id>.counts.tsv`: barcode UMI counts with columns barcode, cell barcode and deduplicated UMI count
 
+### STARCODE_SC
+
+If no reference is available, `starcode-umi` is used to cluster barcodes from scRNA-seq data and error-correct UMIs.  
+We utilized the python script `starcode-umi`, from [starcode/starcode-umi](https://github.com/gui11aume/starcode/blob/master/starcode-umi), written to cluster UMI-tagged sequences.  
+Starcode-umi performs a double round of clustering and merging to find the best possible clusters of UMI and sequence pairs.
+
+Cell barcode-UMI combinations are error corrected within a distance of `umi_dist` (default and recommended 1) by using a cluster-ratio of 1.  
+Parameters `cluster_distance` and `cluster_ratio` can be adjusted for error correction of barcode sequences (see [STARCODE](#starcode)).  
+
+See also section [Trimming barcode length before clustering](#trimming-barcode-length-before-clustering)
+
+Output files:
+- `starcode/<sample_id>_starcode.tsv`: the output of starcode with clustered and corrected cellbarcode-umi-barcode sequence and sequence count.
+- `starcode/logs/<sample_id>_starcode.log`: starcode log.
+- `counts/<sample_id>_starcode_counts.tsv`: barcode UMI counts with columns barcode, cell barcode and deduplicated UMI count.
 
 ### PARSE_BARCODES_SC
 
@@ -397,11 +479,11 @@ E.g. if barcode a has 5 supporting UMIs in a cell and a second barcode with 2 su
 Barcodes and UMIs are semicolon-separated if multiple barcodes were detected per cell.
 
 Output files:
-- `counts/<sample_id>_cell-barcode-anno.tsv`: aggregated barcode counts per cell with cell barcode as row index and barcode and UMI count as columns
+- `counts/<sample_id>_cell_barcode_annotation.tsv`: aggregated barcode counts per cell with cell barcode as row index and barcode and UMI count as columns
 - `counts/<sample_id>_barcodes_per_cell.pdf`: QC plot, number of detected barcode per cell
 - `counts/<sample_id>_UMIs_per_bc.pdf`: QC plot, UMIs supporting the most frequent barcode per cell
-- `counts/<sample_id>_avg_sequence_length.pdf`: QC plot, average mapped sequence length per barcode
+- `counts/<sample_id>_avg_sequence_length.pdf`: QC plot, average mapped sequence length per barcode (only with reference)
 - `counts/<sample_id>_barcodes_per_cell_filtered.pdf`: QC plot, number of detected barcode per cell
 - `counts/<sample_id>_UMIs_per_bc_filtered.pdf`: QC plot, UMIs supporting the most frequent barcode per cell
-- `counts/<sample_id>_avg_sequence_length_filtered.pdf`: QC plot, average mapped sequence length per barcode
-- `counts/<sample_id>_avg_sequence_length.tsv`: average mapped sequence length per barcode as table
+- `counts/<sample_id>_avg_sequence_length_filtered.pdf`: QC plot, average mapped sequence length per barcode (only with reference)
+- `counts/<sample_id>_avg_sequence_length.tsv`: average mapped sequence length per barcode as table (only with reference)

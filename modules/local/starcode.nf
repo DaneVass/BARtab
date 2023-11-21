@@ -1,17 +1,21 @@
 process STARCODE {
-    tag { "starcode on ${sample_id}" }
-    label "process_medium"
-    publishDir "${params.outdir}/starcode/", mode: 'copy'
+    tag "$sample_id"
+    label "process_high_bulk"
 
     input:
-    tuple val(sample_id), path(reads)
+        tuple val(sample_id), path(reads)
+        val(cluster_unmapped)
 
     output:
-    path "${sample_id}_starcode.tsv", emit: counts
-    path "${sample_id}_starcode.log", emit: log
+        path "${sample_id}*_starcode.tsv", emit: counts
+        path "${sample_id}*_starcode.log", emit: log
     
     script:
-    """
-    starcode -t ${task.cpus} $reads -o ${sample_id}_starcode.tsv &> ${sample_id}_starcode.log
-    """
+        // if starcode is run on unmapped reads, that should be visible in output file name
+        def unmapped = cluster_unmapped ? "_unmapped" : ""
+        """
+        gunzip -c $reads > reads.fastq
+        starcode -t ${task.cpus} -d ${params.cluster_distance} -r ${params.cluster_ratio} reads.fastq -o ${sample_id}${unmapped}_starcode.tsv &> ${sample_id}${unmapped}_starcode.log
+        rm reads.fastq
+        """
 }
