@@ -1,7 +1,22 @@
 # BARtab
 A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
+- [Parameters](#parameters)
+- [Pipeline summary](#pipeline-summary)
+  - [Bulk workflow](#bulk-workflow)
+  - [Single-cell workflow](#single-cell-workflow)
+  - [Spatial data](#spatial-data)
+- [Dependiencies](#dependiencies)
+- [Installing the pipeline](#installing-the-pipeline)
+- [Running the pipeline](#running-the-pipeline)
+- [Performance](#performance)
+- [Module Descriptions](#module-descriptions)
+
+
 ![BARtab bartools workflow](assets/BARtab_workflow.png)
+
+
+## Parameters
 
 ```
   Usage: nextflow run danevass/bartab --indir <input dir>
@@ -237,6 +252,11 @@ nextflow run danevass/bartab \
 ```
 
 It is recommended to have a look at the log files!
+
+## Performance
+
+We recently did a comparison of BARtab with two other pipelines, [pycashier](https://github.com/brocklab/pycashier/tree/main) and [timemachine](https://github.com/arjunrajlaboratory/timemachine).  
+Code and results are available here: [https://github.com/DaneVass/bartools_manuscript_code/tree/main/tools-comparison](https://github.com/DaneVass/bartools_manuscript_code/tree/main/tools-comparison)
 
 ## Module Descriptions
 
