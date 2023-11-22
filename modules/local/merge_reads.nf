@@ -21,6 +21,7 @@ process MERGE_READS {
             --out1 ${sample_id}.notCombined_1.fastq.gz --out2 ${sample_id}.notCombined_2.fastq.gz \\
             --merged_out ${sample_id}.merged.fastq.gz \\
             --overlap_len_require ${params.mergeoverlap} \\
+            --overlap_diff_limit 10000 --overlap_diff_percent_limit 25 \\
             --thread ${task.cpus} \\
             2> ${sample_id}.merge.log
 
