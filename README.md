@@ -60,7 +60,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
     Optional arguments:
       -profile                   Configuration profile to use. Can use multiple (comma separated)
-                                        Available: conda, singularity, docker, slurm
+                                        Available: conda, singularity, docker, slurm, lsf
       --outdir                   Output directory to place output [default = './']
       --email                    Direct output messages to this address [default = '']
       --help                     Print this help statement.
@@ -201,7 +201,7 @@ See [citations](../CITATIONS.md)
 Print the help message with `nextflow run danevass/bartab --help`.  
 To run a specific branch or the pipeline use `-r <branch>`.
 
-Run any of the test datasets using `nextflow run danevass/bartab -profile <test_SE,test_PE,test_SE_ref_free,test_sc,test_sc_bam,test_sc_saw_fastq>,<conda,docker,singularity>,<slurm>`
+Run any of the test datasets using `nextflow run danevass/bartab -profile <test_SE,test_PE,test_SE_ref_free,test_sc,test_sc_bam,test_sc_saw_fastq>,<conda,docker,singularity>,<slurm,lsf>`
 
 To run the pipeline with your own data, create a parameter yaml file and specify the location with `-params-file`.
 
