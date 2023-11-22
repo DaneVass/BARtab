@@ -5,16 +5,17 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
 ```
   Usage: nextflow run danevass/bartab --indir <input dir>
-                                     --outdir <output dir>
-                                     --ref <path/to/reference/fasta>
-                                     --mode <single-bulk | paired-bulk | single-cell>
+                                      --outdir <output dir>
+                                      --ref <path/to/reference/fasta>
+                                      --mode <single-bulk | paired-bulk | single-cell>
 
     Input arguments:
-      --indir                    Directory containing input *.fastq.gz files. Must contain R1 and R2 if running in mode paired-bulk or single-cell.
-                                        For single-cell mode, directory can contain BAM files.
+      --indir                    Directory containing input *.fastq.gz files. 
+                                    Must contain R1 and R2 if running in mode paired-bulk or single-cell.
+                                    For single-cell mode, directory can contain BAM files.
       --input_type               Input file type, either fastq or bam, only relevant for single-cell mode [default = fastq]
       --ref                      Path to a reference fasta file for the barcode / sgRNA library.
-                                        If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
+                                    If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
       --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell>
 
     Read merging arguments:
@@ -33,7 +34,8 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
       --down_coverage            Number of bases of the downstream constant that must be covered by the sequence [default = 3]
       --constantmismatches       Proportion of mismatched bases allowed in constant regions [default = 0.1]
       --min_readlength           Minimum length of barcode sequence [default = 20]
-      --barcode_length           Optional. Length of barcode if it is the same for all barcodes. If constant regions are trimmed on both ends, reads are filtered for this length. 
+      --barcode_length           Optional. Length of barcode if it is the same for all barcodes. 
+                                    If constant regions are trimmed on both ends, reads are filtered for this length. 
                                     If either constant region is trimmed, this is the maximum sequence length. 
                                     If barcode_length is set, alignments to the middle of a barcode sequence are filtered out.
 
@@ -44,15 +46,18 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
     Reference-free arguments:
       --cluster_distance         Defines the Levenshtein distance for clustering lineage barcodes [default = 3].
-      --cluster_ratio            Cluster ratio for message passing clustering. A cluster of barcode sequences can absorb a smaller one only if it is at least x times bigger [default = 3].
+      --cluster_ratio            Cluster ratio for message passing clustering. 
+                                    A cluster of barcode sequences can absorb a smaller one only if it is at least x times bigger [default = 3].
 
     Sincle-cell arguments:
-      --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. N = UMI position, C = cell barcode position [default = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
+      --cb_umi_pattern           Cell barcode and UMI pattern on read 1, required for fastq input. 
+                                    N = UMI position, C = cell barcode position [default = CCCCCCCCCCCCCCCCNNNNNNNNNNNN]
       --cellnumber               Number of cells expected in sample, only required when fastq provided. whitelist_indir and cellnumber are mutually exclusive
       --whitelist_indir          Directory that contains a cell ID whitelist for each sample <sample_id>_whitelist.tsv
       --umi_dist                 Hamming distance between UMIs to be collapsed during counting [default = 1]
       --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
-      --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell (barcode supported by most UMIs) [default = 0.3]
+      --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell 
+                                    (barcode supported by most UMIs) [default = 0.3]
       --pipeline                 To specify if input fastq files were created by SAW pipeline
 
     Resources:
@@ -62,7 +67,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
     Optional arguments:
       -profile                   Configuration profile to use. Can use multiple (comma separated)
-                                        Available: conda, singularity, docker, slurm, lsf
+                                    Available: conda, singularity, docker, slurm, lsf
       --outdir                   Output directory to place output [default = './']
       --email                    Direct output messages to this address [default = '']
       --help                     Print this help statement.
