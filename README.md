@@ -1,6 +1,8 @@
 # BARtab
 A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 
+![BARtab bartools workflow](assets/BARtab_workflow.png)
+
 ```
   Usage: nextflow run danevass/bartab --indir <input dir>
                                      --outdir <output dir>
