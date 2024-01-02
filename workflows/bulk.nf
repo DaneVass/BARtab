@@ -73,7 +73,15 @@ workflow BULK {
             // cluster unmapped reads
             // "true" indicates that starcode is running on unmapped reads, will indicate this in output file name
             if (params.cluster_unmapped) {
-                STARCODE(BOWTIE_ALIGN.out.unmapped_reads, true)
+                unmapped_reads = BOWTIE_ALIGN.out.unmapped_reads
+                // trim barcodes to same length if only one adapter and stagger (see same in ref-free workflow)
+                if (params.constants == "up" | params.constants == "down") {
+                    unmapped_reads = TRIM_BARCODE_LENGTH(unmapped_reads).reads
+                } else if (params.constants == "all") {
+                    // not implemented
+                    error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
+                }
+                STARCODE(unmapped_reads, true)
             }
 
             SAMTOOLS(mapped_reads)
