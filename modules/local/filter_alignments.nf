@@ -12,9 +12,10 @@ process FILTER_ALIGNMENTS {
     
     script:
         """
+        # remove unaligned (position <= 0) sequences, just in case
         cat <(grep '^@' ${reads}) \
             <(grep -v '^@' ${reads} |\
-            awk -v bc_len="${params.barcode_length}" -F'\t' '\$4 == 1 || length(\$10) + \$4 == bc_len + 1') \
+            awk -v bc_len="${params.barcode_length}" -F'\t' '\$4 > 0 && ( \$4 == 1 || length(\$10) + \$4 == bc_len + 1 )') \
         > ${sample_id}.mapped_filtered.sam
         """
 }
