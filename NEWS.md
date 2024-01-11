@@ -6,3 +6,4 @@
     - trim reads before running starcode on unmapped reads (if only upstream or only downstream adapter trimmed)
 
 - add NEWS.md to track changes
+- fix resource labels in slurm and lsf config
