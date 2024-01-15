@@ -1,6 +1,6 @@
 process STARCODE {
     tag "$sample_id"
-    label "process_high_bulk"
+    label "$params.cluster_unmapped" ? "process_medium_bulk" : "process_high_bulk"
 
     input:
         tuple val(sample_id), path(reads)
