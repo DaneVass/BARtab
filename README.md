@@ -289,7 +289,8 @@ Output files:
 Reads are quality filtered using [fastx-toolkit](http://hannonlab.cshl.edu/fastx_toolkit/) `fastq_quality_filter` command.  
 
 The minimum quality score to keep can be specified with the parameter `minqual`. 
-The minimum percent of bases that must have `minqual` quality can be specified with the parameter `pctqual`.
+The minimum percent of bases that must have `minqual` quality can be specified with the parameter `pctqual`.  
+To skip read filtering, set `minqual` to 0. 
 
 Output files:
 - `filtered_reads/<sample_id>.filtered.fastq.gz`: filtered reads (symlink)

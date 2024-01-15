@@ -57,9 +57,14 @@ workflow BULK {
             reads = MERGE_READS.out.merged_reads
         }
         
-        FILTER_READS(reads)
+        // skip quality filtering if minimum phred score is set to 0. 
+        if (params.minqual == 0) {
+            filtered_reads = reads
+        } else {
+            filtered_reads = FILTER_READS(reads).reads
+        }
 
-        CUTADAPT_READS(FILTER_READS.out.reads)
+        CUTADAPT_READS(filtered_reads)
 
         if (params.ref) {
 
