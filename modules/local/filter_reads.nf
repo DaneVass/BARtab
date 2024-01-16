@@ -1,7 +1,7 @@
 process FILTER_READS{
     tag "$sample_id"
-    // unfortunately no parallelization implemented
-    label "$params.mode" == "single-cell" ? "process_low_sc" : "process_low_bulk"
+    // only implemented for bulk
+    label "process_medium_bulk"
 
     input:
         tuple val(sample_id), path(reads)
