@@ -9,6 +9,10 @@ echo "fastQC version:" >> $out
 fastqc --version >> $out
 
 echo "------------------------------------" >> $out
+echo "FLASh version:" >> $out
+flash -v >> $out
+
+echo "------------------------------------" >> $out
 echo "fastp version:" >> $out
 fastp -v >> $out
 

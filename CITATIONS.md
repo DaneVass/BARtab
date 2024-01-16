@@ -18,6 +18,9 @@
 - [parallel](https://www.gnu.org/software/parallel/)
   > O. Tange (2011): GNU Parallel - The Command-Line Power Tool,;login: The USENIX Magazine, February 2011:42-47. doi: 10.5281/zenodo.16303
 
+- [FLASh](http://ccb.jhu.edu/software/FLASH/)
+  > Tanja Magoč , Steven L. Salzberg, FLASH: fast length adjustment of short reads to improve genome assemblies, Bioinformatics, Volume 27, Issue 21, November 2011, Pages 2957–2963, https://doi.org/10.1093/bioinformatics/btr507
+
 - [fastp](https://github.com/OpenGene/fastp)
   > Shifu Chen, Yanqing Zhou, Yaru Chen, Jia Gu, fastp: an ultra-fast all-in-one FASTQ preprocessor, Bioinformatics, Volume 34, Issue 17, September 2018, Pages i884–i890, https://doi.org/10.1093/bioinformatics/bty560
 

@@ -103,7 +103,7 @@ Single-cell data can be provided as either BAM files containing reads that do no
 The bulk workflow is executed with mode `single-bulk` and `paired-bulk` for single-end or paired-end reads, respectively. 
 
 - Check raw data quality using `fastqc` [FASTQC](#fastqc)
-- [Paired-end] Merge paired end reads using `fastp` [MERGE_READS](#merge_reads)
+- [Paired-end] Merge paired end reads using `FLASh` [MERGE_READS](#merge_reads)
 - Quality filter reads using `fastp` [FILTER_READS](#filter_reads)
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
 - [Reference-based] Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
@@ -163,6 +163,7 @@ See [citations](../CITATIONS.md)
     * The [tidyverse package](https://www.tidyverse.org/)
 * [Python](https://www.python.org/)
 * [fastqc](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+* [FLASh](http://ccb.jhu.edu/software/FLASH/)
 * [fastp](https://github.com/OpenGene/fastp)
 * [cutadapt](https://cutadapt.readthedocs.io/en/stable/installation.html)
 * [bowtie1](http://bowtie-bio.sourceforge.net/index.shtml)
@@ -273,7 +274,7 @@ Output files:
 - `reports/fastqc/zips/<sample_id>.zip` (copy)
 
 ### MERGE_READS
-If running in mode paired-bulk, forward and reverse reads are merged using [fastp](https://github.com/OpenGene/fastp).  
+If running in mode paired-bulk, forward and reverse reads are merged using [FLASh](http://ccb.jhu.edu/software/FLASH/).  
 The minimum overlap of reads can be specified with the parameter `mergeoverlap` (default 10 bases).
 
 Output files:
@@ -429,7 +430,7 @@ Output files:
 
 ### MULTIQC
 
-MultiQC creates a report of metrics for fastqc, fastp, cutadapt and bowtie for all samples. 
+MultiQC creates a report of metrics for fastqc, flash, fastp, cutadapt and bowtie for all samples. 
 
 Output files:
 - `reports/multiqc/multiqc_report.html`: report for all samples (copy)
