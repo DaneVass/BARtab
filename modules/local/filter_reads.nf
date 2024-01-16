@@ -19,10 +19,8 @@ process FILTER_READS{
             --qualified_quality_phred ${params.minqual} \\
             --unqualified_percent_limit \$(( 100 - ${params.pctqual} )) \\
             --dont_eval_duplication --disable_adapter_trimming --disable_trim_poly_g --disable_length_filtering \\
+            --json ${sample_id}.filter.fastp.json --html ${sample_id}.filter.fastp.html \\
             2> ${sample_id}.filter.log
-
-        mv fastp.json ${sample_id}.filter.fastp.json
-        mv fastp.html ${sample_id}.filter.fastp.html
 
         # check if any reads passed filtering, else throw error to exclude sample
         if LC_ALL=C gzip -l ${sample_id}.filtered.fastq.gz | awk 'NR==2 {exit(\$2!=0)}'; then
