@@ -7,6 +7,9 @@ LABEL authors="Henrietta Holze" \
 RUN conda install -y -c conda-forge mamba
 COPY environment.yaml /
 RUN mamba env create --quiet -f /environment.yaml && mamba clean -a
+# remove fastp from environment.yaml and install afterwards 
+# because mamba create never finishes when adding it to environment
+RUN conda install --name bartab-1.4 -c bioconda fastp=0.23.4
 
 # Add conda installation dir to PATH (instead of doing 'conda activate')
 ENV PATH /opt/conda/envs/bartab-1.4/bin:$PATH
