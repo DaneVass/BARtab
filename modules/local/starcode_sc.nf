@@ -4,13 +4,16 @@ process STARCODE_SC {
 
     input:
         tuple val(sample_id), path(reads)
+        val(cluster_unmapped)
 
     output:
-        tuple val(sample_id), path("${sample_id}_starcode_counts.tsv"), emit: counts
-        path "${sample_id}_starcode.tsv"     // the output of starcode is only interesting when looking at how many reads support a CB-UMI-barcode combination. 
-        path "${sample_id}_starcode.log", emit: log
+        tuple val(sample_id), path("${sample_id}*_starcode_counts.tsv"), emit: counts
+        path "${sample_id}*_starcode.tsv"     // the output of starcode is only interesting when looking at how many reads support a CB-UMI-barcode combination. 
+        path "${sample_id}*_starcode.log", emit: log
     
     script:
+        // if starcode is run on unmapped reads, that should be visible in output file name
+        def unmapped = cluster_unmapped ? "_unmapped" : ""
         """
         # get length of cell barcode
         cb_length=\$(echo ${params.cb_umi_pattern} | tr -cd 'C' | wc -c)
@@ -29,20 +32,20 @@ process STARCODE_SC {
             --seq-cluster-ratio ${params.cluster_ratio} \\
             --seq-trim 0 \\
             ${sample_id}_trimmed.fasta \\
-            > ${sample_id}_starcode.tsv \\
-            2> ${sample_id}_starcode.log
+            > ${sample_id}${unmapped}_starcode.tsv \\
+            2> ${sample_id}${unmapped}_starcode.log
 
         # split starcode results into cell barcode and lineage barcode
         # discard UMI since it is no longer needed
         # count cell barcode lineage barcode combinations to get UMI count per barcode per cell
         # reorder columns and insert header
 
-        cut -f1 ${sample_id}_starcode.tsv |\\
+        cut -f1 ${sample_id}${unmapped}_starcode.tsv |\\
             cut -c 1-\$cb_length,\$((cb_umi_length+1))-1000 --output-delimiter \$'\t' |\\
             sort |\\
             uniq -c |\\
             sed 's/^ *//g;s/ /\\t/g' |\\
             awk '{OFS="\\t"; print \$3,\$2,\$1}' |\\
-            sed '1 i\\gene\\tcell\\tcount' > ${sample_id}_starcode_counts.tsv
+            sed '1 i\\gene\\tcell\\tcount' > ${sample_id}${unmapped}_starcode_counts.tsv
         """
 }
