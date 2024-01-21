@@ -35,17 +35,12 @@ process STARCODE_SC {
             > ${sample_id}${unmapped}_starcode.tsv \\
             2> ${sample_id}${unmapped}_starcode.log
 
-        # split starcode results into cell barcode and lineage barcode
-        # discard UMI since it is no longer needed
+        # split sequence into cell barcode, UMI and lineage barcode
+        # take lineage barcode with most reads for all cell barcode - UMI combinations, remove all ties
+        # discard UMI since it is no longer needed# discard UMI since it is no longer needed
         # count cell barcode lineage barcode combinations to get UMI count per barcode per cell
         # reorder columns and insert header
 
-        cut -f1 ${sample_id}${unmapped}_starcode.tsv |\\
-            cut -c 1-\$cb_length,\$((cb_umi_length+1))-1000 --output-delimiter \$'\t' |\\
-            sort |\\
-            uniq -c |\\
-            sed 's/^ *//g;s/ /\\t/g' |\\
-            awk '{OFS="\\t"; print \$3,\$2,\$1}' |\\
-            sed '1 i\\gene\\tcell\\tcount' > ${sample_id}${unmapped}_starcode_counts.tsv
+        filter_starcode_sc.py ${sample_id}${unmapped}_starcode.tsv ${sample_id}${unmapped}_starcode_counts.tsv \$cb_umi_length \$cb_length
         """
 }

@@ -1,3 +1,6 @@
+# BARtab 1.4.1
+- filter clustered barcodes from single-cell data: for each cell barcode - UMI combination, only keep lineage barcode with the most reads; remove all ambiguous ties.
+
 # BARtab 1.3.1
 
 - Clustering unmapped reads
