@@ -1,22 +1,24 @@
-include { SOFTWARE_CHECK } from '../modules/local/software_check'
-include { FASTQC } from '../modules/local/fastqc'
+include { SOFTWARE_CHECK        } from '../modules/local/software_check'
+include { FASTQC                } from '../modules/local/fastqc'
 // include { FILTER_READS } from '../modules/local/filter_reads'
-include { UMITOOLS_WHITELIST } from '../modules/local/umitools_whitelist'
-include { UMITOOLS_EXTRACT } from '../modules/local/umitools_extract'
-include { BAM_TO_FASTQ } from '../modules/local/bam_to_fastq'
-include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
-include { STARCODE_SC } from '../modules/local/starcode_sc'
-include { TRIM_BARCODE_LENGTH } from '../modules/local/trim_barcode_length'
-include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
-include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
-include { FILTER_ALIGNMENTS } from '../modules/local/filter_alignments'
-include { RENAME_READS_BAM } from '../modules/local/rename_reads_bam'
-include { RENAME_READS_SAW } from '../modules/local/rename_reads_saw'
-include { SAMTOOLS } from '../modules/local/samtools'
-include { UMITOOLS_COUNT } from '../modules/local/umitools_count'
-include { COUNT_BARCODES_SAM } from '../modules/local/count_barcodes_sam'
-include { PARSE_BARCODES_SC } from '../modules/local/parse_barcodes_sc'
-include { MULTIQC } from '../modules/local/multiqc'
+include { UMITOOLS_WHITELIST    } from '../modules/local/umitools_whitelist'
+include { UMITOOLS_EXTRACT      } from '../modules/local/umitools_extract'
+include { BAM_TO_FASTQ          } from '../modules/local/bam_to_fastq'
+include { CUTADAPT_READS        } from '../modules/local/cutadapt_reads'
+include { STARCODE_SC           } from '../modules/local/starcode_sc'
+include { TRIM_BARCODE_LENGTH   } from '../modules/local/trim_barcode_length'
+include { BUILD_BOWTIE_INDEX    } from '../modules/local/build_bowtie_index'
+include { BOWTIE_ALIGN          } from '../modules/local/bowtie_align'
+include { FILTER_ALIGNMENTS     } from '../modules/local/filter_alignments'
+include { RENAME_READS_BAM      } from '../modules/local/rename_reads_bam'
+include { RENAME_READS_SAW      } from '../modules/local/rename_reads_saw'
+// include { SAMTOOLS              } from '../modules/local/samtools'
+include { REMOVE_PCR_CHIMERISM  } from '../modules/local/remove_pcr_chimerism'
+include { UMITOOLS_COUNT        } from '../modules/local/umitools_count'
+include { UMITOOLS_COUNT as UMITOOLS_COUNT_UNMAPPED } from '../modules/local/umitools_count'
+include { COUNT_BARCODES_SAM    } from '../modules/local/count_barcodes_sam'
+include { PARSE_BARCODES_SC     } from '../modules/local/parse_barcodes_sc'
+include { MULTIQC               } from '../modules/local/multiqc'
 
 workflow SINGLE_CELL {
 
@@ -103,6 +105,7 @@ workflow SINGLE_CELL {
                     error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
                 }
                 STARCODE_SC(unmapped_reads, true)
+                UMITOOLS_COUNT_UNMAPPED(STARCODE_SC.out.counts, true, true)
             }
 
             // filter alignments if barcode has fixed length
@@ -117,9 +120,10 @@ workflow SINGLE_CELL {
                 // count barcodes from sam file
                 counts = COUNT_BARCODES_SAM(mapped_reads)
             } else {
-                SAMTOOLS(mapped_reads)
+                // SAMTOOLS(mapped_reads)
 
-                counts = UMITOOLS_COUNT(SAMTOOLS.out).counts
+                REMOVE_PCR_CHIMERISM(mapped_reads)
+                counts = UMITOOLS_COUNT(REMOVE_PCR_CHIMERISM.out.barcodes, false, false).counts
             }
 
             // pass SAM file from mapping for mapped read length QC figures
@@ -139,7 +143,8 @@ workflow SINGLE_CELL {
                 error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
             }
 
-            counts = STARCODE_SC(trimmed_reads, false).counts
+            STARCODE_SC(trimmed_reads, false)
+            counts = UMITOOLS_COUNT(STARCODE_SC.out.counts, false, true).counts
 
             // place holder empty file instead of SAM file from bowtie mapping
             PARSE_BARCODES_SC(counts.combine(Channel.of("$projectDir/assets/NO_FILE")))
