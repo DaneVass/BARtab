@@ -4,6 +4,7 @@ include { MERGE_READS } from '../modules/local/merge_reads'
 include { FILTER_READS } from '../modules/local/filter_reads'
 include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
 include { STARCODE } from '../modules/local/starcode'
+include { STARCODE as STARCODE_UNMAPPED } from '../modules/local/starcode'
 include { TRIM_BARCODE_LENGTH } from '../modules/local/trim_barcode_length'
 include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN } from '../modules/local/bowtie_align'
@@ -86,7 +87,7 @@ workflow BULK {
                     // not implemented
                     error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
                 }
-                STARCODE(unmapped_reads, true)
+                STARCODE_UNMAPPED(unmapped_reads, true)
             }
 
             SAMTOOLS(mapped_reads)

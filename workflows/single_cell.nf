@@ -6,6 +6,7 @@ include { UMITOOLS_EXTRACT      } from '../modules/local/umitools_extract'
 include { BAM_TO_FASTQ          } from '../modules/local/bam_to_fastq'
 include { CUTADAPT_READS        } from '../modules/local/cutadapt_reads'
 include { STARCODE_SC           } from '../modules/local/starcode_sc'
+include { STARCODE_SC as STARCODE_SC_UNMAPPED } from '../modules/local/starcode_sc'
 include { TRIM_BARCODE_LENGTH   } from '../modules/local/trim_barcode_length'
 include { BUILD_BOWTIE_INDEX    } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN          } from '../modules/local/bowtie_align'
@@ -104,8 +105,8 @@ workflow SINGLE_CELL {
                     // i.e. clustering unmapped barcodes driectly from scRNA-seq data (bam files) is not possible. 
                     error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
                 }
-                STARCODE_SC(unmapped_reads, true)
-                UMITOOLS_COUNT_UNMAPPED(STARCODE_SC.out.counts, true, true)
+                STARCODE_SC_UNMAPPED(unmapped_reads, true)
+                UMITOOLS_COUNT_UNMAPPED(STARCODE_SC_UNMAPPED.out.counts, true, true)
             }
 
             // filter alignments if barcode has fixed length

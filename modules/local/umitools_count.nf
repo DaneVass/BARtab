@@ -11,6 +11,7 @@ process UMITOOLS_COUNT {
     output:
         tuple val(sample_id), path("${sample_id}*.counts.tsv"), emit: counts
         path("${sample_id}*_count.log"), emit: log
+        path("${sample_id}*_umi_demultiplexed.tsv"), emit: umitools_out
 
     script:
         def unmapped = cluster_unmapped ? "_unmapped" : ""
@@ -20,9 +21,9 @@ process UMITOOLS_COUNT {
         --per-cell \\
         --edit-distance-threshold=${params.umi_dist} \\
         -I ${barcodes} \\
-        -S ${sample_id}${starcode}${unmapped}_umi_demultiplexed.tsv \\
+        -S ${sample_id}${unmapped}_umi_demultiplexed.tsv \\
         > ${sample_id}_count.log
 
-        count_sc_barcodes.py ${sample_id}${starcode}${unmapped}_umi_demultiplexed.tsv ${sample_id}${starcode}${unmapped}.counts.tsv >> ${sample_id}${starcode}${unmapped}_count.log
+        count_sc_barcodes.py ${sample_id}${unmapped}_umi_demultiplexed.tsv ${sample_id}${unmapped}.counts.tsv >> ${sample_id}${unmapped}_count.log
         """
 }
