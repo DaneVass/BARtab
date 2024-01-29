@@ -19,17 +19,17 @@ mapping_output[["read", "CID", "MID"]] = mapping_output["readname"].str.split("_
 
 # only keep CB_UMI barcode combination with highest UMI count
 mapping_output = mapping_output.value_counts(["barcode", "CID", "MID"]).reset_index()
-print(f"Counted {mapping_output.shape[0]} cell ID - UMI - barcode combinations")
+print(f"Counted {mapping_output.shape[0]} cell ID-UMI-barcode combinations")
 
 idx = mapping_output.groupby(["CID", "MID"])['count'].transform(max) == mapping_output['count']
 mapping_output_max = mapping_output[idx]
-print(f"Removed {mapping_output.shape[0] - mapping_output_max.shape[0]} cell ID - UMI - barcode combinations with max count, kept {mapping_output_max.shape[0]}")
+print(f"Removed {mapping_output.shape[0] - mapping_output_max.shape[0]} cell ID-UMI-barcode combinations with max count, kept {mapping_output_max.shape[0]}")
 
 # remove ties by removing all duplicated CB_UMI values
 mapping_output_max_no_ties = mapping_output_max.drop_duplicates(subset=["CID", "MID"], keep=False)
 # looking at duplicated 
 # mapping_output_max.loc[mapping_output_max.duplicated(["CID", "MID"], keep=False).values, :].sort_values(["count", "CID", "MID"], ascending=False).head()
-print(f"Removed {mapping_output_max.shape[0] - mapping_output_max_no_ties.shape[0]} cell ID - UMI - barcode combinations with count ties, kept {mapping_output_max_no_ties.shape[0]}\n\n")
+print(f"Removed {mapping_output_max.shape[0] - mapping_output_max_no_ties.shape[0]} cell ID-UMI-barcode combinations with count ties, kept {mapping_output_max_no_ties.shape[0]}")
 
 # write file to pass to umi-tools count_tab
 # create read name that contains a unique index, UMI and cell barcode
