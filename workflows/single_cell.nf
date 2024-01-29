@@ -1,6 +1,5 @@
 include { SOFTWARE_CHECK        } from '../modules/local/software_check'
 include { FASTQC                } from '../modules/local/fastqc'
-// include { FILTER_READS } from '../modules/local/filter_reads'
 include { UMITOOLS_WHITELIST    } from '../modules/local/umitools_whitelist'
 include { UMITOOLS_EXTRACT      } from '../modules/local/umitools_extract'
 include { BAM_TO_FASTQ          } from '../modules/local/bam_to_fastq'
@@ -13,7 +12,6 @@ include { BOWTIE_ALIGN          } from '../modules/local/bowtie_align'
 include { FILTER_ALIGNMENTS     } from '../modules/local/filter_alignments'
 include { RENAME_READS_BAM      } from '../modules/local/rename_reads_bam'
 include { RENAME_READS_SAW      } from '../modules/local/rename_reads_saw'
-// include { SAMTOOLS              } from '../modules/local/samtools'
 include { REMOVE_PCR_CHIMERISM  } from '../modules/local/remove_pcr_chimerism'
 include { UMITOOLS_COUNT        } from '../modules/local/umitools_count'
 include { UMITOOLS_COUNT as UMITOOLS_COUNT_UNMAPPED } from '../modules/local/umitools_count'
@@ -67,9 +65,6 @@ workflow SINGLE_CELL {
         } else if (params.input_type == "fastq") {
             FASTQC(readsChannel)
 
-            // filtering reads for quality
-            // TODO
-
             // use provided whitelist of cell barcodes (e.g. cellranger) or generate a whitelist with provided number of cells
             whitelist = (params.whitelist_indir ? whitelistChannel : UMITOOLS_WHITELIST(readsChannel).whitelist)
 
@@ -121,8 +116,6 @@ workflow SINGLE_CELL {
                 // count barcodes from sam file
                 counts = COUNT_BARCODES_SAM(mapped_reads)
             } else {
-                // SAMTOOLS(mapped_reads)
-
                 REMOVE_PCR_CHIMERISM(mapped_reads)
                 counts = UMITOOLS_COUNT(REMOVE_PCR_CHIMERISM.out.barcodes, false, false).counts
             }
