@@ -35,8 +35,10 @@ print(f"Removed {starcode_output_max.shape[0] - starcode_output_max_no_ties.shap
 # write file to pass to umi-tools count_tab
 # create read name that contains a unique index, UMI and cell barcode
 starcode_output_max_no_ties = starcode_output_max_no_ties.reset_index()
-starcode_output_max_no_ties["read"] = starcode_output_max_no_ties["index"].astype(str) + "_" + starcode_output_max_no_ties["CB_UMI"].str[cb_length:cb_umi_length] + "_" + starcode_output_max_no_ties["CB_UMI"].str[0:cb_length]
 starcode_output_max_no_ties["barcode"] = starcode_output_max_no_ties["sequence"].str[cb_umi_length:]
+# it is essential to order by barcode before umi-tools count_tab
+starcode_output_max_no_ties = starcode_output_max_no_ties.sort_values("barcode")
+starcode_output_max_no_ties["read"] = starcode_output_max_no_ties["index"].astype(str) + "_" + starcode_output_max_no_ties["CB_UMI"].str[cb_length:cb_umi_length] + "_" + starcode_output_max_no_ties["CB_UMI"].str[0:cb_length]
 
 starcode_output_max_no_ties[["read", "barcode"]].to_csv(outfile, index=False, sep="\t", header=False)
 

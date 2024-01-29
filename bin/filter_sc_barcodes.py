@@ -34,6 +34,8 @@ print(f"Removed {mapping_output_max.shape[0] - mapping_output_max_no_ties.shape[
 # write file to pass to umi-tools count_tab
 # create read name that contains a unique index, UMI and cell barcode
 mapping_output_max_no_ties = mapping_output_max_no_ties.reset_index()
+# it is essential to order by barcode before umi-tools count_tab
+mapping_output_max_no_ties = mapping_output_max_no_ties.sort_values("barcode")
 mapping_output_max_no_ties["read"] = mapping_output_max_no_ties["index"].astype(str) + "_" + mapping_output_max_no_ties["MID"] + "_" + mapping_output_max_no_ties["CID"]
 
 mapping_output_max_no_ties[["read", "barcode"]].to_csv(out_file, index=False, sep="\t", header=False)
