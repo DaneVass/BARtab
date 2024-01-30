@@ -19,17 +19,19 @@ mapping_output[["read", "CID", "MID"]] = mapping_output["readname"].str.split("_
 
 # only keep CB_UMI barcode combination with highest UMI count
 mapping_output = mapping_output.value_counts(["barcode", "CID", "MID"]).reset_index()
-print(f"Counted {mapping_output.shape[0]} cell ID-UMI-barcode combinations")
+print(f"Counted {mapping_output.shape[0]} cell ID-UMI-barcode combinations ({mapping_output['CID'].unique().shape[0]} cells, {mapping_output['barcode'].unique().shape[0]} barcodes)")
 
 idx = mapping_output.groupby(["CID", "MID"])['count'].transform(max) == mapping_output['count']
 mapping_output_max = mapping_output[idx]
-print(f"Removed {mapping_output.shape[0] - mapping_output_max.shape[0]} cell ID-UMI-barcode combinations with max count, kept {mapping_output_max.shape[0]}")
+print(f"Removed {mapping_output.shape[0] - mapping_output_max.shape[0]} cell ID-UMI-barcode combinations with maximum read count")
+print(f"Kept {mapping_output_max.shape[0]} ({mapping_output_max['CID'].unique().shape[0]} cells, {mapping_output_max['barcode'].unique().shape[0]} barcodes)")
 
 # remove ties by removing all duplicated CB_UMI values
 mapping_output_max_no_ties = mapping_output_max.drop_duplicates(subset=["CID", "MID"], keep=False)
 # looking at duplicated 
 # mapping_output_max.loc[mapping_output_max.duplicated(["CID", "MID"], keep=False).values, :].sort_values(["count", "CID", "MID"], ascending=False).head()
-print(f"Removed {mapping_output_max.shape[0] - mapping_output_max_no_ties.shape[0]} cell ID-UMI-barcode combinations with count ties, kept {mapping_output_max_no_ties.shape[0]}")
+print(f"Removed {mapping_output_max.shape[0] - mapping_output_max_no_ties.shape[0]} cell ID-UMI-barcode combinations with read count ties")
+print(f"Kept {mapping_output_max_no_ties.shape[0]} ({mapping_output_max_no_ties['CID'].unique().shape[0]} cells, {mapping_output_max_no_ties['barcode'].unique().shape[0]} barcodes)")
 
 # write file to pass to umi-tools count_tab
 # create read name that contains a unique index, UMI and cell barcode
