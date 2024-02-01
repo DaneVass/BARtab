@@ -31,6 +31,7 @@ process STARCODE_SC {
             --seq-d ${params.cluster_distance} \\
             --seq-cluster-ratio ${params.cluster_ratio} \\
             --seq-trim 0 \\
+            --seq-threads ${task.cpus} \\
             ${sample_id}_trimmed.fasta \\
             > ${sample_id}${unmapped}_starcode.tsv \\
             2> ${sample_id}${unmapped}_starcode.log
