@@ -2,6 +2,7 @@ include { SOFTWARE_CHECK        } from '../modules/local/software_check'
 include { FASTQC                } from '../modules/local/fastqc'
 include { UMITOOLS_WHITELIST    } from '../modules/local/umitools_whitelist'
 include { UMITOOLS_EXTRACT      } from '../modules/local/umitools_extract'
+include { FILTER_READS          } from '../modules/local/filter_reads'
 include { BAM_TO_FASTQ          } from '../modules/local/bam_to_fastq'
 include { CUTADAPT_READS        } from '../modules/local/cutadapt_reads'
 include { STARCODE_SC           } from '../modules/local/starcode_sc'
@@ -70,6 +71,9 @@ workflow SINGLE_CELL {
 
             // extract reads with whitelisted cell barcode from fastq input
             r2_fastq = UMITOOLS_EXTRACT(readsChannel.combine(whitelist, by: 0)).reads
+
+            // filter read2 for quality and complexity
+            r2_fastq = FILTER_READS(r2_fastq).reads
 
         } else if (params.input_type == "bam") {
 
