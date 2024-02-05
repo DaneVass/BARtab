@@ -32,10 +32,12 @@ process STARCODE_SC {
             --seq-d ${params.cluster_distance} \\
             --seq-cluster-ratio ${params.cluster_ratio} \\
             --seq-trim 0 \\
-            --seq-threads ${task.cpus} \\
+            --seq-threads \$((${task.cpus} - 1)) \\
             ${sample_id}_trimmed.fasta \\
             > ${sample_id}${unmapped}_starcode.tsv \\
             2> ${sample_id}${unmapped}_starcode.log
+
+        rm ${sample_id}_trimmed.fasta
 
         # split sequence into cell barcode, UMI and lineage barcode
         # take lineage barcode with most reads for all cell barcode - UMI combinations, remove all ties
