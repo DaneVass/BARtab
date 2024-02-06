@@ -104,7 +104,7 @@ The bulk workflow is executed with mode `single-bulk` and `paired-bulk` for sing
 
 - Check raw data quality using `fastqc` [FASTQC](#fastqc)
 - [Paired-end] Merge paired end reads using `FLASh` [MERGE_READS](#merge_reads)
-- Quality filter reads using `fastx-toolkit` [FILTER_READS](#filter_reads)
+- Quality filter reads using `fastp` [FILTER_READS](#filter_reads)
 - Filter barcode reads and trim 5' and/or 3' constant regions using `cutadapt` [CUTADAPT_READS](#cutadapt_reads)
 - [Reference-based] Align to reference barcode library using `bowtie` [BUILD_BOWTIE_INDEX](#build_bowtie_index), [BOWTIE_ALIGN](#bowtie_align)
 - [Reference-based optional] Filter alignments for sequences mapping to either end of a barcode [FILTER_ALIGNMENTS](#filter_alignments)
@@ -164,7 +164,7 @@ See [citations](../CITATIONS.md)
 * [Python](https://www.python.org/)
 * [fastqc](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 * [FLASh](http://ccb.jhu.edu/software/FLASH/)
-* [fastx-toolkit](http://hannonlab.cshl.edu/fastx_toolkit/)
+* [fastp](https://github.com/OpenGene/fastp)
 * [cutadapt](https://cutadapt.readthedocs.io/en/stable/installation.html)
 * [bowtie1](http://bowtie-bio.sourceforge.net/index.shtml)
 * [samtools](http://www.htslib.org/)
@@ -197,7 +197,7 @@ See [citations](../CITATIONS.md)
     ### Docker
     Download the Docker image from docker hub.
     ```
-    docker pull henriettaholze/bartab:v1.3
+    docker pull henriettaholze/bartab:v1.4
 
     nextflow run danevass/bartab -profile docker [options]
     ```
@@ -206,7 +206,7 @@ See [citations](../CITATIONS.md)
     ```
     export NXF_SINGULARITY_LIBRARYDIR=MY_SINGULARITY_IMAGES    # your singularity storage dir
     export NXF_SINGULARITY_CACHEDIR=MY_SINGULARITY_CACHE       # your singularity cache dir
-    singularity pull --dir $NXF_SINGULARITY_LIBRARYDIR henriettaholze-bartab-v1.3.img docker://henriettaholze/bartab:v1.3
+    singularity pull --dir $NXF_SINGULARITY_LIBRARYDIR henriettaholze-bartab-v1.4.img docker://henriettaholze/bartab:v1.4
 
     nextflow run danevass/bartab -profile singularity [options]
     ```
@@ -278,6 +278,7 @@ If running in mode paired-bulk, forward and reverse reads are merged using [FLAS
 The minimum overlap of reads can be specified with the parameter `mergeoverlap` (default 10 bases).
 
 Output files:
+
 - `merged_reads/<sample_id>.extendedFrags.fastq.gz`: merged reads  (symlink)
 - `merged_reads/unmerged/<sample_id>.notCombined_<1,2>.fastq.gz`: reads that could not be merged (symlink)
 - `merged_reads/logs/<sample_id>.flash.log`: log (copy)
@@ -286,7 +287,7 @@ Output files:
 
 ### FILTER_READS
 
-Reads are quality filtered using [fastx-toolkit](http://hannonlab.cshl.edu/fastx_toolkit/) `fastq_quality_filter` command.  
+Reads are quality filtered using [fastp](https://github.com/OpenGene/fastp).  
 
 The minimum quality score to keep can be specified with the parameter `minqual`. 
 The minimum percent of bases that must have `minqual` quality can be specified with the parameter `pctqual`.  
@@ -295,6 +296,8 @@ To skip read filtering, set `minqual` to 0.
 Output files:
 - `filtered_reads/<sample_id>.filtered.fastq.gz`: filtered reads (symlink)
 - `filtered_reads/logs/<sample_id>.filter.log`: log (copy)
+- `filtered_reads/logs/<sample_id>.filter.fastp.json`: log (copy)
+- `filtered_reads/logs/<sample_id>.filter.fastp.html`: log (copy)
 
 ### CUTADAPT_READS
 
@@ -427,7 +430,7 @@ Output files:
 
 ### MULTIQC
 
-MultiQC creates a report of metrics for fastqc, flash, cutadapt and bowtie for all samples. 
+MultiQC creates a report of metrics for fastqc, flash, fastp, cutadapt and bowtie for all samples. 
 
 Output files:
 - `reports/multiqc/multiqc_report.html`: report for all samples (copy)

@@ -31,7 +31,7 @@ def helpMessage() {
   log.info logo + """
 
 ---------------------- Tabulate Barcode Counts in NGS data ----------------------
-                               Version = 1.3.1
+                               Version = 1.4.0
 
   Usage: nextflow run danevass/bartab --indir <input dir>
                                       --outdir <output dir>
