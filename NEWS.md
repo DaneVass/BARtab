@@ -1,4 +1,7 @@
-# BARtab 1.4.1
+# BARtab 1.4.0
+
+- Replace fastx_toolkit with fastp for filtering reads based on quality
+- Update conda environment and Docker image with fastp dependency
 - run starcode_umi, not starcode, when clustering unmapped reads from single-cell data. 
 - filter clustered barcodes from single-cell data: for each cell barcode - UMI combination, only keep lineage barcode with the most reads; remove all ambiguous ties.
 
