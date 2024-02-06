@@ -1,9 +1,10 @@
 # BARtab 1.4.0
 
+- Remove PCR chimerism in single-cell data: for each cell ID-UMI combination, only keep the barcode supported by most reads
 - Replace fastx_toolkit with fastp for filtering reads based on quality
 - Update conda environment and Docker image with fastp dependency
-- run starcode_umi, not starcode, when clustering unmapped reads from single-cell data. 
-- filter clustered barcodes from single-cell data: for each cell barcode - UMI combination, only keep lineage barcode with the most reads; remove all ambiguous ties.
+- Run starcode_umi, not starcode, when clustering unmapped reads from single-cell data. 
+- Filter clustered barcodes from single-cell data: for each cell barcode - UMI combination, only keep lineage barcode with the most reads; remove all ambiguous ties.
 
 # BARtab 1.3.1
 
