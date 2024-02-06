@@ -7,9 +7,10 @@ process STARCODE_SC {
         val(cluster_unmapped)
 
     output:
-        tuple val(sample_id), path("${sample_id}*_starcode_counts.tsv"), emit: counts
+        tuple val(sample_id), path("${sample_id}*_starcode_pcr_chimerism.tsv"), emit: counts
         path "${sample_id}*_starcode.tsv"     // the output of starcode is only interesting when looking at how many reads support a CB-UMI-barcode combination. 
         path "${sample_id}*_starcode.log", emit: log
+        path "${sample_id}*starcode_pcr_chimerism.log", emit: log_pcr_chimerism
     
     script:
         // if starcode is run on unmapped reads, that should be visible in output file name
@@ -26,7 +27,7 @@ process STARCODE_SC {
         # cluster CB-UMI and lineage barcodes
         starcode-umi --starcode-path starcode \\
             --umi-len \$cb_umi_length \\
-            --umi-d ${params.umi_dist} \\
+            --umi-d 0 \\
             --umi-cluster-ratio 1 \\
             --seq-d ${params.cluster_distance} \\
             --seq-cluster-ratio ${params.cluster_ratio} \\
@@ -38,10 +39,10 @@ process STARCODE_SC {
 
         # split sequence into cell barcode, UMI and lineage barcode
         # take lineage barcode with most reads for all cell barcode - UMI combinations, remove all ties
-        # discard UMI since it is no longer needed# discard UMI since it is no longer needed
+        # discard UMI since it is no longer needed
         # count cell barcode lineage barcode combinations to get UMI count per barcode per cell
         # reorder columns and insert header
 
-        filter_starcode_sc.py ${sample_id}${unmapped}_starcode.tsv ${sample_id}${unmapped}_starcode_counts.tsv \$cb_umi_length \$cb_length
+        filter_starcode_sc.py ${sample_id}${unmapped}_starcode.tsv ${sample_id}${unmapped}_starcode_pcr_chimerism.tsv \$cb_umi_length \$cb_length > ${sample_id}${unmapped}_starcode_pcr_chimerism.log
         """
 }
