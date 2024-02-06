@@ -5,7 +5,6 @@ include { UMITOOLS_WHITELIST } from '../modules/local/umitools_whitelist'
 include { UMITOOLS_EXTRACT } from '../modules/local/umitools_extract'
 include { BAM_TO_FASTQ } from '../modules/local/bam_to_fastq'
 include { CUTADAPT_READS } from '../modules/local/cutadapt_reads'
-include { STARCODE } from '../modules/local/starcode'
 include { STARCODE_SC } from '../modules/local/starcode_sc'
 include { TRIM_BARCODE_LENGTH } from '../modules/local/trim_barcode_length'
 include { BUILD_BOWTIE_INDEX } from '../modules/local/build_bowtie_index'
@@ -103,7 +102,7 @@ workflow SINGLE_CELL {
                     // i.e. clustering unmapped barcodes driectly from scRNA-seq data (bam files) is not possible. 
                     error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
                 }
-                STARCODE(unmapped_reads, true)
+                STARCODE_SC(unmapped_reads, true)
             }
 
             // filter alignments if barcode has fixed length
@@ -140,7 +139,7 @@ workflow SINGLE_CELL {
                 error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
             }
 
-            counts = STARCODE_SC(trimmed_reads).counts
+            counts = STARCODE_SC(trimmed_reads, false).counts
 
             // place holder empty file instead of SAM file from bowtie mapping
             PARSE_BARCODES_SC(counts.combine(Channel.of("$projectDir/assets/NO_FILE")))
