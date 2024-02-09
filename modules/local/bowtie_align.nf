@@ -29,6 +29,8 @@ process BOWTIE_ALIGN {
             -S ${sample_id}.mapped.sam \\
             2> ${sample_id}.bowtie.log
 
+            if [ -s ${sample_id}.unmapped.fastq ]; then
                 pigz -f -p ${task.cpus} ${sample_id}.unmapped.fastq
+            fi
             """
 }
