@@ -30,7 +30,7 @@ process CUTADAPT_READS{
             # check if cutadapt trimmed any reads, else throw error to exclude file
             # if not, bowtie would crash with a hard to interpret error message
             if [ -s ${sample_id}.trimmed.fastq ]; then
-                pigz -p ${task.cpus} ${sample_id}.trimmed.fastq
+                pigz -f -p ${task.cpus} ${sample_id}.trimmed.fastq
             else
                 printf '%s\n' "No reads passed cutadapt filtering and trimming. Consider excluding sample ${sample_id}." >&2  # write error message to stderr
                 exit 1
@@ -41,7 +41,7 @@ process CUTADAPT_READS{
             """
             cutadapt -j ${task.cpus} -g "${params.upconstant};o=${params.up_coverage};required...${params.downconstant};o=${params.down_coverage};required" --trimmed-only --max-n=0 ${min_len_both} -e ${params.constantmismatches} ${max_len} ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt_both.log
             if [ -s ${sample_id}.trimmed.fastq ]; then
-                pigz -p ${task.cpus} ${sample_id}.trimmed.fastq
+                pigz -f -p ${task.cpus} ${sample_id}.trimmed.fastq
             else
                 printf '%s\n' "No reads passed cutadapt filtering and trimming. Consider excluding sample ${sample_id}." >&2  # write error message to stderr
                 exit 1
@@ -51,7 +51,7 @@ process CUTADAPT_READS{
             """
             cutadapt -j ${task.cpus} -g "${params.upconstant};o=${params.up_coverage}" --trimmed-only --max-n=0 -m ${params.min_readlength} -e ${params.constantmismatches} ${max_len} ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt_up.log
             if [ -s ${sample_id}.trimmed.fastq ]; then
-                pigz -p ${task.cpus} ${sample_id}.trimmed.fastq
+                pigz -f -p ${task.cpus} ${sample_id}.trimmed.fastq
             else
                 printf '%s\n' "No reads passed cutadapt filtering and trimming. Consider excluding sample ${sample_id}." >&2  # write error message to stderr
                 exit 1
@@ -61,7 +61,7 @@ process CUTADAPT_READS{
             """
             cutadapt -j ${task.cpus} -a "${params.downconstant};o=${params.down_coverage}" --trimmed-only --max-n=0 -m ${params.min_readlength} -e ${params.constantmismatches} ${max_len} ${reads} > ${sample_id}.trimmed.fastq 2> ${sample_id}.cutadapt_down.log
             if [ -s ${sample_id}.trimmed.fastq ]; then
-                pigz -p ${task.cpus} ${sample_id}.trimmed.fastq
+                pigz -f -p ${task.cpus} ${sample_id}.trimmed.fastq
             else
                 printf '%s\n' "No reads passed cutadapt filtering and trimming. Consider excluding sample ${sample_id}." >&2  # write error message to stderr
                 exit 1
