@@ -126,17 +126,20 @@ if (!["single-bulk", "paired-bulk", "single-cell"].contains(params.mode)) {
 if (params.input_type != "fastq" && params.input_type != "bam") {
   error "Error: please choose a valid value for --input_type <fastq,bam>."
 }
+if (params.mode != "single-cell" && params.input_type == "bam") {
+  error "Error: bulk workflows do not accept BAM file input."
+}
 if (!params.indir) {
   error "Error: please provide the location of input files via the parameter indir."
 }
 if (!params.outdir) {
   error "Error: please specify location of output directory via parameter outdir."
 }
-if (params.constants != "up" && params.constants != "down" && params.constants != "both" && params.constants != "all") {
+if (!["up", "down", "both", "all"].contains(params.constants)) {
   error "Error: unsupported value for parameter constants. Choose either up, down, both or all (default up)."
 }
 if (params.constants == "both" && params.barcode_length && params.min_readlength) {
-  println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
+  println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered to match the exact barcode length."
 }
 if (params.mode == "single-cell" && params.input_type == "fastq" && params.pipeline != "saw" && !params.whitelist_indir && !params.cellnumber) {
   error "Error: Please provide either a whitelist or the expected number of cells for cell ID and UMI extraction."
@@ -170,9 +173,10 @@ if (params.ref) {
 if (params.mode == "paired-bulk") {
   log.info " Merge overlap            : ${params.mergeoverlap}"
 }
-if (params.mode != "single-cell") {
+if (params.mode != "single-cell" || (params.input_type == "fastq" && params.pipeline != "saw")) {
   log.info " Minimum PHRED quality    : ${params.minqual}"
-  log.info " Quality percentage       : ${params.pctqual}"
+  log.info " Quality percentage       : ${params.pctqual}%"
+  log.info " Complexity threshold     : ${params.complexity_threshold}%"
 }
   log.info " Upstream constant        : ${params.upconstant}"
   log.info " Downstream constant      : ${params.downconstant}"
@@ -184,7 +188,7 @@ if (params.mode != "single-cell") {
 if (params.barcode_length) {
   log.info " Barcode length           : ${params.barcode_length}"
 }
-if (params.ref) {
+if (params.ref || params.cluster_unmapped) {
   log.info " Alignment mismatches     : ${params.alnmismatches}"
 } else {
   log.info " Cluster distance         : ${params.cluster_distance}"
