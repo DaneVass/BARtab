@@ -9,7 +9,6 @@ include { TRIM_BARCODE_LENGTH           } from '../modules/local/trim_barcode_le
 include { BUILD_BOWTIE_INDEX            } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN                  } from '../modules/local/bowtie_align'
 include { FILTER_ALIGNMENTS             } from '../modules/local/filter_alignments'
-include { SAMTOOLS                      } from '../modules/local/samtools'
 include { GET_BARCODE_COUNTS            } from '../modules/local/get_barcode_counts'
 include { COMBINE_BARCODE_COUNTS        } from '../modules/local/combine_barcode_counts'
 include { MULTIQC                       } from '../modules/local/multiqc'
@@ -77,8 +76,7 @@ workflow BULK {
             // this checks if the barcode aligns to the either 3' or 5' end of the reference and not in the middle (which is not possible if an adapter has been trimmed)
             mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS ( BOWTIE_ALIGN.out.mapped_reads ) : BOWTIE_ALIGN.out.mapped_reads
 
-            SAMTOOLS               ( mapped_reads                     )
-            GET_BARCODE_COUNTS     ( SAMTOOLS.out                     )
+            GET_BARCODE_COUNTS     ( mapped_reads                     )
             COMBINE_BARCODE_COUNTS ( GET_BARCODE_COUNTS.out.collect() )
 
             ///// cluster unmapped reads /////

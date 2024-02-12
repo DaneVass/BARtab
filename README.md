@@ -378,17 +378,11 @@ This ensures confidence in barcodes detected with short mapping sequences (`min_
 Output files:
 - `mapped_reads/<sample_id>.mapped_filtered.sam`: Aligned and filtered reads (symlink)
 
-### SAMTOOLS
-
-The SAM file of aligned barcode reads is sorted, indexed and compressed using [samtools](http://www.htslib.org/).
-
-Output files:
-- `mapped_reads/indexed/<sample_id>.mapped.bam` (symlink)
-- `mapped_reads/indexed/<sample_id>.mapped.bai` (symlink)
 
 ### GET_BARCODE_COUNTS
 
-Barcode counts for each sample are extracted with [samtools](http://www.htslib.org/) `indexstats`. 
+The SAM file of aligned barcode reads is sorted, indexed and compressed using [samtools](http://www.htslib.org/).  
+Barcode counts for each sample are compiled with [samtools](http://www.htslib.org/) `indexstats`. 
 
 Output files:
 - `counts/<sample_id>_rawcounts.txt`: tsv containing barcode and count (copy)
