@@ -418,7 +418,7 @@ This is necessary when aligning short barcode fragments from scRNA-seq.
 Note: This can results in not detection of specific barcodes if only a part of the barcode is sequenced.
 If for example only the first 40 bases of a barcode are sequenced and there are non-unique barcodes in the reference based on the first 40 bases, no read will unambiguously match to these barcodes.  
 Sequences that map with the same number of mismatches to multiple barcodes will be discarded.  
-The number of allowed mismatches can be specified with the parameter `alnmismatches` (default 1).
+The number of allowed mismatches can be specified with the parameter `alnmismatches` (default 2).
 
 Output files:
 - `mapped_reads/<sample_id>.mapped.sam`: Aligned reads (symlink)
