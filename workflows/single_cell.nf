@@ -14,6 +14,7 @@ include { FILTER_ALIGNMENTS     } from '../modules/local/filter_alignments'
 include { RENAME_READS_BAM      } from '../modules/local/rename_reads_bam'
 include { RENAME_READS_SAW      } from '../modules/local/rename_reads_saw'
 include { REMOVE_PCR_CHIMERISM  } from '../modules/local/remove_pcr_chimerism'
+include { REMOVE_PCR_CHIMERISM as REMOVE_PCR_CHIMERISM_UNMAPPED } from '../modules/local/remove_pcr_chimerism'
 include { UMITOOLS_COUNT        } from '../modules/local/umitools_count'
 include { UMITOOLS_COUNT as UMITOOLS_COUNT_UNMAPPED } from '../modules/local/umitools_count'
 include { COUNT_BARCODES_SAM    } from '../modules/local/count_barcodes_sam'
@@ -73,6 +74,7 @@ workflow SINGLE_CELL {
             r2_fastq = UMITOOLS_EXTRACT(readsChannel.combine(whitelist, by: 0)).reads
 
             // filter read2 for quality and complexity
+            // filtering before umi-tools whitelist and extract would probably be slightly faster
             r2_fastq = FILTER_READS(r2_fastq).reads
 
         } else if (params.input_type == "bam") {
@@ -105,10 +107,13 @@ workflow SINGLE_CELL {
                     error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
                 }
                 STARCODE_SC_UNMAPPED(unmapped_reads, true)
-                UMITOOLS_COUNT_UNMAPPED(STARCODE_SC_UNMAPPED.out.counts, true, true)
+                REMOVE_PCR_CHIMERISM_UNMAPPED(STARCODE_SC_UNMAPPED.out.barcodes, "starcode_umi", true)
+                UMITOOLS_COUNT_UNMAPPED(REMOVE_PCR_CHIMERISM_UNMAPPED.out.barcodes, true, true)
             }
 
             // filter alignments if barcode has fixed length
+            // barcodes must align to start or end position of the reference, not the middle
+            // necessary when extracting very short barcode reads from scRNA-seq data
             mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS(BOWTIE_ALIGN.out.mapped_reads) : BOWTIE_ALIGN.out.mapped_reads
 
             if (params.input_type == "bam") {
@@ -120,7 +125,7 @@ workflow SINGLE_CELL {
                 // count barcodes from sam file
                 counts = COUNT_BARCODES_SAM(mapped_reads)
             } else {
-                REMOVE_PCR_CHIMERISM(mapped_reads)
+                REMOVE_PCR_CHIMERISM(mapped_reads, "sam", false)
                 counts = UMITOOLS_COUNT(REMOVE_PCR_CHIMERISM.out.barcodes, false, false).counts
             }
 
@@ -142,7 +147,8 @@ workflow SINGLE_CELL {
             }
 
             STARCODE_SC(trimmed_reads, false)
-            counts = UMITOOLS_COUNT(STARCODE_SC.out.counts, false, true).counts
+            REMOVE_PCR_CHIMERISM(STARCODE_SC.out.barcodes, "starcode_umi", false)
+            counts = UMITOOLS_COUNT(REMOVE_PCR_CHIMERISM.out.barcodes, false, true).counts
 
             // place holder empty file instead of SAM file from bowtie mapping
             PARSE_BARCODES_SC(counts.combine(Channel.of("$projectDir/assets/NO_FILE")))

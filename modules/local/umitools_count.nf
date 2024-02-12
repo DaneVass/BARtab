@@ -26,6 +26,7 @@ process UMITOOLS_COUNT {
         -S ${sample_id}${unmapped}_umi_demultiplexed.tsv \\
         > ${sample_id}${unmapped}_count.log
 
+        # parses output of umitools count (reorder and rename columns) and prints log message
         count_sc_barcodes.py ${sample_id}${unmapped}_umi_demultiplexed.tsv ${sample_id}${unmapped}.counts.tsv >> ${sample_id}${unmapped}_count.log
         """
 }
