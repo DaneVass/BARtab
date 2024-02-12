@@ -15,8 +15,7 @@ process REMOVE_PCR_CHIMERISM {
         def unmapped = cluster_unmapped ? "_unmapped" : ""
         if(format == "sam") {
             """
-            samtools view ${data} > ${sample_id}.sam
-            filter_sc_barcodes.py ${sample_id}.sam ${sample_id}_mapped_barcodes.tsv sam > ${sample_id}_pcr_chimerism.log
+            filter_sc_barcodes.py ${data} ${sample_id}_mapped_barcodes.tsv sam > ${sample_id}_pcr_chimerism.log
             """
         }
         else if( format == "starcode_umi" ) {
