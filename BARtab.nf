@@ -38,7 +38,7 @@ def helpMessage() {
                                       --ref <path/to/reference/fasta>
                                       --mode <single-bulk | paired-bulk | single-cell>
 
-    Input arguments:
+    Input/output arguments:
       --indir                    Directory containing input *.fastq.gz files. 
                                     Must contain R1 and R2 if running in mode paired-bulk or single-cell.
                                     For single-cell mode, directory can contain BAM files.
@@ -46,6 +46,7 @@ def helpMessage() {
       --ref                      Path to a reference fasta file for the barcode / sgRNA library.
                                     If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
       --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell>
+      --outdir                   Output directory to place output [default = './']
 
     Read merging arguments:
       --mergeoverlap             Length of overlap required to merge paired-end reads [default = 10]
@@ -53,6 +54,8 @@ def helpMessage() {
     Filtering arguments:
       --minqual                  Minimum PHRED quality per base [default = 20]
       --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
+      --complexity_threshold     Complexity filter [default = 0]
+                                    Minimum percentage of bases that are different from their next base (base[i] != base[i+1])
 
     Trimming arguments:
       --constants                Which constant regions flanking barcode to search for in reads: up, down or both. 
@@ -97,7 +100,6 @@ def helpMessage() {
     Optional arguments:
       -profile                   Configuration profile to use. Can use multiple (comma separated)
                                     Available: conda, singularity, docker, slurm, lsf
-      --outdir                   Output directory to place output [default = './']
       --email                    Direct output messages to this address [default = '']
       --help                     Print this help statement.
 
