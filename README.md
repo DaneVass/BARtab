@@ -596,3 +596,169 @@ Output files:
 - `counts/qc/<sample_id>_UMIs_per_bc_filtered.pdf`: QC plot, UMIs supporting the most frequent barcode per cell (copy)
 - `counts/qc/<sample_id>_avg_sequence_length_filtered.pdf`: QC plot, average mapped sequence length per barcode (only with reference) (copy)
 - `counts/qc/<sample_id>_avg_sequence_length.tsv`: average mapped sequence length per barcode as table (only with reference) (copy)
+
+### Example output structure
+
+Essential output files are marked with **.
+
+#### Bulk
+
+```
+single_end/
+├── counts
+│   ├── **all_counts_combined.tsv**
+│   ├── **test_SE_01_rawcounts.txt**
+│   ├── **test_SE_02_rawcounts.txt**
+│   └── **test_SE_03_rawcounts.txt**
+├── filtered_reads
+│   ├── logs
+│   │   ├── test_SE_01.filter.fastp.html
+│   │   ├── test_SE_01.filter.fastp.json
+│   │   ├── test_SE_01.filter.log
+│   │   ├── test_SE_02.filter.fastp.html
+│   │   ├── test_SE_02.filter.fastp.json
+│   │   ├── test_SE_02.filter.log
+│   │   ├── test_SE_03.filter.fastp.html
+│   │   ├── test_SE_03.filter.fastp.json
+│   │   └── test_SE_03.filter.log
+│   ├── test_SE_01.filtered.fastq.gz -> /scratch/users/hholze/BARtab/work/4b/5aa24ebed0ac626e6f9a3e01a8cda2/test_SE_01.filtered.fastq.gz
+│   ├── test_SE_02.filtered.fastq.gz -> /scratch/users/hholze/BARtab/work/6b/2c6d8dbfd414d1f2cb07d636dd54ec/test_SE_02.filtered.fastq.gz
+│   └── test_SE_03.filtered.fastq.gz -> /scratch/users/hholze/BARtab/work/ee/8aa047ee412dfc7d3efb5e40524770/test_SE_03.filtered.fastq.gz
+├── mapped_reads
+│   ├── logs
+│   │   ├── test_SE_01.bowtie.log
+│   │   ├── test_SE_02.bowtie.log
+│   │   └── test_SE_03.bowtie.log
+│   ├── test_SE_01.mapped_filtered.sam -> /scratch/users/hholze/BARtab/work/87/f338156278257ac88ff276253dcd6e/test_SE_01.mapped_filtered.sam
+│   ├── test_SE_01.mapped.sam -> /scratch/users/hholze/BARtab/work/89/d74f3656808410912312463972204e/test_SE_01.mapped.sam
+│   ├── test_SE_02.mapped_filtered.sam -> /scratch/users/hholze/BARtab/work/e2/b1d81c307389fd6a2ae690792520b5/test_SE_02.mapped_filtered.sam
+│   ├── test_SE_02.mapped.sam -> /scratch/users/hholze/BARtab/work/69/ded496d4631e6d2952e585b81f84bc/test_SE_02.mapped.sam
+│   ├── test_SE_03.mapped_filtered.sam -> /scratch/users/hholze/BARtab/work/45/c0bfc53016017909fd7bc8c6dee2dd/test_SE_03.mapped_filtered.sam
+│   ├── test_SE_03.mapped.sam -> /scratch/users/hholze/BARtab/work/19/84b5109b37a0e5453fc046f38b968b/test_SE_03.mapped.sam
+│   └── unmapped
+│       ├── test_SE_01.unmapped.fastq.gz -> /scratch/users/hholze/BARtab/work/89/d74f3656808410912312463972204e/test_SE_01.unmapped.fastq.gz
+│       ├── test_SE_02.unmapped.fastq.gz -> /scratch/users/hholze/BARtab/work/69/ded496d4631e6d2952e585b81f84bc/test_SE_02.unmapped.fastq.gz
+│       └── test_SE_03.unmapped.fastq.gz -> /scratch/users/hholze/BARtab/work/19/84b5109b37a0e5453fc046f38b968b/test_SE_03.unmapped.fastq.gz
+├── pipeline_info
+│   ├── execution_report_2024-02-13_10-54-54.html
+│   ├── execution_timeline_2024-02-13_10-54-54.html
+│   ├── execution_trace_2024-02-13_10-54-54.txt
+│   ├── pipeline_dag_2024-02-13_10-54-54.html
+│   └── software_check.txt
+├── reference_index
+│   ├── test.ref.fasta.1.ebwt -> /scratch/users/hholze/BARtab/work/2b/cf68381a69d3f08ffef825f5c81e76/test.ref.fasta.1.ebwt
+│   ├── test.ref.fasta.2.ebwt -> /scratch/users/hholze/BARtab/work/2b/cf68381a69d3f08ffef825f5c81e76/test.ref.fasta.2.ebwt
+│   ├── test.ref.fasta.3.ebwt -> /scratch/users/hholze/BARtab/work/2b/cf68381a69d3f08ffef825f5c81e76/test.ref.fasta.3.ebwt
+│   ├── test.ref.fasta.4.ebwt -> /scratch/users/hholze/BARtab/work/2b/cf68381a69d3f08ffef825f5c81e76/test.ref.fasta.4.ebwt
+│   ├── test.ref.fasta.rev.1.ebwt -> /scratch/users/hholze/BARtab/work/2b/cf68381a69d3f08ffef825f5c81e76/test.ref.fasta.rev.1.ebwt
+│   └── test.ref.fasta.rev.2.ebwt -> /scratch/users/hholze/BARtab/work/2b/cf68381a69d3f08ffef825f5c81e76/test.ref.fasta.rev.2.ebwt
+├── reports
+│   ├── fastqc
+│   │   ├── test_SE_01_fastqc.html
+│   │   ├── test_SE_02_fastqc.html
+│   │   ├── test_SE_03_fastqc.html
+│   │   └── zips
+│   │       ├── test_SE_01_fastqc.zip
+│   │       ├── test_SE_02_fastqc.zip
+│   │       └── test_SE_03_fastqc.zip
+│   └── multiqc
+│       ├── multiqc_data
+│       │   ├── multiqc_bowtie1.txt
+│       │   ├── multiqc_citations.txt
+│       │   ├── multiqc_cutadapt_cutadapt_up.txt
+│       │   ├── multiqc_data.json
+│       │   ├── multiqc_fastp_fastp_filter.txt
+│       │   ├── multiqc_fastqc.txt
+│       │   ├── multiqc_general_stats.txt
+│       │   ├── multiqc.log
+│       │   └── multiqc_sources.txt
+│       └── **multiqc_report.html**
+└── trimmed_reads
+    ├── logs
+    │   ├── test_SE_01.cutadapt_up.log
+    │   ├── test_SE_02.cutadapt_up.log
+    │   └── test_SE_03.cutadapt_up.log
+    ├── test_SE_01.trimmed.fastq.gz -> /scratch/users/hholze/BARtab/work/b8/d4049037e44cb9ef2e8123c4cf8bca/test_SE_01.trimmed.fastq.gz
+    ├── test_SE_02.trimmed.fastq.gz -> /scratch/users/hholze/BARtab/work/af/fe172f0a69673bc61a0791fbffc6c3/test_SE_02.trimmed.fastq.gz
+    └── test_SE_03.trimmed.fastq.gz -> /scratch/users/hholze/BARtab/work/5b/5180a8298fd66d703cc75675fa14e2/test_SE_03.trimmed.fastq.gz
+```
+
+#### Single-cell
+
+```
+sc
+├── counts
+│   ├── logs
+│   │   ├── test_sc_count.log
+│   │   └── test_sc_pcr_chimerism.log
+│   ├── pcr_chimerism
+│   │   └── test_sc_mapped_barcodes.tsv -> /scratch/users/hholze/BARtab/work/91/80eb18d752e203a36e56c802287f1e/test_sc_mapped_barcodes.tsv
+│   ├── qc
+│   │   ├── **test_sc_avg_sequence_length_filtered.pdf**
+│   │   ├── **test_sc_avg_sequence_length.pdf**
+│   │   ├── test_sc_avg_sequence_length.tsv
+│   │   ├── **test_sc_barcodes_per_cell_filtered.pdf**
+│   │   ├── **test_sc_barcodes_per_cell.pdf**
+│   │   ├── **test_sc_UMIs_per_bc_filtered.pdf**
+│   │   └── **test_sc_UMIs_per_bc.pdf**
+│   ├── **test_sc_cell_barcode_annotation.tsv**
+│   └── **test_sc.counts.tsv**
+├── filtered_reads
+│   ├── logs
+│   │   ├── test_sc.filter.fastp.html
+│   │   ├── test_sc.filter.fastp.json
+│   │   └── test_sc.filter.log
+│   └── test_sc.filtered.fastq.gz -> /scratch/users/hholze/BARtab/work/3d/5eb0602672d14f41394bb45beb8453/test_sc.filtered.fastq.gz
+├── mapped_reads
+│   ├── logs
+│   │   └── test_sc.bowtie.log
+│   ├── test_sc.mapped_filtered.sam -> /scratch/users/hholze/BARtab/work/74/ba40770c2814b5b8ca350f68b238a3/test_sc.mapped_filtered.sam
+│   ├── test_sc.mapped.sam -> /scratch/users/hholze/BARtab/work/85/342afa175dac82cc4c8c034659ec2a/test_sc.mapped.sam
+│   └── unmapped
+│       └── test_sc.unmapped.fastq.gz -> /scratch/users/hholze/BARtab/work/85/342afa175dac82cc4c8c034659ec2a/test_sc.unmapped.fastq.gz
+├── pipeline_info
+│   ├── execution_report_2024-02-13_10-41-07.html
+│   ├── execution_timeline_2024-02-13_10-41-07.html
+│   ├── execution_trace_2024-02-13_10-41-07.txt
+│   ├── pipeline_dag_2024-02-13_10-41-07.html
+│   └── software_check.txt
+├── reference_index
+│   ├── test.ref.fasta.1.ebwt
+│   ├── test.ref.fasta.2.ebwt
+│   ├── test.ref.fasta.3.ebwt
+│   ├── test.ref.fasta.4.ebwt
+│   ├── test.ref.fasta.rev.1.ebwt
+│   └── test.ref.fasta.rev.2.ebwt
+├── reports
+│   ├── fastqc
+│   │   ├── test_sc_R1_fastqc.html
+│   │   ├── test_sc_R2_fastqc.html
+│   │   └── zips
+│   │       ├── test_sc_R1_fastqc.zip
+│   │       └── test_sc_R2_fastqc.zip
+│   └── multiqc
+│       ├── multiqc_data
+│       │   ├── multiqc_bowtie1.txt
+│       │   ├── multiqc_citations.txt
+│       │   ├── multiqc_cutadapt_cutadapt_up.txt
+│       │   ├── multiqc_data.json
+│       │   ├── multiqc_fastp_fastp_filter.txt
+│       │   ├── multiqc_fastqc.txt
+│       │   ├── multiqc_general_stats.txt
+│       │   ├── multiqc.log
+│       │   └── multiqc_sources.txt
+│       └── **multiqc_report.html**
+├── trimmed_reads
+│   ├── logs
+│   │   └── test_sc.cutadapt_up.log
+│   └── test_sc.trimmed.fastq.gz -> /scratch/users/hholze/BARtab/work/bc/0dc0335a276e124249000dfeeaaeb6/test_sc.trimmed.fastq.gz
+└── umitools
+    ├── extract
+    │   ├── logs
+    │   │   └── test_sc_extract.log
+    │   └── test_sc_R2_extracted.fastq -> /scratch/users/hholze/BARtab/work/8a/1f38d4dcb11843353bcf43b4479a74/test_sc_R2_extracted.fastq
+    └── whitelist
+        ├── logs
+        │   └── test_sc_whitelist.log
+        └── test_sc_whitelist.tsv -> /scratch/users/hholze/BARtab/work/40/89a05ef10cda4349ab4c71dcc74e50/test_sc_whitelist.tsv
+```
