@@ -409,6 +409,9 @@ Output files:
 
 If a reference is provided, it is indexed using [bowtie1](http://bowtie-bio.sourceforge.net/index.shtml).
 
+Output files:
+- `reference_index/`: `NAME.1.bt2`, `NAME.2.bt2`, `NAME.3.bt2`, `NAME.4.bt2`, `NAME.rev.1.bt2`, and `NAME.rev.2.bt2` (symlink)
+
 #### BOWTIE_ALIGN
 If a reference is provided, trimmed and filtered reads are aligned to the indexed reference using [bowtie1](http://bowtie-bio.sourceforge.net/index.shtml).
 
