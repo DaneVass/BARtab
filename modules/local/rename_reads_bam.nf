@@ -21,7 +21,7 @@ process RENAME_READS_BAM {
         # create header that contains cb and umi, needed for umi_tools count
         # first column is original header to merge on later
         # piping awk output into sed is faster and uses less CPU and IO and only marginally more memory
-        awk -F"\t" 'FNR==NR {lines[\$1]; next} \$1 in lines' <(samtools view $sam) <(samtools view $bam) |\
+        awk -F"\t" 'FNR==NR {lines[\$1]; next} \$1 in lines' <(samtools view $sam) <(samtools view -f 4 -d CB $bam) |\
         parallel -j ${task.cpus} --pipe 'sed "s/^\\([^\t]*\\).*CB:Z:\\([^\t]*\\)-1.*UB:Z:\\([^\t]*\\).*/\\1\t\\1_\\2_\\3/g"' |\
         sort -S 2G -k1,1 > read_names.txt
 

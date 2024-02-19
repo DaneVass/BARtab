@@ -31,14 +31,14 @@ def helpMessage() {
   log.info logo + """
 
 ---------------------- Tabulate Barcode Counts in NGS data ----------------------
-                               Version = 1.3.0
+                               Version = 1.4.0
 
   Usage: nextflow run danevass/bartab --indir <input dir>
                                       --outdir <output dir>
                                       --ref <path/to/reference/fasta>
                                       --mode <single-bulk | paired-bulk | single-cell>
 
-    Input arguments:
+    Input/output arguments:
       --indir                    Directory containing input *.fastq.gz files. 
                                     Must contain R1 and R2 if running in mode paired-bulk or single-cell.
                                     For single-cell mode, directory can contain BAM files.
@@ -46,6 +46,7 @@ def helpMessage() {
       --ref                      Path to a reference fasta file for the barcode / sgRNA library.
                                     If null, reference-free workflow will be used for single-bulk and paired-bulk modes.
       --mode                     Workflow to run. <single-bulk, paired-bulk, single-cell>
+      --outdir                   Output directory to place output [default = './']
 
     Read merging arguments:
       --mergeoverlap             Length of overlap required to merge paired-end reads [default = 10]
@@ -53,6 +54,8 @@ def helpMessage() {
     Filtering arguments:
       --minqual                  Minimum PHRED quality per base [default = 20]
       --pctqual                  Percentage of bases within a read that must meet --minqual [default = 80]
+      --complexity_threshold     Complexity filter [default = 0]
+                                    Minimum percentage of bases that are different from their next base (base[i] != base[i+1])
 
     Trimming arguments:
       --constants                Which constant regions flanking barcode to search for in reads: up, down or both. 
@@ -97,7 +100,6 @@ def helpMessage() {
     Optional arguments:
       -profile                   Configuration profile to use. Can use multiple (comma separated)
                                     Available: conda, singularity, docker, slurm, lsf
-      --outdir                   Output directory to place output [default = './']
       --email                    Direct output messages to this address [default = '']
       --help                     Print this help statement.
 
@@ -126,17 +128,20 @@ if (!["single-bulk", "paired-bulk", "single-cell"].contains(params.mode)) {
 if (params.input_type != "fastq" && params.input_type != "bam") {
   error "Error: please choose a valid value for --input_type <fastq,bam>."
 }
+if (params.mode != "single-cell" && params.input_type == "bam") {
+  error "Error: bulk workflows do not accept BAM file input."
+}
 if (!params.indir) {
   error "Error: please provide the location of input files via the parameter indir."
 }
 if (!params.outdir) {
   error "Error: please specify location of output directory via parameter outdir."
 }
-if (params.constants != "up" && params.constants != "down" && params.constants != "both" && params.constants != "all") {
+if (!["up", "down", "both", "all"].contains(params.constants)) {
   error "Error: unsupported value for parameter constants. Choose either up, down, both or all (default up)."
 }
 if (params.constants == "both" && params.barcode_length && params.min_readlength) {
-  println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered for the whole barcode length."
+  println "Warning: min_readlength=${params.min_readlength} will be ignored because barcode_length=${params.barcode_length} and constants=${params.constants}. Reads will be filtered to match the exact barcode length."
 }
 if (params.mode == "single-cell" && params.input_type == "fastq" && params.pipeline != "saw" && !params.whitelist_indir && !params.cellnumber) {
   error "Error: Please provide either a whitelist or the expected number of cells for cell ID and UMI extraction."
@@ -152,7 +157,7 @@ log.info logo
 // https://www.coolgenerator.com/ascii-text-generator Delta Corps Priest 1
 log.info ""
 log.info " ---------------------- Tabulate Barcode Counts in NGS ----------------------"
-log.info "                               Version = 1.3.0 "
+log.info "                               Version = 1.4 "
 log.info ""
 log.info "      Run parameters: "
 log.info " ========================"
@@ -170,9 +175,10 @@ if (params.ref) {
 if (params.mode == "paired-bulk") {
   log.info " Merge overlap            : ${params.mergeoverlap}"
 }
-if (params.mode != "single-cell") {
+if (params.mode != "single-cell" || (params.input_type == "fastq" && params.pipeline != "saw")) {
   log.info " Minimum PHRED quality    : ${params.minqual}"
-  log.info " Quality percentage       : ${params.pctqual}"
+  log.info " Quality percentage       : ${params.pctqual}%"
+  log.info " Complexity threshold     : ${params.complexity_threshold}%"
 }
   log.info " Upstream constant        : ${params.upconstant}"
   log.info " Downstream constant      : ${params.downconstant}"
@@ -184,7 +190,7 @@ if (params.mode != "single-cell") {
 if (params.barcode_length) {
   log.info " Barcode length           : ${params.barcode_length}"
 }
-if (params.ref) {
+if (params.ref || params.cluster_unmapped) {
   log.info " Alignment mismatches     : ${params.alnmismatches}"
 } else {
   log.info " Cluster distance         : ${params.cluster_distance}"

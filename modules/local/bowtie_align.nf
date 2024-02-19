@@ -13,7 +13,8 @@ process BOWTIE_ALIGN {
 
     script:
         // the only difference is output file for unmapped reads and zipping unmapper reads
-        if (params.cluster_unmapped) {
+        // don't write unaligned reads to output sam file but write them to fastq file
+        // makes renaming reads a lot faster, smaller files
             """
             bowtie \\
             -x ${refname} \\
@@ -22,26 +23,14 @@ process BOWTIE_ALIGN {
             -v ${params.alnmismatches} \\
             --norc \\
             -t \\
+            --no-unal \\
             --un ${sample_id}.unmapped.fastq \\
             -a --best --strata -m1 \\
             -S ${sample_id}.mapped.sam \\
             2> ${sample_id}.bowtie.log
 
-            pigz -p ${task.cpus} ${sample_id}.unmapped.fastq
+            if [ -s ${sample_id}.unmapped.fastq ]; then
+                pigz -f -p ${task.cpus} ${sample_id}.unmapped.fastq
+            fi
             """
-        } else {
-            """
-            bowtie \\
-            -x ${refname} \\
-            -q ${reads} \\
-            -p ${task.cpus} \\
-            -v ${params.alnmismatches} \\
-            --norc \\
-            -t \\
-            -a --best --strata -m1 \\
-            -S ${sample_id}.mapped.sam \\
-            2> ${sample_id}.bowtie.log
-            """
-        }
-
 }

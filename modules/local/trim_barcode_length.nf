@@ -1,6 +1,6 @@
 process TRIM_BARCODE_LENGTH{
     tag "$sample_id"
-    label "process_medium_bulk"
+    label "process_low_bulk"
 
     input:
         tuple val(sample_id), path(reads)
@@ -10,24 +10,30 @@ process TRIM_BARCODE_LENGTH{
         tuple val(sample_id), path("${sample_id}.trimmed.${params.min_readlength}.fastq.gz"), emit: reads
     
     script:
-        // Must write decompressed file, otherwise EOFError if piping gunzip output directly into fastx_trimmer
-        """
-            gunzip -c ${reads} > ${sample_id}.tmp.fastq
-
-            if [ ${params.constants} == "up" ]; then
-                # if upstream constant is trimmed, trim sequences on the 3' (right) end
-                fastx_trimmer -z -l ${params.min_readlength} \\
-                -i ${sample_id}.tmp.fastq \\
-                -o ${sample_id}.trimmed.${params.min_readlength}.fastq.gz
-            elif [ ${params.constants} == "down" ]; then
-            # 2> ${sample_id}.trim.log \\
-                # if downstream constant is trimmed, need to reverse reads to effectively trim the 5' end
-                # write stderr to log file and pass stdout to next command
-                fastx_reverse_complement -i ${sample_id}.tmp.fastq |\\
-                fastx_trimmer -l ${params.min_readlength} |\\
-                fastx_reverse_complement -z -o ${sample_id}.trimmed.${params.min_readlength}.fastq.gz
-            fi         
-
-            rm ${sample_id}.tmp.fastq
-        """
+        if ( params.constants == "up" ) {
+            // if upstream constant is trimmed, trim sequences on the 3' (right) end
+            """
+            fastp --in1 ${reads} \\
+                --thread ${task.cpus} \\
+                --out1 ${sample_id}.trimmed.${params.min_readlength}.fastq.gz \\
+                --disable_trim_poly_g --disable_adapter_trimming --disable_quality_filtering --disable_length_filtering --dont_eval_duplication \\
+                --max_len1 ${params.min_readlength}
+            """
+        }
+        else if ( params.constants == "down" ) {
+            // if downstream constant is trimmed, need to reverse reads to effectively trim the 5' end
+            // then reverse reads again
+            // I haven't yet encountered a case where only the downstream adapter is trimmed and barcodes must be trimmed for clustering
+            // there might be a more elegant way to do this
+            """
+            zcat ${reads} |\\
+                awk '!(FNR%2) {t="";l=length;for(i=1;i<=l;i++) t=substr(\$0,i,1) t;\$0=t}1' |\\
+                fastp --stdin --stdout \\
+                    --thread ${task.cpus} \\
+                    --disable_trim_poly_g --disable_adapter_trimming --disable_quality_filtering --disable_length_filtering --dont_eval_duplication \\
+                    --max_len1 ${params.min_readlength} |\\
+                awk '!(FNR%2) {t="";l=length;for(i=1;i<=l;i++) t=substr(\$0,i,1) t;\$0=t}1' |\\
+                gzip > ${sample_id}.trimmed.${params.min_readlength}.fastq.gz
+            """
+        }
 }

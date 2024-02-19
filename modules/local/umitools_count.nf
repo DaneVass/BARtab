@@ -4,23 +4,29 @@ process UMITOOLS_COUNT {
 
     input:
         // index file needs to be linked to work directory
-        tuple val(sample_id), path(bam), path(bai)
+        tuple val(sample_id), path(barcodes)
+        val(cluster_unmapped)
+        val(starcode)
 
     output:
-        tuple val(sample_id), path("${sample_id}.counts.tsv"), emit: counts
-        path("${sample_id}_count.log"), emit: log
-        
-    // if pipeline is saw, use different delimiter
+        tuple val(sample_id), path("${sample_id}*.counts.tsv"), emit: counts
+        path("${sample_id}*_count.log"), emit: log
+
     script:
-        def delim = (params.pipeline == "saw") ? "|||" : "_"
+        def unmapped = cluster_unmapped ? "_unmapped" : ""
+        def starcode = starcode ? "_starcode" : ""
+        // umitools count_tab produces a different column order and frames the cell IDs in b'cell id'
+        // count_tab also does not seem to produce a sensible log file
+        // python script only removes that and writes some stats to log
         """
-        umi_tools count \\
-        --per-contig --per-cell \\
-        --umi-separator='${delim}' \\
+        umi_tools count_tab \\
+        --per-cell \\
         --edit-distance-threshold=${params.umi_dist} \\
-        --random-seed=10101 \\
-        -I ${bam} \\
-        -S ${sample_id}.counts.tsv \\
-        -L ${sample_id}_count.log
-        """  
+        -I ${barcodes} \\
+        -S ${sample_id}${unmapped}_umi_demultiplexed.tsv \\
+        > ${sample_id}${unmapped}_count.log
+
+        # parses output of umitools count (reorder and rename columns) and prints log message
+        count_sc_barcodes.py ${sample_id}${unmapped}_umi_demultiplexed.tsv ${sample_id}${unmapped}.counts.tsv >> ${sample_id}${unmapped}_count.log
+        """
 }
