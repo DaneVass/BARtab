@@ -157,7 +157,7 @@ log.info logo
 // https://www.coolgenerator.com/ascii-text-generator Delta Corps Priest 1
 log.info ""
 log.info " ---------------------- Tabulate Barcode Counts in NGS ----------------------"
-log.info "                               Version = 1.3.1 "
+log.info "                               Version = 1.4 "
 log.info ""
 log.info "      Run parameters: "
 log.info " ========================"
