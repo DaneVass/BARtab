@@ -12,6 +12,7 @@ include { BUILD_BOWTIE_INDEX                                    } from '../modul
 include { BOWTIE_ALIGN                                          } from '../modules/local/bowtie_align'
 include { FILTER_ALIGNMENTS                                     } from '../modules/local/filter_alignments'
 include { RENAME_READS_BAM                                      } from '../modules/local/rename_reads_bam'
+include { RENAME_READS_FASTQ                                      } from '../modules/local/rename_reads_fastq'
 include { RENAME_READS_SAW                                      } from '../modules/local/rename_reads_saw'
 include { REMOVE_PCR_CHIMERISM                                  } from '../modules/local/remove_pcr_chimerism'
 include { REMOVE_PCR_CHIMERISM as REMOVE_PCR_CHIMERISM_UNMAPPED } from '../modules/local/remove_pcr_chimerism'
@@ -102,7 +103,7 @@ workflow SINGLE_CELL {
         trimmed_reads = CUTADAPT_READS ( r2_fastq ).reads
 
         if ( params.input_type == "fastq" & params.pipeline == "saw" ) {
-            trimmed_reads = RENAME_READS_SAW ( CUTADAPT_READS.out.reads )
+            trimmed_reads = RENAME_READS_SAW ( trimmed_reads )
         }
 
         ////////// reference-based workflow //////////
@@ -164,6 +165,12 @@ workflow SINGLE_CELL {
             } else if ( params.constants == "all" ) {
                 // not implemented
                 error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
+            }
+
+            // add CB and UMI info in header
+            if ( params.input_type == "bam" ) {
+                // add CB and UMI info in header
+                trimmed_reads = RENAME_READS_FASTQ ( trimmed_reads.combine( readsChannel, by: 0 ) )
             }
 
             STARCODE_SC             ( trimmed_reads, false                            )
