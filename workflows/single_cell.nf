@@ -162,10 +162,11 @@ workflow SINGLE_CELL {
                 // this is only necessary if only one adapter was trimmed and the difference in barcode length is due to a stagger
                 // and not sequencing errors (indels)
                 trimmed_reads = TRIM_BARCODE_LENGTH ( trimmed_reads ).reads
-            } else if ( params.constants == "all" ) {
-                // not implemented
-                error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
-            }
+            } 
+            // else if ( params.constants == "all" ) {
+            //     // not implemented
+            //     error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
+            // }
 
             // add CB and UMI info in header
             if ( params.input_type == "bam" ) {
