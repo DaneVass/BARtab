@@ -10,9 +10,10 @@ process RENAME_READS_FASTQ {
         tuple val(sample_id), path(fastq), path(bam)
 
     output:
-        tuple val(sample_id), path("${sample_id}.trimmed_renamed.fastq")
+        tuple val(sample_id), path("${sample_id}.trimmed_renamed.fastq.gz")
 
     script:
+    // Need to be able to accept up, down, both trimmed files, rename them individually
         """
         # get unmapped reads using many cores
         samtools view -@ ${task.cpus} -f 4 -d CB $bam > unmapped.sam
@@ -36,7 +37,8 @@ process RENAME_READS_FASTQ {
         join -j1 -t "\$(echo -e "\t")" read_names.txt <(sort -S 2G -k1,1 ${sample_id}.trimmed.txt) |\\
                 awk -v OFS="\t" '{\$1=""; print substr(\$0,2)}' |\\
                 sed 's/^/@/g' |\\
-                sed 's/\t/\n/g' > ${sample_id}.trimmed_renamed.fastq
+                tr "\t" "\n" |\\
+                gzip > ${sample_id}.trimmed_renamed.fastq.gz
 
         rm ${sample_id}.trimmed.fastq
         rm ${sample_id}.trimmed.txt
