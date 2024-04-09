@@ -1,5 +1,9 @@
+
+
 # BARtab
 A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
+
+[![DOI](https://zenodo.org/badge/386759343.svg)](https://zenodo.org/doi/10.5281/zenodo.10896646)
 
 - [Parameters](#parameters)
 - [Pipeline summary](#pipeline-summary)
