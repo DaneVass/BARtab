@@ -1,3 +1,5 @@
+- Add option to trim barcode to min_readlength (in addition to trimming to min_readlength before clustering)
+
 # BARtab 1.4.0
 
 - Remove PCR chimerism in single-cell data: for each cell barcode - UMI combination, only keep lineage barcode with the most reads; remove all ambiguous ties
