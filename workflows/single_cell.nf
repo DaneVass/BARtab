@@ -100,7 +100,7 @@ workflow SINGLE_CELL {
         }
 
         trimmed_reads = CUTADAPT_READS ( r2_fastq ).reads
-
+        
         if ( params.input_type == "fastq" & params.pipeline == "saw" ) {
             trimmed_reads = RENAME_READS_SAW ( CUTADAPT_READS.out.reads )
         }
@@ -108,6 +108,16 @@ workflow SINGLE_CELL {
         ////////// reference-based workflow //////////
 
         if ( params.ref ) {
+
+            // trim reads to same length (min_readlength)
+            if ( params.trim_length == True ) {
+                if ( params.constants == "up" | params.constants == "down" ) {
+                    trimmed_reads = TRIM_BARCODE_LENGTH ( trimmed_reads ).reads
+                } else if ( params.constants == "all" ) {
+                    // not implemented
+                    error "Error: it is currently not possible to trim barcodes to the same length with constants=all."
+                }
+            }
 
             BUILD_BOWTIE_INDEX ( reference                             )
             BOWTIE_ALIGN       ( BUILD_BOWTIE_INDEX.out, trimmed_reads )
@@ -145,7 +155,7 @@ workflow SINGLE_CELL {
                 } else if ( params.constants == "all" ) {
                     // not implemented
                     // i.e. clustering unmapped barcodes driectly from scRNA-seq data (bam files) is not possible. 
-                    error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
+                    error "Error: it is currently not possible to cluster barcodes with constants=all. Set cluster_unmapped=False to avoid this error."
                 }
                 STARCODE_SC_UNMAPPED          ( unmapped_reads, true                                    )
                 REMOVE_PCR_CHIMERISM_UNMAPPED ( STARCODE_SC_UNMAPPED.out.barcodes, "starcode_umi", true )
@@ -163,7 +173,7 @@ workflow SINGLE_CELL {
                 trimmed_reads = TRIM_BARCODE_LENGTH ( trimmed_reads ).reads
             } else if ( params.constants == "all" ) {
                 // not implemented
-                error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
+                error "Error: it is currently not possible to cluster barcodes with constants=all. Please provide a reference."
             }
 
             STARCODE_SC             ( trimmed_reads, false                            )

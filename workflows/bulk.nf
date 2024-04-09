@@ -69,6 +69,16 @@ workflow BULK {
 
         if ( params.ref ) {
 
+            // trim reads to same length (min_readlength)
+            if ( params.trim_length == True ) {
+                if ( params.constants == "up" | params.constants == "down" ) {
+                    trimmed_reads = TRIM_BARCODE_LENGTH ( trimmed_reads ).reads
+                } else if ( params.constants == "all" ) {
+                    // not implemented
+                    error "Error: it is currently not possible to trim barcodes to the same length with constants=all."
+                }
+            }
+
             BUILD_BOWTIE_INDEX ( reference                             )
             BOWTIE_ALIGN       ( BUILD_BOWTIE_INDEX.out, trimmed_reads )
 
