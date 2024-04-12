@@ -13,9 +13,10 @@ process REMOVE_PCR_CHIMERISM {
 
     script:
         def unmapped = cluster_unmapped ? "_unmapped" : ""
+        def delimiter = params.pipeline == "splitpipe" ? "|" : "_"
         if(format == "sam") {
             """
-            filter_sc_barcodes.py ${data} ${sample_id}_mapped_barcodes.tsv sam > ${sample_id}_pcr_chimerism.log
+            filter_sc_barcodes.py ${data} ${sample_id}_mapped_barcodes.tsv sam "$delimiter" > ${sample_id}_pcr_chimerism.log
             """
         }
         else if( format == "starcode_umi" ) {

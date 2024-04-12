@@ -6,6 +6,9 @@ in_file = sys.argv[1]
 out_file = sys.argv[2]
 # input is either sam file with alignments or output of starcode_umi
 input_type = sys.argv[3]
+if input_type == "sam":
+    # cell barcode UMI pattern
+    delimiter = sys.argv[4]
 if input_type == "starcode_umi":
     # cell barcode UMI pattern
     cb_umi_pattern = sys.argv[4]
@@ -45,7 +48,7 @@ if input_type == "sam":
     print(f"Parsed {mapping_output.shape[0]} reads")
 
     # get cell barcode and UMI from header
-    mapping_output[["read", "CB", "UMI"]] = mapping_output["readname"].str.split("_", expand=True)
+    mapping_output[["read", "CB", "UMI"]] = mapping_output["readname"].str.split(delimiter, expand=True)
     mapping_output = mapping_output.value_counts(["barcode", "CB", "UMI"]).reset_index()
 
     output = mapping_output[["CB", "UMI", "barcode", "count"]]
@@ -69,6 +72,6 @@ print(f"Kept {output_max_no_ties.shape[0]} ({output_max_no_ties['CB'].unique().s
 output_max_no_ties = output_max_no_ties.reset_index()
 # it is essential to order by barcode before umi-tools count_tab
 output_max_no_ties = output_max_no_ties.sort_values("barcode")
-output_max_no_ties["read"] = output_max_no_ties["index"].astype(str) + "_" + output_max_no_ties["UMI"] + "_" + output_max_no_ties["CB"]
+output_max_no_ties["read"] = output_max_no_ties["index"].astype(str) + delimiter + output_max_no_ties["UMI"] + delimiter + output_max_no_ties["CB"]
 
 output_max_no_ties[["read", "barcode"]].to_csv(out_file, index=False, sep="\t", header=False)

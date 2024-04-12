@@ -13,6 +13,7 @@ include { BUILD_BOWTIE_INDEX                                    } from '../modul
 include { BOWTIE_ALIGN                                          } from '../modules/local/bowtie_align'
 include { FILTER_ALIGNMENTS                                     } from '../modules/local/filter_alignments'
 include { RENAME_READS_BAM                                      } from '../modules/local/rename_reads_bam'
+include { RENAME_READS_SPLITPIPE                                } from '../modules/local/rename_reads_splitpipe'
 include { RENAME_READS_SAW                                      } from '../modules/local/rename_reads_saw'
 include { REMOVE_PCR_CHIMERISM                                  } from '../modules/local/remove_pcr_chimerism'
 include { REMOVE_PCR_CHIMERISM as REMOVE_PCR_CHIMERISM_UNMAPPED } from '../modules/local/remove_pcr_chimerism'
@@ -128,7 +129,9 @@ workflow SINGLE_CELL {
             // necessary when extracting very short barcode reads from scRNA-seq data
             mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS ( BOWTIE_ALIGN.out.mapped_reads ) : BOWTIE_ALIGN.out.mapped_reads
 
-            if ( params.input_type == "bam" ) {
+            if ( params.input_type == "bam" & params.pipeline == "splitpipe") {
+                mapped_reads = RENAME_READS_SPLITPIPE ( mapped_reads.combine( readsChannel, by: 0 ) )
+            } else if ( params.input_type == "bam") {
                 // add CB and UMI info in header
                 mapped_reads = RENAME_READS_BAM ( mapped_reads.combine( readsChannel, by: 0 ) )
             }

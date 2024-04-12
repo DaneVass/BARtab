@@ -80,7 +80,7 @@ Please check [NEWS.md](NEWS.md) for changes in BARtab v1.4.
       --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
       --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell 
                                     (barcode supported by most UMIs) [default = 0.3]
-      --pipeline                 To specify if input fastq files were created by SAW pipeline
+      --pipeline                 To specify preprocessing pipeline <starsolo, cellranger, saw, splitpipe> [default = cellranger]
 
     Resources:
       --max_cpus                 Maximum number of CPUs [default = 6]
