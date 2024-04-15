@@ -12,6 +12,7 @@ if input_type == "sam":
 if input_type == "starcode_umi":
     # cell barcode UMI pattern
     cb_umi_pattern = sys.argv[4]
+    delimiter = "_"
 
 print("############ Clean PCR chimerism ############\n")
 
