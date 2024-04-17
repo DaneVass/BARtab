@@ -10,10 +10,11 @@ process UMITOOLS_EXTRACT {
         path("${sample_id}_extract.log"), emit: log
 
     script:
+        // stdout is R1 which is not needed. Redirect to /dev/null
         """
         umi_tools extract --bc-pattern=${params.cb_umi_pattern} \\
         --stdin ${reads[0]} \\
         --read2-in ${reads[1]} --read2-out=${sample_id}_R2_extracted.fastq \\
-        --whitelist=${whitelist} -L ${sample_id}_extract.log
+        --whitelist=${whitelist} -L ${sample_id}_extract.log > /dev/null
         """
 }
