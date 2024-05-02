@@ -1,6 +1,8 @@
 process GET_BARCODE_COUNTS {
     tag "$sample_id"
     label "process_low_bulk"
+    errorStrategy 'retry'
+    maxRetries 3
 
     input:
         tuple val(sample_id), path(reads)
