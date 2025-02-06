@@ -15,6 +15,7 @@ process UMITOOLS_COUNT {
     script:
         def unmapped = cluster_unmapped ? "_unmapped" : ""
         def starcode = starcode ? "_starcode" : ""
+        def delimiter = params.pipeline == "splitpipe" ? "|" : "_"
         // umitools count_tab produces a different column order and frames the cell IDs in b'cell id'
         // count_tab also does not seem to produce a sensible log file
         // python script only removes that and writes some stats to log
@@ -24,6 +25,7 @@ process UMITOOLS_COUNT {
         --edit-distance-threshold=${params.umi_dist} \\
         -I ${barcodes} \\
         -S ${sample_id}${unmapped}_umi_demultiplexed.tsv \\
+        --barcode-separator "$delimiter" \\
         > ${sample_id}${unmapped}_count.log
 
         # parses output of umitools count (reorder and rename columns) and prints log message

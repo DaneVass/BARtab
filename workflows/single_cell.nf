@@ -8,10 +8,12 @@ include { CUTADAPT_READS                                        } from '../modul
 include { STARCODE_SC                                           } from '../modules/local/starcode_sc'
 include { STARCODE_SC as STARCODE_SC_UNMAPPED                   } from '../modules/local/starcode_sc'
 include { TRIM_BARCODE_LENGTH                                   } from '../modules/local/trim_barcode_length'
+include { TRIM_BARCODE_LENGTH as TRIM_BARCODE_LENGTH_CLUSTER    } from '../modules/local/trim_barcode_length'
 include { BUILD_BOWTIE_INDEX                                    } from '../modules/local/build_bowtie_index'
 include { BOWTIE_ALIGN                                          } from '../modules/local/bowtie_align'
 include { FILTER_ALIGNMENTS                                     } from '../modules/local/filter_alignments'
 include { RENAME_READS_BAM                                      } from '../modules/local/rename_reads_bam'
+include { RENAME_READS_SPLITPIPE                                } from '../modules/local/rename_reads_splitpipe'
 include { RENAME_READS_SAW                                      } from '../modules/local/rename_reads_saw'
 include { REMOVE_PCR_CHIMERISM                                  } from '../modules/local/remove_pcr_chimerism'
 include { REMOVE_PCR_CHIMERISM as REMOVE_PCR_CHIMERISM_UNMAPPED } from '../modules/local/remove_pcr_chimerism'
@@ -100,7 +102,7 @@ workflow SINGLE_CELL {
         }
 
         trimmed_reads = CUTADAPT_READS ( r2_fastq ).reads
-
+        
         if ( params.input_type == "fastq" & params.pipeline == "saw" ) {
             trimmed_reads = RENAME_READS_SAW ( CUTADAPT_READS.out.reads )
         }
@@ -108,6 +110,16 @@ workflow SINGLE_CELL {
         ////////// reference-based workflow //////////
 
         if ( params.ref ) {
+
+            // trim reads to same length (min_readlength)
+            if ( params.trim_length ) {
+                if ( params.constants == "up" | params.constants == "down" ) {
+                    trimmed_reads = TRIM_BARCODE_LENGTH ( trimmed_reads ).reads
+                } else if ( params.constants == "all" ) {
+                    // not implemented
+                    error "Error: it is currently not possible to trim barcodes to the same length with constants=all."
+                }
+            }
 
             BUILD_BOWTIE_INDEX ( reference                             )
             BOWTIE_ALIGN       ( BUILD_BOWTIE_INDEX.out, trimmed_reads )
@@ -117,7 +129,9 @@ workflow SINGLE_CELL {
             // necessary when extracting very short barcode reads from scRNA-seq data
             mapped_reads = params.barcode_length ? FILTER_ALIGNMENTS ( BOWTIE_ALIGN.out.mapped_reads ) : BOWTIE_ALIGN.out.mapped_reads
 
-            if ( params.input_type == "bam" ) {
+            if ( params.input_type == "bam" & params.pipeline == "splitpipe") {
+                mapped_reads = RENAME_READS_SPLITPIPE ( mapped_reads.combine( readsChannel, by: 0 ) )
+            } else if ( params.input_type == "bam") {
                 // add CB and UMI info in header
                 mapped_reads = RENAME_READS_BAM ( mapped_reads.combine( readsChannel, by: 0 ) )
             }
@@ -141,11 +155,11 @@ workflow SINGLE_CELL {
                 unmapped_reads = BOWTIE_ALIGN.out.unmapped_reads
                 // trim barcodes to same length if only one adapter and stagger (see same in ref-free workflow)
                 if ( params.constants == "up" | params.constants == "down" ) {
-                    unmapped_reads = TRIM_BARCODE_LENGTH ( unmapped_reads ).reads
+                    unmapped_reads = TRIM_BARCODE_LENGTH_CLUSTER ( unmapped_reads ).reads
                 } else if ( params.constants == "all" ) {
                     // not implemented
                     // i.e. clustering unmapped barcodes driectly from scRNA-seq data (bam files) is not possible. 
-                    error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
+                    error "Error: it is currently not possible to cluster barcodes with constants=all. Set cluster_unmapped=False to avoid this error."
                 }
                 STARCODE_SC_UNMAPPED          ( unmapped_reads, true                                    )
                 REMOVE_PCR_CHIMERISM_UNMAPPED ( STARCODE_SC_UNMAPPED.out.barcodes, "starcode_umi", true )
@@ -160,10 +174,10 @@ workflow SINGLE_CELL {
                 // trim reads to same length (min_readlength) befor running starcode
                 // this is only necessary if only one adapter was trimmed and the difference in barcode length is due to a stagger
                 // and not sequencing errors (indels)
-                trimmed_reads = TRIM_BARCODE_LENGTH ( trimmed_reads ).reads
+                trimmed_reads = TRIM_BARCODE_LENGTH_CLUSTER ( trimmed_reads ).reads
             } else if ( params.constants == "all" ) {
                 // not implemented
-                error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
+                error "Error: it is currently not possible to cluster barcodes with constants=all. Please provide a reference."
             }
 
             STARCODE_SC             ( trimmed_reads, false                            )

@@ -22,7 +22,7 @@ A Nextflow pipeline to tabulate synthetic barcode counts from NGS data
 BARtab integrates with the R package [bartools](https://github.com/DaneVass/bartools) for downstream QC, analysis and visualization of population-level and single-cell level cellular barcoding datasets.  
 Please see our [preprint](https://www.biorxiv.org/content/10.1101/2023.11.21.568179v1.full) for application examples. 
 
-Please check [NEWS.md](NEWS.md) for changes in BARtab v1.4.
+Please check [NEWS.md](NEWS.md) for changes in BARtab v1.4 and v1.5.
 
 ## Parameters
 
@@ -84,7 +84,7 @@ Please check [NEWS.md](NEWS.md) for changes in BARtab v1.4.
       --umi_count_filter         Minimum number of UMIs per barcode per cell [default = 1]
       --umi_fraction_filter      Minimum fraction of UMIs per barcode per cell compared to dominant barcode in cell 
                                     (barcode supported by most UMIs) [default = 0.3]
-      --pipeline                 To specify if input fastq files were created by SAW pipeline
+      --pipeline                 To specify preprocessing pipeline <starsolo, cellranger, saw, splitpipe> [default = cellranger]
 
     Resources:
       --max_cpus                 Maximum number of CPUs [default = 6]

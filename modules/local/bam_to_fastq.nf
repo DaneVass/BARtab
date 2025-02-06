@@ -13,6 +13,7 @@ process BAM_TO_FASTQ {
         tuple val(sample_id), path("${sample_id}_R2.fastq.gz"), emit: reads
 
     script:
+        def umi_tag = params.pipeline == "splitpipe" ? "pN" : "UB"
         """
         # Save the header lines
         samtools view -H $bam > SAM_header.sam
@@ -22,7 +23,7 @@ process BAM_TO_FASTQ {
         # Combine header and body
         # convert BAM to fastq. CR output only contains R2
         # pipe everything to save time on IO
-        cat SAM_header.sam  <(samtools view -f 4 -d CB $bam | LC_ALL=C grep 'UB:Z:') |\
+        cat SAM_header.sam  <(samtools view -f 4 -d CB $bam | LC_ALL=C grep '${umi_tag}:Z:') |\
         samtools fastq -@ ${task.cpus} -0 ${sample_id}_R2.fastq.gz
         """
 }

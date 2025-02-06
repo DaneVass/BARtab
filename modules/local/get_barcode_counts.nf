@@ -1,6 +1,6 @@
 process GET_BARCODE_COUNTS {
     tag "$sample_id"
-    label "process_low_bulk"
+    label "process_medium_bulk"
 
     input:
         tuple val(sample_id), path(reads)

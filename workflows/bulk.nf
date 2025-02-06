@@ -1,17 +1,18 @@
-include { SOFTWARE_CHECK                } from '../modules/local/software_check'
-include { FASTQC                        } from '../modules/local/fastqc'
-include { MERGE_READS                   } from '../modules/local/merge_reads'
-include { FILTER_READS                  } from '../modules/local/filter_reads'
-include { CUTADAPT_READS                } from '../modules/local/cutadapt_reads'
-include { STARCODE                      } from '../modules/local/starcode'
-include { STARCODE as STARCODE_UNMAPPED } from '../modules/local/starcode'
-include { TRIM_BARCODE_LENGTH           } from '../modules/local/trim_barcode_length'
-include { BUILD_BOWTIE_INDEX            } from '../modules/local/build_bowtie_index'
-include { BOWTIE_ALIGN                  } from '../modules/local/bowtie_align'
-include { FILTER_ALIGNMENTS             } from '../modules/local/filter_alignments'
-include { GET_BARCODE_COUNTS            } from '../modules/local/get_barcode_counts'
-include { COMBINE_BARCODE_COUNTS        } from '../modules/local/combine_barcode_counts'
-include { MULTIQC                       } from '../modules/local/multiqc'
+include { SOFTWARE_CHECK                                        } from '../modules/local/software_check'
+include { FASTQC                                                } from '../modules/local/fastqc'
+include { MERGE_READS                                           } from '../modules/local/merge_reads'
+include { FILTER_READS                                          } from '../modules/local/filter_reads'
+include { CUTADAPT_READS                                        } from '../modules/local/cutadapt_reads'
+include { STARCODE                                              } from '../modules/local/starcode'
+include { STARCODE as STARCODE_UNMAPPED                         } from '../modules/local/starcode'
+include { TRIM_BARCODE_LENGTH                                   } from '../modules/local/trim_barcode_length'
+include { TRIM_BARCODE_LENGTH as TRIM_BARCODE_LENGTH_CLUSTER    } from '../modules/local/trim_barcode_length'
+include { BUILD_BOWTIE_INDEX                                    } from '../modules/local/build_bowtie_index'
+include { BOWTIE_ALIGN                                          } from '../modules/local/bowtie_align'
+include { FILTER_ALIGNMENTS                                     } from '../modules/local/filter_alignments'
+include { GET_BARCODE_COUNTS                                    } from '../modules/local/get_barcode_counts'
+include { COMBINE_BARCODE_COUNTS                                } from '../modules/local/combine_barcode_counts'
+include { MULTIQC                                               } from '../modules/local/multiqc'
 
 
 workflow BULK {
@@ -69,6 +70,16 @@ workflow BULK {
 
         if ( params.ref ) {
 
+            // trim reads to same length (min_readlength)
+            if ( params.trim_length ) {
+                if ( params.constants == "up" | params.constants == "down" ) {
+                    trimmed_reads = TRIM_BARCODE_LENGTH ( trimmed_reads ).reads
+                } else if ( params.constants == "all" ) {
+                    // not implemented
+                    error "Error: it is currently not possible to trim barcodes to the same length with constants=all."
+                }
+            }
+
             BUILD_BOWTIE_INDEX ( reference                             )
             BOWTIE_ALIGN       ( BUILD_BOWTIE_INDEX.out, trimmed_reads )
 
@@ -86,7 +97,7 @@ workflow BULK {
                 unmapped_reads = BOWTIE_ALIGN.out.unmapped_reads
                 // trim barcodes to same length if only one adapter and stagger (see same in ref-free workflow)
                 if ( params.constants == "up" | params.constants == "down" ) {
-                    unmapped_reads = TRIM_BARCODE_LENGTH( unmapped_reads ).reads
+                    unmapped_reads = TRIM_BARCODE_LENGTH_CLUSTER( unmapped_reads ).reads
                 } else if ( params.constants == "all" ) {
                     // not implemented
                     error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
@@ -103,7 +114,7 @@ workflow BULK {
                 // trim reads to same length (min_readlength) befor running starcode
                 // this is only necessary if only one adapter was trimmed and the difference in barcode length is due to a stagger
                 // and not sequencing errors (indels)
-                trimmed_reads = TRIM_BARCODE_LENGTH ( trimmed_reads ).reads
+                trimmed_reads = TRIM_BARCODE_LENGTH_CLUSTER ( trimmed_reads ).reads
             } else if ( params.constants == "all" ) {
                 // not implemented
                 error "Error: this function has not been implemented. Please contact henrietta.holze[at]petermac.org"
